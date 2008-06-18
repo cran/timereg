@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <math.h>
                  
-int Cpred(cum,nx,px,xval,nxval,pred)
+void Cpred(cum,nx,px,xval,nxval,pred)
 double *cum,*xval,*pred;
 int *nxval,*nx,*px;
 {
@@ -14,7 +14,7 @@ for (s=0;s<*nxval;s++)
    timex=xval[s]; pred[s]=timex; c=*nx-1; 
    sc1=cum[*nx-1];  sc2=smax+xval[*nxval-1];  
 
-   while ((!(timex<sc2 & timex>=sc1)) & c>=0) {
+   while ((!((timex<sc2) && (timex>=sc1))) && (c>=0)) {
    /* printf(" %lf %lf %lf %ld \n",timex,sc2,sc1,c); */ 
    sc1=cum[c-1];sc2=cum[c];c=c-1; } 
    /* printf("før pred  %lf %lf %lf %ld \n",timex,sc2,sc1,c); */

@@ -13,15 +13,11 @@
 
 #define ME(matrix,row,col) (((matrix)->entries)[(col) * ((matrix)->nr) + (row)])
 #define VE(vector,index) (((vector)->entries)[(index)])
-
 #define oops(s) {error((s));}
-#define malloc_safe(s,t) if(((s) = malloc((t))) == NULL) { oops("error: malloc() "); }
-#define calloc_safe(s,t,T) if(((s) = calloc((t),(T))) == NULL) { oops("error: calloc() "); }
 #define max(a,b) ( ((a) > (b)) ? (a) : (b) )
 #define min(a,b) ( ((a) > (b)) ? (b) : (a) )
-#define malloc_mat(NR, NC, M) { calloc_safe((M),((size_t) 1),sizeof(matrix)); ((M)->nr) = (NR); ((M)->nc) = (NC); ((M)->entries) = calloc(((size_t) (NR)*(NC)) , sizeof(double));}
-#define malloc_vec(L, V) { calloc_safe((V),((size_t) 1),sizeof(vector)); ((V)->length) = (L); ((V)->entries) = calloc(((size_t) (L)), sizeof(double));}
-
+#define malloc_mat(NR, NC, M) { (M) = Calloc(1,matrix); ((M)->nr) = (NR); ((M)->nc) = (NC); ((M)->entries) = Calloc(((NR)*(NC)) , double);}
+#define malloc_vec(L, V) { (V) = Calloc(1,vector); ((V)->length) = (L); ((V)->entries) = Calloc((L), double);}
 
 typedef struct{
   int nr;
@@ -87,6 +83,7 @@ extern void F77_SUB(dtrco)(double*, int*, int*, double*, double*, int*);
 void MtM(matrix *M, matrix *A);
 
 void invertSPD(matrix *A, matrix *AI);
+void invertSPDunsafe(matrix *A, matrix *AI);
 
 void Mv(matrix *M, vector *v1, vector *v2);
 
@@ -138,6 +135,7 @@ void MtA(matrix *M, matrix *A, matrix *Mout);
 void MAt(matrix *M, matrix *A, matrix *Mout);
 
 void invert(matrix *A, matrix *AI);
+void invertUnsafe(matrix *A, matrix *AI);
 
 void MxA(matrix *M, matrix *A, matrix *Mout);
 

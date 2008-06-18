@@ -368,7 +368,7 @@ void print_mat(matrix *M){
  
   int j, k;
 
-printf(" rows %ld, cols %ld \n",nrow_matrix(M),ncol_matrix(M)); 
+printf(" rows %d, cols %d \n",nrow_matrix(M),ncol_matrix(M)); 
   for(j=0; j < nrow_matrix(M); j++){
     for(k = 0; k < ncol_matrix(M); k++){
       printf("%5.5g ", ME(M,j,k));
@@ -410,7 +410,7 @@ void print_vec(vector *v){
  
   int j;
 
-  printf(" vector length %ld \n",length_vector(v)); 
+  printf(" vector length %d \n",length_vector(v)); 
   for(j=0; j < length_vector(v); j++){
     printf("%5.5g ", VE(v,j));
   }  

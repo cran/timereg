@@ -20,7 +20,7 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,*ratesim,*robust,
   matrix *W3t[*antclust],*W4t[*antclust],*W2t[*antclust],*AIxit[*antpers],*destheta,*d2UItheta,*d2Utheta,*varthetascore,*Sthetaiid[*antclust],*Stheta; 
   matrix *Ftilde,*Gtilde;
   vector *dA,*VdA,*dN,*MdA,*delta,*zav,*lamt,*lamtt,*xi,*zi,*U,*beta,*xtilde; 
-  vector *sxtilde,*Gbeta,*zcol,*one,*difzzav; 
+  vector *Gbeta,*zcol,*one,*difzzav; 
   vector *offset,*weight,*ZXdA[*Ntimes],*Uprofile;
   vector *ahatt,*phit[*Ntimes],*dbetaNH[*antclust],*dANH[*antclust]; 
   vector *tmpv1,*tmpv2,*rowX,*rowZ,*difX,*VdB,*atrisk[*antpers]; 
@@ -29,7 +29,7 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,*ratesim,*robust,
   vector *dAiid[*antclust]; 
   int c,pers=0,i,j,k,l,s,it,count,sing,pmax,cluster[*antpers];
   double Nt[*antclust],dtime,time,dummy,ll,lle,llo;
-  double tau,hati,scale,sumscore=999,Nti[*antpers],theta0;
+  double tau,hati,scale,sumscore=999,Nti[*antpers],theta0=0;
   double
   thetaiidscale[*antclust],NH[*antclust],HeH[*antclust],H2eH[*antclust],Rtheta[*antclust],Hik[*antpers],Dthetanu=1,DDthetanu=1,nu=1; 
   long ipers[*Ntimes];
@@ -356,7 +356,7 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,*ratesim,*robust,
       invert(d2Utheta,d2UItheta); 
 
       if (*detail==1) { 
-	printf("====================Iteration %ld ==================== \n",it);
+	printf("====================Iteration %d ==================== \n",it);
 	printf("Estimate theta \n"); print_vec(vtheta1); 
 	printf("Score D l\n");  print_vec(vthetascore); 
 	printf("Information D^2 l\n"); print_mat(d2UItheta); 
@@ -410,7 +410,7 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,*ratesim,*robust,
 	}
 	extract_row(W4t[k],s,tmpv1); extract_row(W4t[k],s-1,xi); 
 	vec_subtr(tmpv1,xi,xi); Mv(Ftilde,xi,vtheta2); 
-	if (k==-1) printf(" s er %ld \n",s); 
+	if (k==-1) printf(" s er %d \n",s); 
 	if (k==-1) print_mat(Ftilde); 
 	vec_add(dAiid[k],vtheta2,dAiid[k]); 
       } /* s=1..Ntimes */ 

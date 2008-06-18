@@ -15,10 +15,10 @@ int *detail,*nx,*px,*antpers,*Nalltimes,*Ntimes,*ng,*pg,*status,*mof,*mw,*Nit,*r
   vector *VdB,*difX,*xi,*tmpv1,*tmpv2,*gamoff; 
   vector *dA,*rowX,*dN,*AIXWdN,*bhatt,*pbhat,*plamt;
   vector *S1,*korG,*pghat,*rowZ,*gam,*dgam,*ZHdN,*VZHdN,*IZHdN,*zi,*offsets;
-  int it,i,j,k,l,c,s,count,pers,pmax,coef[1],ps[1];
+  int it,i,j,k,l,c,s,count,pers=0,pmax,coef[1],ps[1];
   int stat,maxtime,ls[*Ntimes]; 
   double S0,sumscore,dptime,time,dummy,dtime,random,fabs(),sqrt();
-  double ahati,ghati,dMi,weights[*antpers];
+  double ghati,dMi,weights[*antpers];
   double times[*Ntimes],cumoff[(*Nalltimes)*(*px+1)];
   long idum;  idum=*rani; 
   double norm_rand(); 
@@ -181,7 +181,7 @@ int *detail,*nx,*px,*antpers,*Nalltimes,*Ntimes,*ng,*pg,*status,*mof,*mw,*Nit,*r
 
     if (stat==1) for (k=1;k<=*px;k++) VE(dA,k-1)=cu[k*(*Ntimes)+l]; else vec_zeros(dA); 
     if (*mof==1) 
-      for (k=1;k<=*px;k++) VE(dA,k-1)*VE(dA,k-1)-cumoff[k*(*Nalltimes)+s];
+      for (k=1;k<=*px;k++) VE(dA,k-1)=VE(dA,k-1)-cumoff[k*(*Nalltimes)+s];
 
     if (*mof==1) 
       for (k=1;k<=*px;k++) cumoff[k*(*Ntimes)+s]=cumoff[k*(*Ntimes)+s-1]+

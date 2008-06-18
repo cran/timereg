@@ -18,9 +18,9 @@ int *sim,*antsim,*retur,*nxval,*nx,*px,*na,*pa,*antpers,*Ntimes,*mw,*rani,*statu
   matrix *cumBt[*antpers];
   vector *cumhatB[*antpers],*cumB[*antpers],*cum;
 
-  int pers,i,j,k,s,c,count,sing=1,imin[1],pmax,nmax,risk;
+  int pers=0,i,j,k,s,c,count,sing=1,imin[1],pmax,nmax,risk;
   int coef[1],ps[1],degree[1]; 
-  double time,dummy,zpers,dif,dtime,YoneN,kia;
+  double time,dummy,zpers=0,dif,dtime,YoneN,kia;
   FILE *fp; int VERBOSE=0;
   double tukey(); 
   double vcudif[(*Ntimes)*(*px+1)];
@@ -201,7 +201,7 @@ int *naval,*nxval,*nx,*px,*na,*pa,*ng,*pg,*antpers,*Ntimes,*mw,
   vector *tmpv,*tmpv1,*tmpv2,*tmpv3,*tmpv4,*zi,*xi,*ZHdp,*IZHdp,*IZHdN,*ZHdN;
   vector *korgamly,*korgam,*gamstart;
   vector *rowX,*rowZ,*difX,*dgamef,*gammsd,*ai; 
-  int i,j,k,s,c,count,sing,imin[1],pmax,nmax,pers;
+  int i,j,k,s,c,count,sing,imin[1],pmax,nmax,pers=0;
   int robust=1,ipers[*Ntimes]; 
   double time,dummy,dtime,zpers,risk,YoneN,dif,dif2,ctime;
   double tau,C[(*pg)*(*pg)];

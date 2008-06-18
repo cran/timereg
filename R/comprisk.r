@@ -1,4 +1,4 @@
-comp.risk<-function(formula,data=sys.parent(),cause,times,Nit=50,
+comp.risk<-function(formula,data=sys.parent(),cause,times=NULL,Nit=50,
 clusters=NULL,gamma=0,n.sim=500,weighted=0,model="additive",
 causeS=1,cens.code=0,detail=0,interval=0.01,resample.iid=1,
 cens.model="KM",time.pow=0){
@@ -52,8 +52,9 @@ cens.model="KM",time.pow=0){
     antclust <- length(unique(clusters))
   }
     
-  
   pxz <-px+pz;
+
+  if (is.null(times)) { times<-sort(unique(time2[cause==causeS])); times<-times[-c(1:5)];}
 
   n<-nrow(X); ntimes<-length(times);
   if (npar==TRUE) {Z<-matrix(0,n,1); pg<-1; fixed<-0;} else {fixed<-1;pg<-pz;} 
@@ -66,15 +67,23 @@ cens.model="KM",time.pow=0){
     Gctimes<-Cpred(Gfit,times)[,2];
   } else if (cens.model=="cox") { 
     if (npar==TRUE) XZ<-X[,-1] else XZ<-cbind(X,Z)[,-1];
-    ud.cens<-cox.aalen(Surv(time2,cause==censcode)~prop(XZ),n.sim=0,robust=0);
+    ud.cens<-cox.aalen(Surv(time2,cause==cens.code)~prop(XZ),n.sim=0,robust=0);
     Gcx<-Cpred(ud.cens$cum,time2)[,2];
     RR<-exp(XZ %*% ud.cens$gamma)
     Gcx<-exp(-Gcx*RR)
     Gfit<-rbind(c(0,1),cbind(time2,Gcx)); 
     Gctimes<-Cpred(Gfit,times)[,2];
+    } else if (cens.model=="aalen") { 
+    if (npar==TRUE) XZ<-X[,-1] else XZ<-cbind(X,Z)[,-1];
+    ud.cens<-aalen(Surv(time2,cause==cens.code)~XZ,n.sim=0,robust=0);
+    Gcx<-Cpred(ud.cens$cum,time2)[,-1];
+    Gcx<-exp(-XZ %*% Gcx); Gcx[,Gcx>1]<-1; Gcx[,Gcx<1]<-0
+print(Gcx); 
+    Gfit<-rbind(c(0,1),cbind(time2,Gcx)); 
+    Gctimes<-Cpred(Gfit,times)[,2];
     } else { stop('Unknown censoring model') }
 
-  times<-times[Gctimes>interval]; ntimes<-length(times); 
+   times<-times[Gctimes>interval]; ntimes<-length(times); 
 
   if (resample.iid == 1) {
     biid <- matrix(0, ntimes, n * px);
@@ -126,7 +135,7 @@ cens.model="KM",time.pow=0){
     if (fixed==1) gamiid<-matrix(out[[35]],antclust,pg) else gamiid<-NULL; 
     B.iid<-list();
     for (i in (0:(antclust-1))*px) {
-      B.iid[[i/px+1]]<-as.matrix(biid[,i+(1:px)]);
+      B.iid[[i/px+1]]<-matrix(biid[,i+(1:px)],ncol=px);
       colnames(B.iid[[i/px+1]])<-covnamesX; }
     if (fixed==1) colnames(gamiid)<-covnamesZ
   } else B.iid<-gamiid<-NULL;

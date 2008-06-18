@@ -167,7 +167,6 @@ function (object,digits = 3,...)
   if (is.null(cox.aalen.object$gamma)==TRUE) stop(" No regression terms"); 
   if (is.null(cox.aalen.object$prop.odds)==TRUE) p.o<-FALSE else p.o<-TRUE
     
-                                        # We print information about object:  
   if (p.o==FALSE) cat("Cox-Aalen Model \n\n") else cat("Proportional Odds model \n\n")
 
   if (sum(abs(cox.aalen.object$score)>0.000001)) 

@@ -22,15 +22,15 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*sim,*antsim,*rani,*id,*status
   vector *dLamt[*antpers]; 
   vector *dA,*VdA,*dN,*MdA,*delta,*zav,*lamt,*plamt,*dlamt;
   vector *xi,*zi,*U,*beta,*xtilde; 
-  vector *Gbeta,*zcol,*one,*difzzav; // unused vars:*sxtilde
+  vector *Gbeta,*zcol,*one,*difzzav; 
   vector *offset,*weight,*ZXdA[*Ntimes],*varUthat[*Ntimes],*Uprofile;
   vector *Lplamt,*ta,*ahatt,*risk; 
   vector *tmpv1,*tmpv2,*rowX,*rowZ,*difX,*VdB,*lht; 
   vector *W2[*antpers],*W3[*antpers],*reszpbeta,*res1dim,*dAt[*Ntimes]; 
-  int t,c,robust=1,pers,i,j,k,l,s,it,count,sing,pmax; // unused vars: nmax,imin[1],fv,it1
-  double dtime,time,dummy,ll,lle,llo; // unused vars: zpers
-  double S0,tau,hati,random,sumscore; // unused vars: scale
-  long idum,ipers[*Ntimes],nap; // unused vars: obsi=0
+  int t,c,robust=1,pers=0,i,j,k,l,s,it,count,sing,pmax; 
+  double dtime,time=0,dummy,ll,lle,llo; 
+  double S0,tau,hati=0,random,sumscore; 
+  long idum,ipers[*Ntimes],nap; 
   double norm_rand(); 
   void GetRNGstate(),PutRNGstate();  
 

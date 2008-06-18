@@ -27,10 +27,10 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,
   vector *ahatt,*phit[*Ntimes],*dbetaNH,*dANH; 
   vector *tmpv1,*tmpv2,*rowX,*rowZ,*difX,*VdB,*atrisk[*antpers]; 
   vector *W2[*antclust],*W3[*antclust],*reszpbeta,*res1dim,*dAt[*Ntimes]; 
-  int c,pers,i,j,k,s,it,count,sing,pmax,cluster[*antpers];
+  int c,pers=0,i,j,k,s,it,count,sing,pmax,cluster[*antpers];
   double Nt[*antclust],dtime,time,dummy,ll,lle,llo;
-  double tau,hati,scale,sumscore,d2Utheta,Nti[*antpers];
-  double HeHi[*antpers],H2eHi[*antpers],Rthetai[*antpers],NH[*antclust],HeH[*antclust],H2eH[*antclust],Rtheta[*antclust],dtheta,Hik[*antpers],thetaiid[*antclust],Dthetanu,DDthetanu,nu,dAiid[*antclust]; 
+  double tau,hati,scale,sumscore,d2Utheta=0,Nti[*antpers];
+  double HeHi[*antpers],H2eHi[*antpers],Rthetai[*antpers],NH[*antclust],HeH[*antclust],H2eH[*antclust],Rtheta[*antclust],dtheta,Hik[*antpers],thetaiid[*antclust],Dthetanu=0,DDthetanu=0,nu,dAiid[*antclust]; 
   long ipers[*Ntimes];
 
 
@@ -380,7 +380,7 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,
 	}
 	extract_row(W4t[k],s,tmpv1); extract_row(W4t[k],s-1,xi); 
 	vec_subtr(tmpv1,xi,xi); vec_star(rowX,xi,tmpv1); 
-	if (k==-1) printf("  s er %ld \n",s); 
+	if (k==-1) printf("  s er %d \n",s); 
 	if (k==-1) print_vec(rowX); 
 	dAiid[k]=dAiid[k]+vec_sum(tmpv1); 
       } /* s=1..Ntimes */ 

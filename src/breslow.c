@@ -11,8 +11,8 @@ int
   vector *diag,*dB,*dN,*VdB,*AIXdN,*AIXlamt,*ta,*bhatt,*pbhat,*plamt,*avx,*lrisk;
   vector *ssrow2,*ssrow,*vtmp,*xi,*rowX,*cumi[*antpers],*difX,*cumBLi[*antpers],*Btau,*Base[*antpers],*score; 
   matrix *cumBL[*antpers],*cumB[*antpers],*BLsubbetaLam[*antpers],*varBL, *Delta2,*Delta,*tmpM1,*tmpM2; 
-  int supsup=0,itt,i,j,k,s,c,count,pers,imin[1],coef[1],ps[1];// unused var:l,sing
-  double time2,rr,time,time1,dummy,dtime,S0,lam0t,sdBt,tau,random;
+  int supsup=0,itt,i,j,k,s,c,count,pers=0,imin[1],coef[1],ps[1];// unused var:l,sing
+  double time2,rr,time=0,time1,dummy,dtime,S0,lam0t,sdBt,tau,random;
   double Basei[*antpers],rvarbase,vcudif[(*Ntimes)*(*p+2)];
   double sbhat[(*Ntimes)*(*p+2)];
   void smoothB(),smooth2B(),comptest(); 
@@ -466,7 +466,7 @@ int *nx,*px,*antpers,*Ntimes,*nb,*ng,*pg,*it,*degree,*sim,*antsim,
   vector *zi,*z1,*lrisk,*avx,*avz,*rowG,*xi,*rowX,*rowZ,*tmpv2;
   vector *cumi[*antpers],*W2[*antpers],*W3[*antpers];
   vector *Base[*antpers]; 
-  int itt,i,j,k,l,s,c,count,sing,imin[1],pers,pmax,coef[1],ps[1];
+  int itt,i,j,k,s,c,count,imin[1],pers=0,pmax,coef[1],ps[1];
   double time,dummy,dtime,lam0t,S0,Basei[*antpers],
     vcudif[(*Ntimes)*(*px+2)],dum2,rvarbase; 
   void comptest(),smoothB();

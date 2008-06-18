@@ -47,6 +47,7 @@
 \alias{coef.two.stage}
 \alias{coefBase}
 \alias{des.aalen}
+\alias{surv.lars.gcv}
 \alias{timetest}
 \alias{plot.comprisk} 
 \alias{plot.predictAalen} 

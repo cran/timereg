@@ -85,7 +85,7 @@ int *nx,*p,*antpers,*Ntimes,*sim,*retur,*rani,*antsim,*status,*id,*covariance,
   matrix *cumAt[*antclust];
   vector  *diag,*dB,*dN,*VdB,*xi,*rowX,*rowcum,*difX,*ta,*vtmp;
   vector *cumhatA[*antclust],*cumA[*antclust],*cum;
-  int i,j,k,l,s,c,count,pers,coef[1],ps[1],degree[1];
+  int i,j,k,l,s,c,count,pers=0,coef[1],ps[1],degree[1];
   int var1,var2,nb[1],cluster[*antpers]; // unused var: nap
   double time,ahati,band[1],bhat[(*Ntimes)*(*p+1)],dt,tau;
   double vcudif[(*Ntimes)*(*p+1)];
@@ -246,7 +246,7 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*
   vector *VdB,*difX,*xi,*tmpv1,*tmpv2; 
   vector *dA,*rowX,*dN,*AIXWdN,*ta,*bhatt,*pbhat,*plamt;
   vector *korG,*pghat,*rowZ,*gam,*dgam,*ZHdN,*IZHdN,*zi;
-  int i,j,k,l,c,s,count,pers,pmax,coef[1],ps[1],cluster[*antpers];
+  int i,j,k,l,c,s,count,pers=0,pmax,coef[1],ps[1],cluster[*antpers];
   int stat,maxtime,ls[*Ntimes]; 
   double time,dtime,dtime1,fabs(),sqrt();
   double ahati,ghati,hati,tau,dMi;

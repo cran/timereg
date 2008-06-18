@@ -13,11 +13,10 @@ int *n,*px,*Ntimes,*Nit,*cause,*delta,*sim,*antsim,*rani,*weighted,
 {
   matrix *X,*cX,*A,*AI,*cumAt[*antclust],*VAR,*Z;
   vector *VdB,*risk,*SCORE,*W,*Y,*Gc,*DELTA,*CAUSE,*bhat,*pbhat,*beta,*xi,
-    *rr,*rowX,*difbeta,*qs,*bhatub,*betaub,*dcovs,*pcovs,*zi,*rowZ,*zgam; // unused var:y
+    *rr,*rowX,*difbeta,*qs,*bhatub,*betaub,*dcovs,*pcovs,*zi,*rowZ,*zgam; 
   vector *cumhatA[*antclust],*cumA[*antclust],*bet1,*gam,*dp,*dp1,*dp2; 
-  int ps,sing,sc,c,i,j,k,l,s,it,count,cpers;// unused var:ptot
-  double time,sumscore,totrisk,
-    vcudif[(*Ntimes)*(*px+1)],zgamt; // unused var:xg,dummy,ppx,rrx,varppx,xb,xbub
+  int ps,sing,sc,c,i,j,k,l,s,it;
+  double time,sumscore,totrisk,vcudif[(*Ntimes)*(*px+1)],zgamt; 
   long idum;
   float gasdev(),expdev(),ran1();
   void comptestfunc(),itfitsemi(); 
@@ -133,7 +132,7 @@ int *n,*px,*Ntimes,*Nit,*cause,*delta,*sim,*antsim,*rani,*weighted,
        for (j=0;j<*antclust;j++) { 
        vec_zeros(cumA[j]); vec_zeros(cumhatA[j]); 
           for (i=0;i<*n;i++) if (clusters[i]==j)  {
-	if (s<-1) printf("%ld  %ld %ld \n",s,i,j);
+	if (s<-1) printf("%d  %d %d \n",s,i,j);
 	extract_row(cX,i,dp); scl_vec_mult(VE(Y,i),dp,dp); 
 	vec_add(dp,cumA[j],cumA[j]); 
 
@@ -192,19 +191,19 @@ int *antpers,*px,*Ntimes,*Nit,*cause,*delta,*sim,*antsim,*rani,*weighted,
   matrix *S,*dCGam,*CGam,*ICGam,*VarKorG,*dC,*XZ,*ZZ,*ZZI,*XZAI; 
   matrix *Ct,*C[*Ntimes],*Acorb[*Ntimes],*tmpM1,*tmpM2,*tmpM3,*tmpM4; 
   matrix *Vargam,*dVargam,*M1M2[*Ntimes],*Delta,*dM1M2,*M1M2t,*RobVargam;
-  matrix *W3t[*antclust],*W4t[*antclust]; // ,*AIxit[*antpers];
+  matrix *W3t[*antclust],*W4t[*antclust];
   vector *W2[*antclust],*W3[*antclust];
   vector *diag,*dB,*dN,*VdB,*AIXdN,*AIXlamt,*ta,*bhatt,*pbhat,*plamt;
   vector *korG,*pghat,*rowG,*gam,*dgam,*ZGdN,*IZGdN,*ZGlamt,*IZGlamt;
   vector *covsx,*covsz,*qs,*Y,*rr,*bhatub,*xi,*rowX,*rowZ,*difX,*zi,*z1,
     *tmpv1,*tmpv2,*lrisk;
   int nb[1],itt,i,j,k,l,s,c,pmax,coef[1],
-    totrisk,ps[1],n[1],nx[1],retur[1];// unused var:imin[1],pers,sing,count
-  double time,dummy,dtime,sdBt,timem;// unused var:sdBt,tau,ahati,ghati,hati,random
+    totrisk,ps[1],n[1],nx[1],retur[1];
+  double time,dummy,dtime,timem;
   double vcudif[(*Ntimes)*(*px+1)],inc[(*Ntimes)*(*px+1)];
-  double lrr,fabs();// unused var:sumscore,rrx,ppx,varppx,xb,xbub
+  double lrr,fabs();
   double pow(); 
-  long robust[1],idum,fixedcov; // unused var:ipers[*Ntimes]
+  long robust[1],idum,fixedcov; 
   void comptestfunc();
   float gasdev(),expdev(),ran1();
   idum=*rani; robust[0]=1; fixedcov=1; 
@@ -331,7 +330,7 @@ int *antpers,*px,*Ntimes,*Nit,*cause,*delta,*sim,*antsim,*rani,*weighted,
       if (isnan(vec_sum(dgam))) {printf("missing values in dgam %ld \n",(long int) s);
 	vec_zeros(gam); }
 
-      dummy=0; for (k=1;k<=*pg;k++)  dummy=dummy+fabs(VE(dgam,k)); 
+      dummy=0; for (k=0;k<*pg;k++)  dummy=dummy+fabs(VE(dgam,k)); 
 
       for (s=0;s<*Ntimes;s++) {
 	vM(Acorb[s],dgam,korG); 
@@ -341,11 +340,11 @@ int *antpers,*px,*Ntimes,*Nit,*cause,*delta,*sim,*antsim,*rani,*weighted,
 	  dummy=dummy+fabs(inc[k*(*Ntimes)+s]-VE(korG,k-1)); 
 	  /* printf(" %lf ",est[k*(*Ntimes)+s]); printf(" \n");*/ }
       } /* s=1,...Ntimes */
-      if (dummy<0.000001 & itt<*Nit-2) itt=*Nit-2; 
+      if (dummy<0.000001 && itt<*Nit-2) itt=*Nit-2; 
 
       if (*detail==1) { 
-	printf(" iteration %ld %ld \n",(long int) itt,(long int) *Nit); 
-	printf("Total score %lf \n",(long int) dummy); 
+	printf(" iteration %d %d \n",itt,*Nit); 
+	printf("Total score %lf \n",dummy); 
 	printf(" parmaetre \n"); print_vec(gam); 
 	printf(" aendring \n"); print_vec(dgam); }
 

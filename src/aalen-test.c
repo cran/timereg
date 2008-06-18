@@ -8,13 +8,13 @@ int *nx,*p,*antpers,*Ntimes,*sim,*retur,*rani,*antsim,*status,*id,*covariance,
     *weighted,*robust,*resample,*clusters,*antclust,*mw,*mof;
 {
   matrix *WX,*ldesignX,*A,*AI,*Vcov,*cumAt[*antclust];
-  vector *diag,*dB,*dN,*VdB,*xi,*rowX,*rowcum,*difX,*vtmp,*cum,*offsets; // unused var:ta
+  vector *diag,*dB,*dN,*VdB,*xi,*rowX,*rowcum,*difX,*vtmp,*cum,*offsets; 
   vector *cumhatA[*antclust],*cumA[*antclust];
-  int i,j,k,l,s,c,count,pers,coef[1],ps[1],degree[1]; // unused var:VERBOSE=0,sing,m,obsi=0
-  int stat,nap,cluster[*antpers];// unused var:persid,imin[1]
-  double time,ahati,dt,dtime;// unused var:dummy,fsing
-  double tau,vcudif[(*Ntimes)*(*p+1)],weights[*antpers]; // unused var:sdBt,G[*antclust]
-  double fabs(),sqrt();// unused var: FILE *fp; random
+  int i,j,k,l,s,c,count,pers=0,coef[1],ps[1],degree[1]; 
+  int stat,nap,cluster[*antpers];
+  double time,ahati,dt,dtime;
+  double tau,vcudif[(*Ntimes)*(*p+1)],weights[*antpers]; 
+  double fabs(),sqrt();
   void comptest(); 
   long idum; idum=*rani; 
 
@@ -72,10 +72,7 @@ int *nx,*p,*antpers,*Ntimes,*sim,*retur,*rani,*antsim,*status,*id,*covariance,
 /*
       printf(" %lf %lf  \n",time,dtime); 
       printf(" %lf \n",vec_sum(offsets)); 
-      print_mat(AI); 
-      print_vec(rowX); 
-      print_vec(xi); 
-      print_vec(dB);  
+      print_mat(AI); print_vec(rowX); print_vec(xi); print_vec(dB);  
       print_vec(diag); 
       for (k=1;k<*p+1;k++) { printf(" %lf  ",cu[k*(*Ntimes)+s]);  } 
       printf(" \n "); 
@@ -142,13 +139,13 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*
   matrix *C[*Nalltimes],*dM1M2,*M1M2t,*RobVargam,*tmpM2,*tmpM3,*tmpM4;
   matrix *W3t[*antclust],*W4t[*antclust],*AIxit[*antpers],*Scoret[*antclust]; 
   vector *W2[*antclust],*W3[*antclust]; 
-  vector *dB,*VdB,*difX,*xi,*tmpv1,*tmpv2,*gamoff;// unused var:tmpv3,tmpv4
-  vector *dAoff,*dA,*rowX,*dN,*AIXWdN,*bhatt,*pbhat,*plamt; // unused var:ta
+  vector *dB,*VdB,*difX,*xi,*tmpv1,*tmpv2,*gamoff;
+  vector *dAoff,*dA,*rowX,*dN,*AIXWdN,*bhatt,*pbhat,*plamt; 
   vector *korG,*pghat,*rowZ,*gam,*dgam,*ZHdN,*VZHdN,*IZHdN,*zi,*offsets;
-  int m,i,j,k,l,c,s,count,pers,pmax,coef[1],ps[1],cluster[*antpers];// unused var:imin[1],sing
+  int m,i,j,k,l,c,s,count,pers=0,pmax,coef[1],ps[1],cluster[*antpers];
   int stat,maxtime,ls[*Ntimes]; 
-  double dptime,ddtime,time,dtime,random,fabs(),sqrt();// unused var:w,dtime1,dummy
-  double ahati,ghati,hati,tau,dMi,weights[*antpers];// unused var:sdBt
+  double dptime,ddtime,time,dtime,random,fabs(),sqrt();
+  double ahati,ghati,hati,tau,dMi,weights[*antpers];
   double vcudif[(*Ntimes)*(*px+1)],times[*Ntimes],cumoff[(*Nalltimes)*(*px+1)],
          cuL[(*Nalltimes)*(*px+1)];
   void comptest(); 
@@ -350,9 +347,11 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*
 	      if (i==pers && stat==1) vec_add(rowX,W3[j],W3[j]); 
 	      scl_vec_mult(hati,rowX,rowX); vec_subtr(W3[j],rowX,W3[j]); 
 
-	      if (*retur==1) if (stat==0)
-		cumAit[i*(*Ntimes)+l+1]=cumAit[i*(*Ntimes)+l+1]+1*(i==pers)*stat-hati;
-	      else cumAit[i*(*Ntimes)+l]=cumAit[i*(*Ntimes)+l]+1*(i==pers)*stat-hati;
+	      if (*retur==1) {
+	      if (stat==0) 
+     cumAit[i*(*Ntimes)+l+1]=cumAit[i*(*Ntimes)+l+1]+1*(i==pers)*stat-hati;
+    else cumAit[i*(*Ntimes)+l]=cumAit[i*(*Ntimes)+l]+1*(i==pers)*stat-hati;
+	      }
 	    }  /* if if (cluster[i]==j)  */
 	    if (*gamfix==1) vec_zeros(W2[j]); 
 	  if (stat==1) replace_row(W3t[j],l,W3[j]);  

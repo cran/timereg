@@ -24,8 +24,8 @@ int*covariance,*nx,*px,*ng,*pg,*antpers,*Ntimes,*mw,*Nit,*detail,*mof,*sim,*ants
   vector *ta,*ahatt; 
   vector *tmpv1,*tmpv2,*rowX,*rowZ,*difX,*VdB; 
   vector *W2[*antclust],*W3[*antclust],*reszpbeta,*res1dim,*dAt[*Ntimes]; //unused var:*W2i[*antpers]
-  int c,pers,i,j,k,l,s,it,count,sing,imin[1],pmax,cluster[*antpers];// unused var:nmax
-  double dtime,time,dummy,ll,lle,llo;// unused var:zpers
+  int c,pers=0,i,j,k,l,s,it,count,sing,imin[1],pmax,cluster[*antpers];// unused var:nmax
+  double dtime,time=0,dummy,ll,lle,llo;// unused var:zpers
   double tau,hati,random,scale,sumscore;
   long idum,ipers[*Ntimes],nap;//obsi=0
   double norm_rand();

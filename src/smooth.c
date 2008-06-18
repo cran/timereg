@@ -12,7 +12,7 @@ double dtukey(x,b) double x,b;
   return((-3.141592/b*b)*(sin(3.141592 *(x/b))/2)*(fabs(x/b) < 1));
 }
 
-int smoothB(designX,nx,p,bhat,nb,b,degree,coef)
+void smoothB(designX,nx,p,bhat,nb,b,degree,coef)
 double *designX,*bhat,*b;
 int *coef,*nx,*p,*degree,*nb;
 {
@@ -79,7 +79,7 @@ int *coef,*nx,*p,*degree,*nb;
   free_vec(sY); free_vec(Y); free_vec(XWy); free_vec(RES); 
 }
 
-int localTimeReg(designX,nx,p,times,response,bhat,nb,b,lin,dens)
+void localTimeReg(designX,nx,p,times,response,bhat,nb,b,lin,dens)
 double *designX,*bhat,*b,*times,*response,*dens;
 int *nx,*p,*nb,*lin;
 {

@@ -22,9 +22,9 @@ int *nx,*px,*antpers,*Ntimes,*Nit,*detail,*sim,*antsim,*rani,*id,*status,*weight
   vector *ahatt,*risk,*tmpv1,*tmpv2,*rowX,*rowZ,*difX,*VdB; 
   vector *W2[*antpers],*W3[*antpers],*reszpbeta,*res1dim,*dAt[*Ntimes]; 
   vector *dLamt[*antpers];
-  int pg[1],c,robust=1,pers,i,j,k,l,s,t,it,count,sing;
+  int pg[1],c,robust=1,pers=0,i,j,k,l,s,t,it,count,sing;
   double S0p,S0star,dtime,time,dummy,ll;
-  double S0cox,S0,tau,hati,random,scale,sumscore;
+  double S0cox,S0,tau,random,scale,sumscore;
   long idum,ipers[*Ntimes],nap;
   double norm_rand();
   void GetRNGstate(),PutRNGstate();
@@ -110,7 +110,7 @@ int *nx,*px,*antpers,*Ntimes,*Nit,*detail,*sim,*antsim,*rani,*id,*status,*weight
 	      replace_row(dotwitowit[j],s,xi); else replace_row(dotwitowit[j],s,dA); 
   
 	    scl_vec_mult(VE(plamt,j),dA,tmpv1); vec_add(tmpv1,dS0,dS0); 
-	    if (s<0 & j<5 ) {printf(" %d %d \n",s,j); print_vec(tmpv1); }
+	    if (s<0 && j<5 ) {printf(" %d %d \n",s,j); print_vec(tmpv1); }
 
 	    if (*profile==0) scl_vec_mult(-VE(dlamt,j),xi,dA); 
 	    else scl_vec_mult(-VE(dlamt,j),dA,dA); 
@@ -302,7 +302,7 @@ int *nx,*px,*antpers,*Ntimes,*Nit,*detail,*sim,*antsim,*rani,*id,*status,*weight
 
 	vec_subtr(W2[i],xi,W2[i]); 
 	if (i==ipers[s]) vec_add(rowX,W2[i],W2[i]);
-	if (*ratesim==1) {scl_vec_mult(hati,tmpv2,rowZ); vec_subtr(W2[i],rowZ,W2[i]);}
+	if (*ratesim==1) {scl_vec_mult(VE(dLamt[i],s),tmpv2,rowZ); vec_subtr(W2[i],rowZ,W2[i]);}
 	replace_row(W2t[i],s,W2[i]); 
 
 	VE(rowZ,0)=exp(-VE(lht,s))/VE(S0t,s); 
@@ -311,7 +311,8 @@ int *nx,*px,*antpers,*Ntimes,*Nit,*detail,*sim,*antsim,*rani,*id,*status,*weight
 	vec_subtr(W3[i],zi,W3[i]); 
 	if (i==ipers[s]) vec_add(rowZ,W3[i],W3[i]);
 
-	if (*ratesim==1) {scl_vec_mult(hati,rowX,rowX); vec_subtr(W3[i],rowX,W3[i]);}
+	if (*ratesim==1) {scl_vec_mult(VE(dLamt[i],s),rowX,rowX); 
+		          vec_subtr(W3[i],rowX,W3[i]);}
 	replace_row(W3t[i],s,W3[i]);  
 
 	if (*retur==1)  dhatMit[i*(*Ntimes)+s]=1*(i==pers)-VE(dLamt[i],s);
@@ -422,7 +423,7 @@ int *nx,*px,*antpers,*Ntimes,*Nit,*detail,*sim,*antsim,*rani,*id,*status,*weight
 
       if (*weighted>=1) {  /* sup beregnes i R */ 
 	if ((s>*weighted) && (s<*Ntimes-*weighted)) {extract_row(Utt,s,rowX);
-	  for (i=0;i<*px;i++) VE(rowX,i)*VE(rowX,i)/sqrt(VE(varUthat[s],i));
+	  for (i=0;i<*px;i++) VE(rowX,i)=VE(rowX,i)/sqrt(VE(varUthat[s],i));
 	  replace_row(Utt,s,rowX); /* scaled score process */ 
 	}
 	else {vec_zeros(rowX); replace_row(Utt,s,rowX);}
