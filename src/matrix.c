@@ -1,0 +1,962 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <math.h>
+#include <R_ext/BLAS.h>
+#include <R_ext/Lapack.h>
+#include <R_ext/Linpack.h>
+#include <R_ext/Applic.h>
+#include <R_ext/Random.h>
+#include "matrix.h"
+
+/* void malloc_mat(int *nrow, int *ncol, matrix *M){ */
+
+/*   malloc_safe(M,sizeof(matrix *)); */
+/*   M->nr = *nrow; */
+/*   M->nc = *ncol; */
+/*   malloc_safe(M->entries,*nrow * *ncol * sizeof(double)); */
+
+/* } */
+
+void free_mat(matrix *M){
+
+  free(M->entries);
+  free(M);
+
+}
+
+/* void malloc_vec(int *length, vector *V){ */
+
+/*   malloc_safe(V,sizeof(vector *)); */
+/*   V->length = *length; */
+/*   malloc_safe(V->entries,*length * sizeof(double)); */
+
+/* } */
+
+void free_vec(vector *V){
+
+  free(V->entries);
+  free(V);
+
+}
+
+int nrow_matrix(matrix *M){
+
+  return M->nr;
+
+}
+
+int ncol_matrix(matrix *M){
+
+  return M->nc;
+
+}
+
+int length_vector(vector *v){
+
+  return v->length;
+
+}
+
+void print_a_matrix(matrix *M){
+
+  int j, k;
+  for(j=0; j < nrow_matrix(M); j++){
+    for(k = 0; k < ncol_matrix(M); k++){
+      printf("%+7.7g ", ME(M,j,k));
+    }
+    printf("\n");
+  }  
+
+}
+
+/* DPOTRI - compute the inverse of a real symmetric positive */
+/* definite matrix A using the Cholesky factorization A = U**T*U */
+/* or A = L*L**T computed by DPOTRF */
+extern void F77_SUB(dpotri)(const char* uplo, const int* n,
+		 double* a, const int* lda, int* info);
+
+
+/* DPOTRF - compute the Cholesky factorization of a real */
+/* symmetric positive definite matrix A */
+extern void F77_SUB(dpotrf)(const char* uplo, const int* n,
+		 double* a, const int* lda, int* info);
+
+
+extern void F77_SUB(dgemm)(const char *transa, const char *transb, const int *m,
+		const int *n, const int *k, const double *alpha,
+		const double *a, const int *lda,
+		const double *b, const int *ldb,
+		const double *beta, double *c, const int *ldc);
+
+/* DGEMV - perform one of the matrix-vector operations */
+/* y := alpha*A*x + beta*y, or y := alpha*A'*x + beta*y,  */
+
+extern void F77_SUB(dgemv)(const char *trans, const int *m, const int *n,
+		const double *alpha, const double *a, const int *lda,
+		const double *x, const int *incx, const double *beta,
+		double *y, const int *incy);
+
+
+/* DGETRF - compute an LU factorization of a general M-by-N */
+/* matrix A using partial pivoting with row interchanges */
+extern void
+F77_SUB(dgetrf)(const int* m, const int* n, double* a, const int* lda,
+                 int* ipiv, int* info);
+
+
+/* DGETRI - compute the inverse of a matrix using the LU */
+/* factorization computed by DGETRF */
+extern void
+F77_SUB(dgetri)(const int* n, double* a, const int* lda,
+                 int* ipiv, double* work, const int* lwork, int* info);
+
+// Performs A := t(M) %*% M, where A is an nRowM x nColM matrix, 
+// and A is an nColM x nColM matrix
+void MtM(matrix *M, matrix *A){
+
+  char transa = 't';
+  char transb = 'n';
+  double alpha = 1.0;
+  double beta = 0.0;
+  int m = ncol_matrix(M);
+  int n = ncol_matrix(M);
+  int k = nrow_matrix(M);
+  int lda = nrow_matrix(M);
+  int ldb = nrow_matrix(M);
+  int ldc = ncol_matrix(M);
+
+  if( !(nrow_matrix(A) == ncol_matrix(M) && 
+	ncol_matrix(A) == ncol_matrix(M)) ){
+    oops("Error: dimensions in MtM\n");
+  }
+
+  // the results of 1.0 * t(M) %*% M + 0.0 * c is stored in c
+  F77_CALL(dgemm)(&transa, &transb, &m, &n, &k, &alpha, M->entries, &lda,
+		M->entries, &ldb, &beta, A->entries, &ldc);
+  
+}
+
+// Does AI := inverse(A), where A is symmetric positive definite, of order *n
+void invertSPD(matrix *A, matrix *AI){
+
+  char uplo = 'U';
+  int i, j;
+  int n = nrow_matrix(A);
+  int lda = n; // matrix A has dimensions *n x *n
+  int info = -999;
+  double rcond;
+  int pivot[n];
+  double z[n];
+  double qraux[n];
+  double work[2*n];
+  int rank = 0;
+  int job;
+  double tol = 1.0e-07;
+
+  if( !(nrow_matrix(A)  == ncol_matrix(A) && 
+	nrow_matrix(AI) == ncol_matrix(AI) &&
+	nrow_matrix(A)  == ncol_matrix(AI)) ){
+    oops("Error: dimensions in invertSPD\n");
+  }
+  
+  // First copy the matrix A into the matrix AI
+  for(i = 0; i < n; i++){
+    for(j = 0; j < n; j++){
+      ME(AI,i,j) = ME(A,i,j);
+    }
+  }
+    
+  F77_CALL(dqrdc2)(AI->entries, &n, &n, &n, &tol, &rank, qraux, pivot, work);
+
+  for(i = 0; i < n; i++){
+    for(j = 0; j < i; j++){
+      ME(AI,j,i) = 0.0;
+    }
+  }
+
+  job = 1; // Indicates that AI is upper triangular
+  rcond = 999.0;
+  F77_CALL(dtrco)(AI->entries, &n, &n, &rcond, z, &job);
+    
+  if(rcond < tol){
+    printf("Error in invertSPD: estimated condition number = %7.7e\n",1/rcond); 
+    
+    for(i = 0; i < n; i++){
+      for(j = 0; j < n; j++){
+	ME(AI,i,j) = 0.0;
+      }
+    }
+  } else {
+
+    for(i = 0; i < n; i++){
+      pivot[i] = i+1;
+      for(j = 0; j < n; j++){
+	ME(AI,i,j) = ME(A,i,j);
+      }
+    }
+
+    // First find the Cholesky factorization of A,
+    // stored as an upper triangular matrix
+    F77_CALL(dpotrf)(&uplo, &n, AI->entries, &lda, &info);
+
+    if(info < 0){
+      printf("Error in invertSPD: arg %d of DPOTRF\n",-info);
+    } else if(info > 0){
+      printf("Error in invertSPD: matrix does not appear to be SPD\n");
+    } 
+       
+    // then use this factorization to compute the inverse of A
+    F77_CALL(dpotri)(&uplo, &n, AI->entries, &lda, &info);
+
+    if(info != 0){
+      printf("Error in invertSPD: DPOTRI returned info = %d \n",info);
+    }
+
+    // Lastly turn the vector a into the matrix AI
+    // Take only the upper triangular portion, since this 
+    // is the relevant part returned by dpotrf
+    for(i = 0; i < n; i++){
+      for(j = 0; j < i; j++){
+	ME(AI,j,i) = ME(AI,i,j);
+      }
+    }
+  }
+}
+
+// v2 := M %*% v1
+// where M has dims (nrow x ncol)
+// and v1 has dims  (ncol x  1  )
+// amd v2 has dims  (nrow x  1  )
+void Mv(matrix *M, vector *v1, vector *v2){
+
+  char trans = 'n';
+  double alpha = 1.0;
+  double beta = 0.0;
+  int incx = 1;
+  int incy = 1;
+  int nrow = nrow_matrix(M);
+  int ncol = ncol_matrix(M);
+
+  if( !(length_vector(v1) == ncol && 
+	length_vector(v2) == nrow) ){
+    oops("Error: dimensions in Mv\n");
+  }
+  
+  F77_CALL(dgemv)(&trans, &nrow, &ncol, &alpha, M->entries, &nrow,
+		v1->entries, &incx, &beta, v2->entries, &incy);
+  
+}
+
+// v2 := v1 %*% matrix
+// where v1 has dims     (1    x nrow)
+// and matrix has dims   (nrow x ncol)
+// amd v2 has dims       (1    x ncol)
+void vM(matrix *M, vector *v1, vector *v2){
+
+  char trans = 't';
+  double alpha = 1.0;
+  double beta = 0.0;
+  int incx = 1;
+  int incy = 1;
+  int nrow = nrow_matrix(M);
+  int ncol = ncol_matrix(M);
+
+  if( !(length_vector(v1) == nrow && 
+	length_vector(v2) == ncol) ){
+    oops("Error: dimensions in vM\n");
+  }
+  
+  F77_CALL(dgemv)(&trans, &nrow, &ncol, &alpha, M->entries, &nrow,
+		v1->entries, &incx, &beta, v2->entries, &incy);
+}
+
+// v3 := v1 * v2, where * is the Hadamard (componentwise) product of the 
+// two vectors, which is the same as * does in R for vectors of the same length
+vector *vec_star(vector *v1, vector *v2, vector *v3){
+  
+  int i;
+  int n = length_vector(v1);
+
+  if( !(length_vector(v2) == n && 
+	length_vector(v3) == n) ){
+    oops("Error: dimensions in vec_star\n");
+  }
+
+  for(i = 0; i < n; i++){
+    VE(v3,i) = VE(v1,i)*VE(v2,i);
+  }
+
+  return(v3);
+  
+}
+
+
+// Sums the entries of a vector of length n
+double vec_sum(vector *v){
+  
+  double sum = 0.0;
+  int i;
+  int n = length_vector(v);
+
+  for(i = 0; i < n; i++){
+    sum += VE(v,i);
+  }
+  return sum;
+  
+}
+
+// Sums the entries of a vector of length n
+vector *vec_ones(vector *v){
+  
+  int i;
+  int n = length_vector(v);
+
+  for(i = 0; i < n; i++){
+    VE(v,i) = 1.0;
+  }
+
+  return(v);
+
+}
+
+// Returns the minimum of the entries of a vector of length n
+double vec_min(vector *v, int *imin){
+  
+  double Min = VE(v,0);
+  int i;
+  int n = length_vector(v);
+  *imin = 0;
+
+  for(i = 1; i < n; i++){
+    if(VE(v,i) < Min){
+      Min = VE(v,i);
+      *imin = i;
+    }
+  }
+  return Min;
+  
+}
+
+
+// set all entries of an *nrow x *ncol matrix M to zero
+void mat_zeros(matrix *M){
+  
+  int j, k;
+  
+  for(j=0; j < nrow_matrix(M); j++){
+    for(k = 0; k < ncol_matrix(M); k++){
+      ME(M,j,k) = 0.0;
+    }
+  }  
+  
+}
+
+// set all entries of vector v of length *length to zero
+void vec_zeros(vector *v){
+  
+  int j;
+  
+  for(j=0; j < length_vector(v); j++){
+    VE(v,j) = 0.0;
+  }
+  
+}
+
+// Simple I/O function that prints a matrix
+void print_mat(matrix *M){
+ 
+  int j, k;
+
+printf(" rows %ld, cols %ld \n",nrow_matrix(M),ncol_matrix(M)); 
+  for(j=0; j < nrow_matrix(M); j++){
+    for(k = 0; k < ncol_matrix(M); k++){
+      printf("%5.5g ", ME(M,j,k));
+    }
+    printf("\n");
+  }  
+
+}
+
+// Simple I/O function that prints the top of a matrix
+void head_matrix(matrix *M){
+ 
+  int j, k;
+
+  for(j=0; j < min(nrow_matrix(M),6); j++){
+    for(k = 0; k < min(ncol_matrix(M),6); k++){
+      printf("%5.5g ", ME(M,j,k));
+    }
+    printf("\n");
+  }  
+
+}
+
+// Simple I/O function that prints the first few entries of a vector
+void head_vector(vector *V){
+ 
+  int j;
+
+  for(j=0; j < min(length_vector(V),6); j++){
+    printf("%5.5g ", VE(V,j));
+  }  
+  printf("\n");
+
+}
+
+
+// Simple I/O function that prints a vector
+void print_vec(vector *v){
+ 
+  int j;
+
+  printf(" vector length %ld \n",length_vector(v)); 
+  for(j=0; j < length_vector(v); j++){
+    printf("%5.5g ", VE(v,j));
+  }  
+  printf("\n");
+  
+}
+
+// sets v := M[row_to_get,]
+vector *extract_row(matrix *M, int row_to_get, vector *v){
+
+  int j;
+
+  if(!(length_vector(v) == ncol_matrix(M))){
+    oops("Error: dimensions in extract_row\n");
+  }
+
+  if(row_to_get >= 0 && row_to_get < nrow_matrix(M)){ 
+    for(j = 0; j < length_vector(v); j++){
+      VE(v,j) = ME(M,row_to_get,j);
+    }
+    return(v);
+  } else {
+    oops("Error: trying to get an invalid row in 'extract_row'\n");
+  }
+
+  return(v);
+    
+}
+
+// sets M[row_to_get,] := v
+void replace_row(matrix *M, int row_to_set, vector *v){
+
+  int j;
+
+  if(!(length_vector(v) == ncol_matrix(M))){
+    oops("Error: dimensions in replace_row\n");
+  }
+
+  if(row_to_set >= 0 && row_to_set < nrow_matrix(M)){
+    for(j = 0; j < ncol_matrix(M); j++){
+      ME(M,row_to_set,j) = VE(v,j);
+    }
+  } else {
+    oops("Error: trying to get an invalid row in 'replace_row'\n");
+  }
+  
+}
+
+// v3 := v1 + v2, where the three vectors have length
+void vec_add(vector *v1, vector *v2, vector *v3){
+
+  int i;
+  int n = length_vector(v1);
+
+  if( !(length_vector(v2) == n && 
+	length_vector(v3) == n) ){
+    oops("Error: dimensions in vec_addition\n");
+  }
+
+  for(i=0; i < n; i++){
+    VE(v3,i) = VE(v1,i) + VE(v2,i);
+  }
+
+}
+
+// v3 := v1 + s * v2, where the three vectors have length,
+// and s is a double scalar
+void vec_add_mult(vector *v1, vector *v2, double s, vector *v3){
+
+  int i;
+  int n = length_vector(v1);
+
+  if( !(length_vector(v2) == n && 
+	length_vector(v3) == n) ){
+    oops("Error: dimensions in vec_addition\n");
+  }
+
+  for(i=0; i < n; i++){
+    VE(v3,i) = VE(v1,i) + s*VE(v2,i);
+  }
+
+}
+
+
+// v2 := scalar * v1, where invec and outvec are vectors of
+// length *length, and *scalar is a (double) scalar
+vector *scl_vec_mult(double scalar, vector *v1, vector *v2){
+
+  int i;
+  int n = length_vector(v1);
+
+  if( !(length_vector(v2) == n) ){
+    oops("Error: dimensions in scl_vec_mult\n");
+  }
+
+  for(i=0; i < n; i++){
+    VE(v2,i) = scalar * VE(v1,i);
+  }
+
+  return(v2);
+  
+}
+
+// m2 := scalar * m1
+matrix *scl_mat_mult(double scalar, matrix *m1, matrix *m2){
+
+  int i,j;
+  int m = nrow_matrix(m1);
+  int n = ncol_matrix(m1);
+  
+  if( !(nrow_matrix(m1) == m && ncol_matrix(m1) == n) ){
+    oops("Error: dimensions in scl_vec_mult\n");
+  }
+
+  for(i=0; i < m; i++){
+    for(j=0; j < n; j++){
+      ME(m2,i,j) = ME(m1,i,j) * scalar;
+    }
+  }
+  
+  return(m2);
+  
+}
+
+// m2 := m1
+matrix *mat_copy(matrix *m1, matrix *m2){
+
+  int i,j;
+  int m = nrow_matrix(m1);
+  int n = ncol_matrix(m1);
+
+  if( !(nrow_matrix(m2) == m && ncol_matrix(m2) == n) ){
+    oops("Error: dimensions in copy_matrix\n");
+  }
+
+  for(i=0; i < m; i++){
+    for(j=0; j < n; j++){
+      ME(m2,i,j) = ME(m1,i,j);
+    }
+  }
+
+  return(m2);
+  
+}
+
+// v2 := v1
+vector *vec_copy(vector *v1, vector *v2){
+
+  int i;
+  int l = length_vector(v1);
+
+  if( !(length_vector(v2) == l) ){
+    oops("Error: dimensions in copy_vector\n");
+  }
+
+  for(i=0; i < l; i++){
+    VE(v2,i) = VE(v1,i);
+  }
+
+  return(v2);
+  
+}
+
+
+// m2 := m1
+void mat_subsec(matrix *m1, int rowStart, int colStart,
+		       int rowStop, int colStop, matrix *m2){
+
+  int i,j;
+  int m = nrow_matrix(m1);
+  int n = ncol_matrix(m1);
+
+  if( !(nrow_matrix(m2) == (rowStop-rowStart) 
+	&& ncol_matrix(m2) == (colStop-colStart)) ){
+    oops("Error: dimensions in mat_subsec\n");
+  } else if(!(rowStart >= 0 && colStart >= 0
+	      && rowStop < m && colStop < n)){
+    oops("Error: trying to access non-existing rows or cols in mat_subsec\n");
+  }
+
+  for(i=rowStart; i < rowStop; i++){
+    for(j=colStart; j < colStop; j++){
+      ME(m2,i-rowStart,j-colStart) = ME(m1,i,j);
+    }
+  }
+  
+}
+
+// m2 := t(m1)
+matrix *mat_transp(matrix *m1, matrix *m2){
+
+  int i,j;
+  int m = nrow_matrix(m1);
+  int n = ncol_matrix(m1);
+
+  if( !(ncol_matrix(m2) == m && nrow_matrix(m2) == n) ){
+    oops("Error: dimensions in mat_transp\n");
+  }
+
+  for(i=0; i < m; i++){
+    for(j=0; j < n; j++){
+      ME(m2,j,i) = ME(m1,i,j);
+    }
+  }
+
+  return(m2);
+  
+}
+
+
+// v3 := v1 - v2, where the three vectors have length *length
+void vec_subtr(vector *v1, vector *v2, vector *v3){
+
+  int i;
+  int n = length_vector(v1);
+
+  if( !(length_vector(v2) == n && 
+	length_vector(v3) == n) ){
+    oops("Error: dimensions in vec_subtraction\n");
+  }
+
+  for(i=0; i < n; i++){
+    VE(v3,i) = VE(v1,i) - VE(v2,i);
+  }
+
+}
+
+// m3 := m1 - m2, where the three matrix have the same dimentions
+void mat_subtr(matrix *m1, matrix *m2, matrix *m3){
+
+  int i,j;
+  int m = nrow_matrix(m1);
+  int n = ncol_matrix(m1);
+
+  if( !(nrow_matrix(m2) == m && ncol_matrix(m2) == n && 
+	nrow_matrix(m3) == m && ncol_matrix(m3) == n) ){
+    oops("Error: dimensions in mat_subtr\n");
+  }
+
+  for(i=0; i < m; i++){
+    for(j=0; j < n; j++){
+      ME(m3,i,j) = ME(m1,i,j) - ME(m2,i,j);
+    }
+  }
+
+}
+
+// m3 := m1 + m2, where the three matrix have the same dimentions
+void mat_add(matrix *m1, matrix *m2, matrix *m3){
+
+  int i,j;
+  int m = nrow_matrix(m1);
+  int n = ncol_matrix(m1);
+
+  if( !(nrow_matrix(m2) == m && ncol_matrix(m2) == n &&
+	nrow_matrix(m3) == m && ncol_matrix(m3) == n) ){
+    oops("Error: dimensions in mat_subtr\n");
+  }
+
+  for(i=0; i < m; i++){
+    for(j=0; j < n; j++){
+      ME(m3,i,j) = ME(m1,i,j) + ME(m2,i,j);
+    }
+  }
+
+}
+
+// Performs Mout := t(M) %*% A, where M is an nRowM x nColM matrix, 
+// and A is an nRowM x nColA matrix, and Mout is a nColM x nColA matrix
+void MtA(matrix *M, matrix *A, matrix *Mout){
+
+  char transa = 't';
+  char transb = 'n';
+  double alpha = 1.0;
+  double beta = 0.0;
+  int m = ncol_matrix(M); 
+  int n = ncol_matrix(A);
+  int k = nrow_matrix(M);
+  int lda = nrow_matrix(M);
+  int ldb = nrow_matrix(M);
+  int ldc = ncol_matrix(M);
+
+  if( !(nrow_matrix(M)    == nrow_matrix(A) && 
+	nrow_matrix(Mout) == ncol_matrix(M) &&	
+	ncol_matrix(Mout) == ncol_matrix(A)) ){
+    oops("Error: dimensions in MtA\n");
+  }
+ 
+  // the results of 1.0 * t(M) %*% A + 0.0 * Mout is stored in Mout
+  F77_CALL(dgemm)(&transa, &transb, &m, &n, &k, &alpha, M->entries,
+		  &lda, A->entries, &ldb, &beta, Mout->entries, &ldc);
+
+}
+
+// Performs Mout := M %*% t(A), where M is an nRowM x nColM matrix, 
+// and A is an nRowA x nColM matrix, and Mout is a nRowM x nRowA matrix
+void MAt(matrix *M, matrix *A, matrix *Mout){
+
+  char transa = 'n';
+  char transb = 't';
+  double alpha = 1.0;
+  double beta = 0.0;
+  int m = nrow_matrix(M); 
+  int n = nrow_matrix(A);
+  int k = ncol_matrix(M);
+  int lda = nrow_matrix(M);
+  int ldb = nrow_matrix(A);
+  int ldc = nrow_matrix(Mout);
+
+  if( !(ncol_matrix(M)    == ncol_matrix(A) && 
+	nrow_matrix(Mout) == nrow_matrix(M) &&	
+	ncol_matrix(Mout) == nrow_matrix(A)) ){
+    oops("Error: dimensions in MAt\n");
+  }
+ 
+  // the results of 1.0 * t(M) %*% A + 0.0 * Mout is stored in Mout
+  F77_CALL(dgemm)(&transa, &transb, &m, &n, &k, &alpha, M->entries,
+		  &lda, A->entries, &ldb, &beta, Mout->entries, &ldc);
+
+}
+
+// Does Ainv := inverse(A), where A is a square matrix
+void invert(matrix *A, matrix *Ainv){
+
+  //char uplo = 'U';
+  int i, j;
+  int n = nrow_matrix(A);
+  int lda = n; // matrix A has dimensions n x n
+  int *ipiv = malloc(n * sizeof(int));
+  int lwork = n * n;
+  double *work = malloc(n * n * sizeof(double));
+  int info = -999;
+
+  if( !(nrow_matrix(A)  == ncol_matrix(A) && 
+	nrow_matrix(Ainv) == ncol_matrix(Ainv) &&
+	nrow_matrix(A)  == ncol_matrix(Ainv)) ){
+    oops("Error: dimensions in invert\n");
+  }
+
+  // First turn the matrix A into the vector a
+
+  for(i = 0; i < n; i++){
+    for(j = 0; j < n; j++){
+      ME(Ainv,i,j) = ME(A,i,j);
+    }
+  }
+
+  // First find the LU factorization of A,
+  // stored as an upper triangular matrix
+  F77_CALL(dgetrf)(&n, &n, Ainv->entries, &lda, ipiv, &info);
+
+  if(info != 0){
+    printf("Error in invert: DGETRF returned info = %d \n",info);
+    mat_zeros(Ainv);
+  } else {
+
+    // then use this factorization to compute the inverse of A
+    F77_CALL(dgetri)(&n, Ainv->entries, &lda, ipiv, work, &lwork, &info);
+
+    if(info != 0){
+      printf("Error in invert: DPOTRI returned info = %d \n",info);
+      mat_zeros(Ainv);
+    }
+  }
+
+  free(ipiv);
+  free(work);
+
+}
+
+// Performs Mout := M %*% A, where M is an nRowM x nColM matrix, 
+// and A is an nColM x nColA matrix, and Mout is a nRowM x nColA matrix
+void MxA(matrix *M, matrix *A, matrix *Mout){
+
+  char transa = 'n';
+  char transb = 'n';
+  double alpha = 1.0;
+  double beta = 0.0;
+  int m = nrow_matrix(M);
+  int n = ncol_matrix(A);
+  int k = ncol_matrix(M);
+  int lda = nrow_matrix(M);
+  int ldb = ncol_matrix(M);
+  int ldc = nrow_matrix(M);
+
+  if( !(ncol_matrix(M)    == nrow_matrix(A) && 
+	nrow_matrix(Mout) == nrow_matrix(M) &&	
+	ncol_matrix(Mout) == ncol_matrix(A)) ){
+    oops("Error: dimensions in MxA\n");
+  }
+
+  // the results of 1.0 * M %*% A + 0.0 * c is stored in c
+  // therfore we do not need to initialise c
+  F77_CALL(dgemm)(&transa, &transb, &m, &n, &k, &alpha, M->entries, &lda,
+		A->entries, &ldb, &beta, Mout->entries, &ldc);
+
+}
+
+void print_clock(clock_t *intime, int i){
+
+  clock_t outtime = clock();
+  
+  printf("### point %d, time %7.7e\n", i, difftime(outtime,*intime));
+  
+  *intime = outtime;
+
+}
+
+void update_clock(clock_t *intime, counter *C){
+
+  clock_t outtime = clock();
+  
+  C->timec += difftime(outtime,*intime);
+  C->callc++;
+  
+  *intime = outtime;
+
+}
+
+void zcntr(counter *C){
+  C->timec = 0.0;
+  C->callc = 0;
+}
+
+void print_counter(int i, counter *C){
+
+  printf("### counter %d, time %7.7g, calls %d\n", i, C->timec, C->callc);
+  
+}
+
+void identity_matrix(matrix *M){
+
+  int i, j;
+
+  if(nrow_matrix(M) != ncol_matrix(M)){
+    oops("Error in identity_matrix: dimenions do not match\n");
+  }
+
+  for(i = 0; i < nrow_matrix(M); i++){
+    for(j = 0; j < nrow_matrix(M); j++){
+      if(i == j){
+	ME(M,i,j) = 1.0;
+      } else {
+	ME(M,i,j) = 0.0;
+      }
+    }
+  }
+}
+
+void malloc_mats(int nrow, int ncol, ...){
+
+  va_list argp;
+  va_start(argp, ncol);
+  matrix **M;
+
+  while((M = va_arg(argp, matrix **))){
+    malloc_mat(nrow,ncol,*M);
+  }
+
+  va_end(argp);
+
+}
+
+void malloc_vecs(int length, ...){
+
+  va_list argp;
+  va_start(argp, length);
+  vector **V;
+
+  while((V = va_arg(argp, vector **))){
+    malloc_vec(length,*V);
+  }
+
+  va_end(argp);
+
+}
+
+void free_mats(matrix **M1, ...){
+
+  va_list argp;
+  va_start(argp, M1);
+  matrix **M;
+
+  free_mat(*M1);
+
+  while((M = va_arg(argp, matrix **))){
+    free_mat(*M);
+  }
+
+  va_end(argp);
+
+}
+
+void free_vecs(vector **V1, ...){
+
+  va_list argp;
+  va_start(argp, V1);
+  vector **V;
+
+  free_vec(*V1);
+
+  while((V = va_arg(argp, vector **))){
+    free_vec(*V);
+  }
+
+  va_end(argp);
+
+}
+
+// sets v := M[,col_to_get]
+vector *extract_col(matrix *M, int col_to_get, vector *v){
+
+  int j;
+
+  if(!(length_vector(v) == nrow_matrix(M))){
+    oops("Error: dimensions in extract_col\n");
+  }
+
+  if(col_to_get >= 0 && col_to_get < ncol_matrix(M)){ 
+    for(j = 0; j < length_vector(v); j++){
+      VE(v,j) = ME(M,j,col_to_get);
+    }
+    return(v);
+  } else {
+    oops("Error: trying to get an invalid column in 'extract_col'\n");
+  }
+
+  return(v);
+    
+}
+
+// sets M[,col_to_set] := v
+void replace_col(matrix *M, int col_to_set, vector *v){
+
+  int j;
+
+  if(!(length_vector(v) == nrow_matrix(M))){
+    oops("Error: dimensions in replace_col\n");
+  }
+
+  if(col_to_set >= 0 && col_to_set < ncol_matrix(M)){
+    for(j = 0; j < nrow_matrix(M); j++){
+      ME(M,j,col_to_set) = VE(v,j);
+    }
+  } else {
+    oops("Error: trying to get an invalid column in 'replace_col'\n");
+  }
+  
+}
