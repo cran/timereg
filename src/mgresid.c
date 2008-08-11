@@ -24,17 +24,17 @@ int *pg,*coxaalen,*nx,*p,*antpers,*nmgt,*sim,*rani,*ant,
   matrix *Delta,*tmpM1,*ldesignX,*cummat,*modelMGT[*antpers],*modMGz[*antpers],*Deltaz,*tmpM1z;
   matrix *cdesX,*ldesignG,*ZP,*A,*AI,*cumX,*cumXAI,*cumZP,*XPZ,*tmp2,*dS,*St[*nmgt]; 
   matrix *dS1,*cumX1,*cumXAI1,*cumZP1,*tmp21,*cummat1;
-  vector *vtmp1,*cumdB1,*dB1,*VdB1,*respm1;
+  vector *vtmp1,*cumdB1,*VdB1,*respm1;
   vector *dMGt[*antpers],*dMGtiid[*antpers],
     *cumdB,*diag,*dB,*VdB,*xi,*rowX,*rowcum,*difX,*vtmp,*respm,*gamma;
-  vector *risk,*cumA[*antpers],*cum,*vecX,*MGt,*MGtiid;
+  vector *risk,*cumA[*antclust],*cum,*vecX,*MGt,*MGtiid;
   vector *lamt,*Gbeta,*dA,*xtilde,*zi,*gammaiid[*antpers];
   vector *covlesszi; 
   int m,i,j,k,l,s,c,count,pers;
   int ptot,weighted,cluster[*antpers];
   double time,dummy;
   double vardiv;
-  double random,fabs(),sqrt(),xij,dtime;
+  double random,fabs(),sqrt(),xij,dtime,dB1[*antclust];
   void smoothB(),comptest(); 
   long idum; idum=*rani; 
   double norm_rand();
@@ -44,11 +44,12 @@ int *pg,*coxaalen,*nx,*p,*antpers,*nmgt,*sim,*rani,*ant,
   ptot=*p+*pg; 
 
   GetRNGstate();  /* to use R random normals */
+  for (j=0;j<*antpers;j++) cluster[j]=0;
 
   for (i=0;i<*nmgt;i++){malloc_vec(*antpers,dMGt[i]); 
     malloc_vec(*antpers,dMGtiid[i]); malloc_mat(*pm,*pg,St[i]);}
 
-  for (i=0;i<*antclust;i++) {malloc_mat(*nmgt,*pm,modelMGT[i]); 
+  for (i=0;i<*antclust;i++) {malloc_mat(*nmgt,*pm,modelMGT[i]);dB1[i]=0.0; 
     malloc_vec(*pg,gammaiid[i]); malloc_vec(*pm,cumA[i]); }
   malloc_mat(*nmgt,*pm,Delta); malloc_mat(*nmgt,*pm,tmpM1); 
   malloc_vec(*p,cum); malloc_mat(*antpers,*p,ldesignX); malloc_vec(*antpers,vecX); 
@@ -62,7 +63,7 @@ int *pg,*coxaalen,*nx,*p,*antpers,*nmgt,*sim,*rani,*ant,
 
   malloc_mat(1,*pg,dS1); malloc_mat(1,*p,cumX1); malloc_mat(1,*p,cumXAI1); 
   malloc_mat(1,*pg,cumZP1); malloc_mat(1,*pg,tmp21); malloc_mat(*antpers,1,cummat1); 
-  malloc_vecs(1,&vtmp1,&cumdB1,&dB1,&VdB1,&respm1,NULL);
+  malloc_vecs(1,&vtmp1,&cumdB1,&VdB1,&respm1,NULL);
   if (*cumresid>0) {
     for (i=0;i<*antclust;i++) malloc_mat(ptot,*maxval,modMGz[i]); 
     malloc_mat(ptot,*maxval,Deltaz); malloc_mat(ptot,*maxval,tmpM1z);  }
@@ -150,25 +151,25 @@ int *pg,*coxaalen,*nx,*p,*antpers,*nmgt,*sim,*rani,*ant,
 
 
 	  vec_zeros(VdB); 
-	  for (j=0;j<*antclust;j++) 
-	    {
-	      vec_zeros(dB); 
-	      for (i=0;i<*antpers;i++) if (cluster[i]==j)  
-		{
-		  extract_row(cummat,i,respm); 
-		  extract_row(ldesignX,i,xi); Mv(cumXAI,xi,vtmp);
-		  vec_subtr(respm,vtmp,respm); 
-		  scl_vec_mult(VE(dMGt[s],i),respm,vtmp);vec_add(vtmp,dB,dB); 
-		}
-	      if (*coxaalen==1) {
-		Mv(dS,gammaiid[j],respm);vec_subtr(dB,respm,dB);}
+	  for (i=0;i<*antpers;i++) 
+	  {
+	   j=cluster[i];
+	   extract_row(cummat,i,respm); 
+	   extract_row(ldesignX,i,xi); Mv(cumXAI,xi,vtmp);
+	   vec_subtr(respm,vtmp,respm); 
+	   scl_vec_mult(VE(dMGt[s],i),respm,vtmp);
+	   vec_add(vtmp,cumA[j],cumA[j]); 
+	  }
 
-	      vec_add(dB,cumA[j],cumA[j]); 
-	      replace_row(modelMGT[j],s,cumA[j]); 
-	      vec_star(cumA[j],cumA[j],vtmp); vec_add(vtmp,VdB,VdB); 
-	    }
- 
+          for (j=0;j<*antclust;j++)  {
+          if (*coxaalen==1)  {
+             Mv(dS,gammaiid[j],respm);vec_subtr(cumA[j],respm,cumA[j]);}
+
+	     replace_row(modelMGT[j],s,cumA[j]); 
+	     vec_star(cumA[j],cumA[j],vtmp); vec_add(vtmp,VdB,VdB); 
+	  }
 	  for (k=1;k<*pm+1;k++) robvarcum[k*(*nmgt)+s]=VE(VdB,k-1); 
+ 
 	  /* comp observed sup statistics */ 
 	  Ut[s]=time; 
 	  for (i=1;i<=*pm;i++) {
@@ -274,24 +275,23 @@ int *pg,*coxaalen,*nx,*p,*antpers,*nmgt,*sim,*rani,*ant,
 	      mat_subtr(cumZP1,tmp21,dS1); /* mat_add(dS1,St1[s-1],St1[s]);   */
 	    } /*coxaalen=1 */ 
 
+	    for (i=0;i<*antclust;i++) dB1[i]=0.0; 
 
-	    vec_zeros(VdB1); 
+	    for (i=0;i<*antpers;i++) 
+            {
+		m=cluster[i]; 
+		extract_row(cummat1,i,respm1); 
+		extract_row(ldesignX,i,xi); Mv(cumXAI1,xi,vtmp1);
+		vec_subtr(respm1,vtmp1,respm1); 
+		scl_vec_mult(VE(dMGt[s],i),respm1,vtmp1); 
+		dB1[m]=dB1[m]+VE(vtmp1,0); 
+	    }
 	    for (m=0;m<*antclust;m++) 
-	      {
-		vec_zeros(dB1); 
-		for (i=0;i<*antpers;i++) if (cluster[i]==m)  
-		  {
-		    extract_row(cummat1,i,respm1); 
-		    extract_row(ldesignX,i,xi); Mv(cumXAI1,xi,vtmp1);
-		    vec_subtr(respm1,vtmp1,respm1); 
-		    scl_vec_mult(VE(dMGt[s],i),respm1,vtmp1); 
-		    vec_add(vtmp1,dB1,dB1); 
-		  }
-		if (*coxaalen==1) {
-		  Mv(dS1,gammaiid[m],respm1);vec_subtr(dB1,respm1,dB1);}
-
-		ME(modMGz[m],l,j)=ME(modMGz[m],l,j)+VE(dB1,0); 
-	      }
+	    {
+	       if (*coxaalen==1) {
+		  Mv(dS1,gammaiid[m],respm1);dB1[m]=dB1[m]-VE(respm1,0);}
+		ME(modMGz[m],l,j)=ME(modMGz[m],l,j)+dB1[m]; 
+	    }
 	  } /* j=0 j < ant[l]; j++ */ 
 	} /* l=0,...,ptot */ 
       } /* s=1... *Ntimes */ 
@@ -334,7 +334,7 @@ int *pg,*coxaalen,*nx,*p,*antpers,*nmgt,*sim,*rani,*ant,
 
   PutRNGstate();  /* to use R random normals */
 
-  free_vecs(&MGt,&MGtiid,&risk,&xi,&rowX,&diag,&dB,&VdB,&rowcum,&cum,&vtmp,&lamt,&dA,&Gbeta,&gamma,&vtmp1,&cumdB1,&dB1,&VdB1,&respm1,NULL);
+  free_vecs(&MGt,&MGtiid,&risk,&xi,&rowX,&diag,&dB,&VdB,&rowcum,&cum,&vtmp,&lamt,&dA,&Gbeta,&gamma,&vtmp1,&cumdB1,&VdB1,&respm1,NULL);
   free_mats(&Delta,&tmpM1,&ldesignX,&cdesX,&ldesignG,&ZP,&A,&AI,&XPZ,
 	      &cumX, &cumXAI, &cumZP, &tmp2, &dS,&cummat,
 	      &cumX1,&cumXAI1,&cumZP1,&tmp21,&dS1,&cummat1,NULL); 

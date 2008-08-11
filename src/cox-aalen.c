@@ -19,15 +19,15 @@ int*covariance,*nx,*px,*ng,*pg,*antpers,*Ntimes,*mw,*Nit,*detail,*mof,*sim,*ants
   matrix *W3t[*antclust],*W4t[*antclust],*W2t[*antclust],*AIxit[*antpers],*Uti[*antclust]; 
   vector *dA,*VdA,*dN,*MdA,*delta,*zav,*lamt,*lamtt;
   vector *xi,*zi,*U,*beta,*xtilde; 
-  vector *Gbeta,*zcol,*one,*difzzav;// unused var:sxtilde 
+  vector *Gbeta,*zcol,*one,*difzzav;
   vector *offset,*weight,*ZXdA[*Ntimes],*varUthat[*Ntimes],*Uprofile;
-  vector *ta,*ahatt; 
+  vector *ta,*ahatt,*vrisk; 
   vector *tmpv1,*tmpv2,*rowX,*rowZ,*difX,*VdB; 
-  vector *W2[*antclust],*W3[*antclust],*reszpbeta,*res1dim,*dAt[*Ntimes]; //unused var:*W2i[*antpers]
-  int c,pers=0,i,j,k,l,s,it,count,sing,imin[1],pmax,cluster[*antpers];// unused var:nmax
-  double dtime,time=0,dummy,ll,lle,llo;// unused var:zpers
+  vector *W2[*antclust],*W3[*antclust],*reszpbeta,*res1dim,*dAt[*Ntimes]; 
+  int ci,c,pers=0,i,j,k,l,s,it,count,sing,imin[1],pmax,cluster[*antpers];
+  double dtime,time=0,dummy,ll,lle,llo;
   double tau,hati,random,scale,sumscore;
-  long idum,ipers[*Ntimes],nap;//obsi=0
+  long idum,ipers[*Ntimes],nap;
   double norm_rand();
   void GetRNGstate(),PutRNGstate();
 
@@ -39,7 +39,8 @@ int*covariance,*nx,*px,*ng,*pg,*antpers,*Ntimes,*mw,*Nit,*detail,*mof,*sim,*ants
     for (j=0;j<*antclust;j++) { malloc_mat(*Ntimes,*px,W3t[j]); 
       malloc_mat(*Ntimes,*px,W4t[j]); malloc_mat(*Ntimes,*pg,W2t[j]); 
       malloc_mat(*Ntimes,*pg,Uti[j]); malloc_vec(*pg,W2[j]); malloc_vec(*px,W3[j]); }
-    for (j=0;j<*antpers;j++) {malloc_mat(*Ntimes,*px,AIxit[j]);}
+    for (j=0;j<*antpers;j++) {malloc_mat(*Ntimes,*px,AIxit[j]);
+                              cluster[j]=0; }
     for(j=0;j<*Ntimes;j++) malloc_vec(*pg,varUthat[j]);
   }
 
@@ -69,6 +70,7 @@ int*covariance,*nx,*px,*ng,*pg,*antpers,*Ntimes,*mw,*Nit,*detail,*mof,*sim,*ants
     malloc_mat(*pg,*px,ZXAIs[j]); malloc_mat(*px,*pg,dYIt[j]); malloc_vec(*px,dAt[j]);
     malloc_vec(*pg,ZXdA[j]); malloc_mat(*pg,*pg,St[j]); } 
   malloc_vec(*nb,ta); 
+  malloc_vec(*antpers,vrisk); 
 
   if (*px>=*pg) pmax=*px; else pmax=*pg; ll=0; 
   for(j=0;j<*pg;j++) VE(beta,j)=betaS[j]; 
@@ -192,12 +194,14 @@ int*covariance,*nx,*px,*ng,*pg,*antpers,*Ntimes,*mw,*Nit,*detail,*mof,*sim,*ants
   for (s=1;s<*Ntimes;s++) {
     time=times[s]; vec_zeros(dN);dtime=time-times[s-1]; 
     cu[s]=times[s]; vcu[s]=times[s]; Rvcu[s]=times[s]; Ut[s]=times[s]; 
+    vec_zeros(vrisk); 
 
     mat_zeros(ldesignX); mat_zeros(ldesignG); 
     for (c=0,count=0;((c<*nx) && (count!=*antpers));c++) 
       {
-	if ((start[c]<time) && (stop[c]>=time))  {
+	if ((start[c]<time) && (stop[c]>=time))  { 
 	  cluster[id[c]]=clusters[c];
+	  VE(vrisk,id[c])=1.0; 
 	  for(j=0;j<pmax;j++) {
 	    if (j<*px) ME(ldesignX,id[c],j)=designX[j*(*nx)+c];
 	    if (j<*pg) ME(ldesignG,id[c],j)=designG[j*(*ng)+c]; } 
@@ -218,40 +222,44 @@ int*covariance,*nx,*px,*ng,*pg,*antpers,*Ntimes,*mw,*Nit,*detail,*mof,*sim,*ants
 
 
     /* terms for robust variance   */ 
-    if (*robust==1) {
-      for (j=0;j<*antclust;j++) 
+    if (*robust==1 || *retur==1 ) {
+	for (i=0;i<*antpers;i++)  
 	{
-	  for (i=0;i<*antpers;i++) if (cluster[i]==j)  {
+         ci=cluster[i]; 
+	 extract_row(cdesX,i,rowX); scl_vec_mult(1/VE(weight,i),rowX,rowX); 
+	 extract_row(ldesignG,i,zi); extract_row(ldesignX,i,xi); 
+	 vec_star(rowX,dAt[s],tmpv1); hati=vec_sum(tmpv1); 
 
-	    extract_row(cdesX,i,rowX); scl_vec_mult(1/VE(weight,i),rowX,rowX); 
-	    extract_row(ldesignG,i,zi); extract_row(ldesignX,i,xi); 
-	    vec_star(rowX,dAt[s],tmpv1); hati=vec_sum(tmpv1); 
+	 if (*robust==1) {
+	 Mv(ZXAIs[s],xi,tmpv2);  vec_subtr(zi,tmpv2,tmpv2); 
+	 scl_vec_mult(VE(weight,i),tmpv2,tmpv2); 
 
-	    Mv(ZXAIs[s],xi,tmpv2);  vec_subtr(zi,tmpv2,tmpv2); 
-	    scl_vec_mult(VE(weight,i),tmpv2,tmpv2); 
+	 if (i==pers) vec_add(tmpv2,W2[ci],W2[ci]);
+	 if (*ratesim==1) {scl_vec_mult(hati,tmpv2,rowZ); vec_subtr(W2[ci],rowZ,W2[ci]); }
 
-	    if (i==pers) vec_add(tmpv2,W2[j],W2[j]);
-	    if (*ratesim==1) {scl_vec_mult(hati,tmpv2,rowZ); vec_subtr(W2[j],rowZ,W2[j]); }
+	 extract_row(AIxit[i],s,rowX);
+	 scl_vec_mult(VE(weight,i),rowX,rowX); 
 
-	    extract_row(AIxit[i],s,rowX);
-	    scl_vec_mult(VE(weight,i),rowX,rowX); 
+	 if (i==pers) {vec_add(rowX,W3[ci],W3[ci]); }
+	 llo=llo+hati;
 
-	    if (i==pers) {vec_add(rowX,W3[j],W3[j]); }
-	    llo=llo+hati;
+	 if (*ratesim==1) {scl_vec_mult(hati,rowX,rowX); vec_subtr(W3[ci],rowX,W3[ci]);}
+	 }
 
-	    if (*ratesim==1) {scl_vec_mult(hati,rowX,rowX); vec_subtr(W3[j],rowX,W3[j]);}
-
-	    if (*retur==1)  { 
-	      dhatMit[i*(*Ntimes)+s]=
-		dhatMit[i*(*Ntimes)+s]+1*(i==pers)-hati;
+	 if (*retur==1)  { 
+	    dhatMit[i*(*Ntimes)+s]= dhatMit[i*(*Ntimes)+s]+1*(i==pers)-hati;
 	      /*if ((i==pers) | (hati>0)) 
 		printf(" %ld %ld %ld %lf \n",i,s,(i==pers),hati); */
-	    }
-	  } /* i if cluste==j */
-	  replace_row(W2t[j],s,W2[j]); 
-	  replace_row(W3t[j],s,W3[j]);  
+	 }
 
-	} /* j and i=1..antclust */ 
+       } /* i 1.. antpers */
+
+       if (*robust==1) {
+         for (j=0;j<*antclust;j++) 
+  	 {
+	  replace_row(W2t[j],s,W2[j]); replace_row(W3t[j],s,W3[j]);  
+	 } /* j and i=1..antclust */ 
+       }
     }
 
 
@@ -470,7 +478,7 @@ int*covariance,*nx,*px,*ng,*pg,*antpers,*Ntimes,*mw,*Nit,*detail,*mof,*sim,*ants
   free_vecs(&ta,&ahatt,&Uprofile,&lamtt,&lamt,&dN,&one,&xi,&zcol,&Gbeta,NULL);
   free_vecs(&VdA,&dA,&MdA,&xtilde,&zi,&U,&beta,&delta,&zav,&difzzav,&weight,NULL);
   free_vecs(&offset,&tmpv1,&tmpv2,&rowX,&rowZ,&difX,&VdB,&reszpbeta,NULL);
-  free_vecs(&res1dim,NULL); 
+  free_vecs(&vrisk,&res1dim,NULL); 
 
   if (*robust==1) {
     for (j=0;j<*antclust;j++) {

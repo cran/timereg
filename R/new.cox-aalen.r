@@ -22,9 +22,9 @@ rate.sim=1,beta.fixed=0)
     cat("When robust=0, No simulations \n"); 
     cat("n.sim set to 0\n"); 
     sim<-0;}
-  if (residuals==1 & robust==0) {
-    cat("When robust=0, no martingale residuals \n"); 
-    residuals<-0;}
+#  if (residuals==1 & robust==0) {
+#    cat("When robust=0, no martingale residuals \n"); 
+#    residuals<-0;}
   if (n.sim>0 & n.sim<50) {n.sim<-50 ; cat("Minimum 50 simulations\n");}
   if (beta.fixed==1) Nit<-1; 
 
@@ -58,14 +58,14 @@ rate.sim=1,beta.fixed=0)
   stop("Both multiplicative and additive model needed");
   Ntimes <- sum(status); 
 
-                                        #times<-c(start.time,time2[status==1]); times<-sort(times);
-                                        #if (is.null(max.time)==TRUE) maxtimes<-max(times)+0.1 else 
-                                        #maxtimes<-max.time; 
-                                        #times<-times[times<maxtimes]
-                                        #print(cbind(time,time2)); 
+  #times<-c(start.time,time2[status==1]); times<-sort(times);
+  #if (is.null(max.time)==TRUE) maxtimes<-max(times)+0.1 else 
+  #maxtimes<-max.time; 
+  #times<-times[times<maxtimes]
+  #print(cbind(time,time2)); 
   if ((sum(beta)==0) & (beta.fixed==0)) beta<-coxph(Surv(time,time2,status)~Z)$coef; 
 
-                                        #cat("Cox-Aalen Survival Model"); cat("\n")
+  #cat("Cox-Aalen Survival Model"); cat("\n")
   if (px==0) stop("No nonparametric terms (needs one!)");
   ud<-cox.aalenBase(times,ldata,X,Z,
                     status,id,clusters,Nit=Nit,detail=detail,beta=beta,weights=weights,

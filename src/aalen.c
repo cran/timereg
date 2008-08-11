@@ -83,10 +83,10 @@ int *nx,*p,*antpers,*Ntimes,*sim,*retur,*rani,*antsim,*status,*id,*covariance,
 
   matrix *ldesignX, *QR, *R, *A, *AI, *Vcov;
   matrix *cumAt[*antclust];
-  vector  *diag,*dB,*dN,*VdB,*xi,*rowX,*rowcum,*difX,*ta,*vtmp;
+  vector  *vrisk,*diag,*dB,*dN,*VdB,*xi,*rowX,*rowcum,*difX,*ta,*vtmp;
   vector *cumhatA[*antclust],*cumA[*antclust],*cum;
-  int i,j,k,l,s,c,count,pers=0,coef[1],ps[1],degree[1];
-  int var1,var2,nb[1],cluster[*antpers]; // unused var: nap
+  int ci,i,j,k,l,s,c,count,pers=0,coef[1],ps[1],degree[1];
+  int var1,var2,nb[1],cluster[*antpers]; 
   double time,ahati,band[1],bhat[(*Ntimes)*(*p+1)],dt,tau;
   double vcudif[(*Ntimes)*(*p+1)];
   double fabs(),sqrt();
@@ -104,7 +104,8 @@ int *nx,*p,*antpers,*Ntimes,*sim,*retur,*rani,*antsim,*status,*id,*covariance,
 
   if (*robust==1) {
     for (i=0;i<*antclust;i++) { malloc_vec(*p,cumhatA[i]); 
-    malloc_vec(*p,cumA[i]); malloc_mat(*Ntimes,*p,cumAt[i]); } }
+    malloc_vec(*p,cumA[i]); 
+    if (*sim==1) malloc_mat(*Ntimes,*p,cumAt[i]); } }
 
 /*   print_clock(&debugTime, 0); */
 
@@ -115,26 +116,31 @@ int *nx,*p,*antpers,*Ntimes,*sim,*retur,*rani,*antsim,*status,*id,*covariance,
   malloc_vec(*p,diag); malloc_vec(*p,dB); malloc_vec(*p,VdB); malloc_vec(*p,xi);
   malloc_vec(*p,rowX); malloc_vec(*p,rowcum); malloc_vec(*p,difX); malloc_vec(*p,vtmp);
   malloc_vec(nb[0],ta);
+  malloc_vec(*antpers,vrisk); 
+
+  for (j=0;j<*antpers;j++) cluster[j]=0;
 
 /*   print_clock(&debugTime, 1); */
 
   R_CheckUserInterrupt();
 
   for (s=1;s<*Ntimes;s++){
-    time=times[s]; mat_zeros(ldesignX);
+    time=times[s]; mat_zeros(ldesignX); 
+    vec_zeros(vrisk); 
 
     for (c=0,count=0;((c<*nx) && (count!=*antpers));c++){
       if ((start[c]<time) && (stop[c]>=time)) {
 	for(j=0;j<*p;j++) {
 	  ME(ldesignX,id[c],j) = designX[j*(*nx)+c]; }
-	cluster[id[c]]=clusters[c]; 
+	  cluster[id[c]]=clusters[c]; 
+	  VE(vrisk,id[c])=1.0; 
 	if (time==stop[c] && status[c]==1) { pers=id[c]; }
 	count=count+1; } 
     }
     
     /*if (count!=*antpers) printf("Design %ld %ld  \n",*antpers,count);*/
 
-    MtM(ldesignX,A); // this replaces this function
+    MtM(ldesignX,A); 
     invert(A,AI); 
 
     if (ME(AI,0,0)==0.0){ printf(" X'X not invertible at time %lf \n",time); }
@@ -155,60 +161,55 @@ int *nx,*p,*antpers,*Ntimes,*sim,*retur,*rani,*antsim,*status,*id,*covariance,
     }
     cu[s]=time; vcu[s]=time; robvcu[s]=time; 
 
-    if (*robust==1) {
+    if (*robust==1 || *retur==1) {
       vec_zeros(VdB); mat_zeros(Vcov);
 
-      for (j=0;j<*antclust;j++) {
-	for (i=0;i<*antpers;i++) {
-	  if (cluster[i]==j)  {
-	    extract_row(ldesignX,i,xi);
+	for (i=0;i<*antpers;i++)
+	{
+          ci=cluster[i]; 
+	  // printf(" %d %d   \n",i,ci); 
+	  extract_row(ldesignX,i,xi);
+	  ahati=vec_prod(xi,dB);
+	  // ahati = vec_sum(vtmp);
+	  if (*robust==1) {
+	  if (i==pers) { vec_add(rowX,cumhatA[ci],cumhatA[ci]); }
 	    Mv(AI,xi,rowX); 
-	    vec_star(xi,dB,vtmp);
-	    ahati = vec_sum(vtmp);
-	    if (i==pers) { vec_add(rowX,cumhatA[j],cumhatA[j]); }
 	    scl_vec_mult(ahati,rowX,rowX);
-	    vec_add(rowX,cumA[j],cumA[j]);
-
-	    if (*retur==1){ 
-	      cumAit[i*(*Ntimes)+s]= cumAit[i*(*Ntimes)+s]+1*(i==pers)-ahati;  
-	    }
-
+	    vec_add(rowX,cumA[ci],cumA[ci]);
 	  }
-	}
 
-	vec_subtr(cumhatA[j],cumA[j],difX);
-	replace_row(cumAt[j],s,difX);
-
-	vec_star(difX,difX,vtmp);
-	vec_add(vtmp,VdB,VdB);
-
-	if (*resample==1) {
-	  for (k=0;k<*p;k++) { 
-	    l=j*(*p)+k; 
-	    Biid[l*(*Ntimes)+s]=VE(difX,k); 
+	  if (*retur==1){ 
+	     cumAit[i*(*Ntimes)+s]= cumAit[i*(*Ntimes)+s]+1*(i==pers)-ahati;  
 	  }
-	}
+       }
 
-	if (*covariance==1) {
-	  for (k=0;k<*p;k++){
-	    for (c=0;c<*p;c++){
-	      ME(Vcov,k,c) = ME(Vcov,k,c) + VE(difX,k)*VE(difX,c);
-	    }
-	  }
-	}
+       if (*robust==1) {
+       for (i=0;i<*antclust;i++) {
 
-      }   /* j in cluster */ 
+	   vec_subtr(cumhatA[i],cumA[i],difX);
+	   if (*sim==1) replace_row(cumAt[i],s,difX);
+	   vec_star(difX,difX,vtmp); vec_add(vtmp,VdB,VdB);
 
-      for (k=1;k<*p+1;k++) { 
-	robvcu[k*(*Ntimes)+s]=VE(VdB,k-1); 
-	if (*covariance==1) {
-	  for (c=0;c<*p;c++)  {
-	    l=(k-1)*(*p)+c; 
-	    covs[l*(*Ntimes)+s]=ME(Vcov,k-1,c);
-	  }
-	}
-      }
-    } /* if robust==1 */ 
+	   if (*resample==1) {
+	     for (k=0;k<*p;k++) {l=i*(*p)+k; Biid[l*(*Ntimes)+s]=VE(difX,k);}
+	   }
+
+	   if (*covariance==1) {
+	     for (k=0;k<*p;k++) for (c=0;c<*p;c++)
+	      ME(Vcov,k,c) = ME(Vcov,k,c) + VE(difX,k)*VE(difX,c); }
+
+       }
+           for (k=1;k<*p+1;k++) { 
+	       robvcu[k*(*Ntimes)+s]=VE(VdB,k-1); 
+	   if (*covariance==1) {
+	       for (c=0;c<*p;c++)  {
+	       l=(k-1)*(*p)+c; 
+	       covs[l*(*Ntimes)+s]=ME(Vcov,k-1,c);
+	       }
+	   }
+           }
+     }
+    } /* if robust==1  || retur==1*/ 
 
 
     R_CheckUserInterrupt();
@@ -224,11 +225,11 @@ int *nx,*p,*antpers,*Ntimes,*sim,*retur,*rani,*antsim,*status,*id,*covariance,
   cu[0]=times[0]; vcu[0]=times[0]; robvcu[0]=times[0]; 
   free_vec(xi); free_vec(rowX); free_vec(diag); free_vec(dB); free_vec(VdB);
   free_vec(rowcum); free_vec(cum); free_vec(vtmp); free_mat(Vcov);
-  free_mat(ldesignX); free_mat(QR);
+  free_mat(ldesignX); free_mat(QR);free_vec(vrisk); 
 
   if (*robust==1){
     for (i=0;i<*antclust;i++) {
-      free_vec(cumA[i]); free_vec(cumhatA[i]); free_mat(cumAt[i]); } }
+      free_vec(cumA[i]); free_vec(cumhatA[i]); if (*sim==1) free_mat(cumAt[i]); } }
 }
 
 void semiaalen(alltimes,Nalltimes,Ntimes,designX,nx,px,designG,ng,pg,antpers,start,stop,nb,bhat,cu,vcu,Robvcu,gamma,Vgamma,RobVgamma,sim,antsim,test,rani,testOBS,robust,status,Ut,simUt,id,weighted,cumAit,retur,covariance,covs,resample,gammaiid,Biid,clusters,antclust,loglike,intZHZ,intZHdN,deltaweight)
@@ -243,10 +244,10 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*
   matrix *W3t[*antclust],*W4t[*antclust];
   vector *W2[*antclust],*W3[*antclust];
   matrix *AIxit[*antpers]; 
-  vector *VdB,*difX,*xi,*tmpv1,*tmpv2; 
+  vector *VdB,*difX,*xi,*tmpv1,*tmpv2,*vrisk; 
   vector *dA,*rowX,*dN,*AIXWdN,*ta,*bhatt,*pbhat,*plamt;
   vector *korG,*pghat,*rowZ,*gam,*dgam,*ZHdN,*IZHdN,*zi;
-  int i,j,k,l,c,s,count,pers=0,pmax,coef[1],ps[1],cluster[*antpers];
+  int ci,i,j,k,l,c,s,count,pers=0,pmax,coef[1],ps[1],cluster[*antpers];
   int stat,maxtime,ls[*Ntimes]; 
   double time,dtime,dtime1,fabs(),sqrt();
   double ahati,ghati,hati,tau,dMi;
@@ -266,11 +267,11 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*
   malloc_mats(*px,*pg,&tmpM3,&Ct,&dC,&XWZ,&XWZAI,&dM1M2,&M1M2t,NULL);
   malloc_mat(*px,*pg,tmpM4);
   for (j=0;j<*Nalltimes;j++) {
-    malloc_mat(*px,*pg,Acorb[j]);
-    malloc_mat(*px,*pg,C[j]);
+	  malloc_mat(*px,*pg,Acorb[j]);
+	  malloc_mat(*px,*pg,C[j]);
   }
   for (j=0;j<*Ntimes;j++) {
-    malloc_mat(*px,*pg,M1M2[j]);
+	  malloc_mat(*px,*pg,M1M2[j]);
   }
 
   malloc_vec(*px,dA); malloc_vec(*px,VdB); malloc_vec(*px,difX);
@@ -280,23 +281,20 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*
   malloc_vec(*pg,gam); malloc_vec(*pg,dgam); malloc_vec(*pg,ZHdN);
   malloc_vec(*pg,IZHdN); malloc_vec(*antpers,dN); malloc_vec(*antpers,pbhat);
   malloc_vec(*antpers,pghat); malloc_vec(*antpers,plamt); malloc_vec(*nb,ta);
+  malloc_vec(*antpers,vrisk); 
 
   if (*robust==1) {
-    for (j=0;j<*antclust;j++) { malloc_mat(*Ntimes,*px,W3t[j]);
-      malloc_mat(*Ntimes,*px,W4t[j]); malloc_vec(*pg,W2[j]); 
-      malloc_vec(*px,W3[j]); }
+	  for (j=0;j<*antclust;j++) { malloc_mat(*Ntimes,*px,W3t[j]);
+		  malloc_mat(*Ntimes,*px,W4t[j]); malloc_vec(*pg,W2[j]); 
+		  malloc_vec(*px,W3[j]); }
     for (j=0;j<*antpers;j++){ 
       malloc_mat(*Nalltimes,*px,AIxit[j]);
     }; 
   }
+  for (j=0;j<*antpers;j++) cluster[j]=0;
 
   coef[0]=1; 
-  ps[0]=*px+1; 
-  if (*px>=*pg){ 
-    pmax=*px;
-  } else {
-    pmax=*pg;
-  }
+  ps[0]=*px+1; pmax=max(*pg,*px); 
   mat_zeros(Ct); mat_zeros(CGam); vec_zeros(IZHdN);
   times[0]=alltimes[0]; l=0; 
   maxtime=alltimes[*Nalltimes]; 
@@ -368,9 +366,7 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*
 
       if (*robust==1) {
 	for (i=0;i<*antpers;i++) {
-	  extract_row(X,i,xi); 
-	  Mv(AI,xi,rowX); 
-	  replace_row(AIxit[i],s,rowX); 
+	  extract_row(X,i,xi); Mv(AI,xi,rowX); replace_row(AIxit[i],s,rowX); 
 	}
       }
     } /* s =1...Ntimes */ 
@@ -385,82 +381,70 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*
   for (s=1;s<*Nalltimes;s++) {
     time=alltimes[s]; vec_zeros(dN); dtime=time-alltimes[s-1]; 
     mat_zeros(X); mat_zeros(Z); mat_zeros(WX); mat_zeros(WZ);
+    vec_zeros(vrisk); 
     stat=0; dMi=0; 
     for (c=0,count=0;((c<*nx) && (count!=*antpers));c++) {
 	if ((start[c]<time) && (stop[c]>=time)) {
 	  cluster[id[c]]=clusters[c]; 
+	  VE(vrisk,id[c])=1.0; 
 	  for(j=0;j<pmax;j++) {
-	    if (j<*px){ 
-	      ME(X,id[c],j)=designX[j*(*nx)+c];
-	    }
-	    if (j<*pg){ 
-	      ME(Z,id[c],j)=designG[j*(*ng)+c];
-	    }  
+	    if (j<*px){ ME(X,id[c],j)=designX[j*(*nx)+c]; }
+	    if (j<*pg){ ME(Z,id[c],j)=designG[j*(*ng)+c]; }  
 	  }
 	  if (time==stop[c] && status[c]==1) {pers=id[c];stat=1;l=l+1;dMi=0;ghati=0;} 
 	  count=count+1; }
       }
 
     if (stat==1) {
-      for (k=1;k<=*px;k++) {
-	VE(dA,k-1)=cu[k*(*Ntimes)+l];
-      }
-    } else {
-      vec_zeros(dA);
-    }
+      for (k=1;k<=*px;k++) { VE(dA,k-1)=cu[k*(*Ntimes)+l]; }
+    } else { vec_zeros(dA); }
 
 
     /* terms for robust variance   */ 
-    if (*robust==1)
-      {
+    if (*robust==1 || *retur==1) 
+    {
 	mat_subtr(C[s],C[s-1],tmpM4); 
 	Mv(tmpM4,gam,korG); 
 
-	for (j=0;j<*antclust;j++) {
-	  for (i=0;i<*antpers;i++) 
-	    if (cluster[i]==j) {
-	      extract_row(X,i,xi); 
-	      extract_row(Z,i,zi); 
-	      if (stat==1) {
-		vec_star(xi,dA,tmpv1); 
-		ahati=vec_sum(tmpv1);
-	      } else  {
-		ahati=0.0;
-	      }
-	      vec_star(zi,gam,rowZ); 
-	      ghati=dtime*vec_sum(rowZ); 
-	      vec_star(xi,korG,tmpv1); 
-	      hati=ahati+ghati-vec_sum(tmpv1);
+	for (i=0;i<*antpers;i++) 
+	{
+          ci=cluster[i]; 
+	  extract_row(X,i,xi); extract_row(Z,i,zi); 
+	  if (stat==1) {
+	     vec_star(xi,dA,tmpv1); 
+	     ahati=vec_sum(tmpv1);
+	  } else  { ahati=0.0; }
+	  vec_star(zi,gam,rowZ); 
+	  ghati=dtime*vec_sum(rowZ); 
+	  vec_star(xi,korG,tmpv1); 
+	  hati=ahati+ghati-vec_sum(tmpv1);
 
-	      vM(Acorb[s],xi,tmpv2); 
-	      vec_subtr(zi,tmpv2,tmpv2); 
+	  if (*robust==1) {
+	  vM(Acorb[s],xi,tmpv2); 
+	  vec_subtr(zi,tmpv2,tmpv2); 
 
-	      if (i==pers && stat==1){ 
-		vec_add(tmpv2,W2[j],W2[j]);
-	      }
-	      scl_vec_mult(hati,tmpv2,rowZ); 
-	      vec_subtr(W2[j],rowZ,W2[j]); 
+	  if (i==pers && stat==1){ 
+	     vec_add(tmpv2,W2[ci],W2[ci]);
+	  }
+	  scl_vec_mult(hati,tmpv2,rowZ); 
+	  vec_subtr(W2[ci],rowZ,W2[ci]); 
 
-	      extract_row(AIxit[i],s,rowX); 
-	      if (i==pers && stat==1) {
-		vec_add(rowX,W3[j],W3[j]);
-	      }
-	      scl_vec_mult(hati,rowX,rowX); 
-	      vec_subtr(W3[j],rowX,W3[j]); 
+	  extract_row(AIxit[i],s,rowX); 
+	  if (i==pers && stat==1) { vec_add(rowX,W3[ci],W3[ci]); }
+	  scl_vec_mult(hati,rowX,rowX); 
+	  vec_subtr(W3[ci],rowX,W3[ci]); 
+	  }
 
-	      if (*retur==1) { 
+	  if (*retur==1) { 
 		if (stat==0){
 		  cumAit[i*(*Ntimes)+l+1]=cumAit[i*(*Ntimes)+l+1]-hati;
 		} else {
 		  cumAit[i*(*Ntimes)+l]=cumAit[i*(*Ntimes)+l]+1*(i==pers)-hati;
 		}
-	      }
-	    }  /* if if (cluster[i]==j)  */
-	  if (stat==1) {
-	    replace_row(W3t[j],l,W3[j]);
-	  }  
-	} /* j=1..antclust */ 
-      } /* robust ==1 */
+	  }
+	  if (stat==1)  replace_row(W3t[ci],l,W3[ci]);   
+	} /* i=1..antpers */ 
+    } /* robust ==1 */
 
 
     if (stat==1) {
@@ -586,6 +570,7 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*
   free_vec(korG); free_vec(rowX); free_vec(AIXWdN); free_vec(bhatt); free_vec(zi); 
   free_vec(rowZ); free_vec(gam); free_vec(dgam); free_vec(ZHdN); free_vec(IZHdN); 
   free_vec(dN); free_vec(pbhat); free_vec(pghat); free_vec(plamt); free_vec(ta); 
+  free_vec(vrisk); 
   for (j=0;j<*Ntimes;j++) {
     free_mat(M1M2[j]);
   }

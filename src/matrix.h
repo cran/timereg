@@ -93,6 +93,8 @@ vector *vec_star(vector *v1, vector *v2, vector *v3);
   
 double vec_sum(vector *v);
 
+double vec_prod(vector *v1,vector *v2);
+
 double vec_min(vector *v, int *imin);
   
 void mat_zeros(matrix *M);

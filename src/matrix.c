@@ -9,34 +9,17 @@
 #include <R_ext/Random.h>
 #include "matrix.h"
 
-/* void malloc_mat(int *nrow, int *ncol, matrix *M){ */
-
-/*   malloc_safe(M,sizeof(matrix *)); */
-/*   M->nr = *nrow; */
-/*   M->nc = *ncol; */
-/*   malloc_safe(M->entries,*nrow * *ncol * sizeof(double)); */
-
-/* } */
-
 void free_mat(matrix *M){
 
-  free(M->entries);
-  free(M);
+  Free(M->entries);
+  Free(M);
 
 }
 
-/* void malloc_vec(int *length, vector *V){ */
-
-/*   malloc_safe(V,sizeof(vector *)); */
-/*   V->length = *length; */
-/*   malloc_safe(V->entries,*length * sizeof(double)); */
-
-/* } */
-
 void free_vec(vector *V){
 
-  free(V->entries);
-  free(V);
+  Free(V->entries);
+  Free(V);
 
 }
 
@@ -131,14 +114,58 @@ void MtM(matrix *M, matrix *A){
     oops("Error: dimensions in MtM\n");
   }
 
-  // the results of 1.0 * t(M) %*% M + 0.0 * c is stored in c
-  F77_CALL(dgemm)(&transa, &transb, &m, &n, &k, &alpha, M->entries, &lda,
-		M->entries, &ldb, &beta, A->entries, &ldc);
-  
+  // Ensure that M and A do not occupy the same memory. 
+  if(M != A){
+    // the results of 1.0 * t(M) %*% M + 0.0 * c is stored in c
+    F77_CALL(dgemm)(&transa, &transb, &m, &n, &k, &alpha, M->entries, &lda,
+		    M->entries, &ldb, &beta, A->entries, &ldc);
+  } else {
+    // if M and A occupy the same memory, store the results in a
+    // temporary matrix. 
+    matrix *temp;
+    malloc_mat(nrow_matrix(A),ncol_matrix(A),temp);
+
+    F77_CALL(dgemm)(&transa, &transb, &m, &n, &k, &alpha, M->entries, &lda,
+		    M->entries, &ldb, &beta, temp->entries, &ldc);
+
+    // Copy these results into A, then remove the temporary matrix
+    mat_copy(temp,A);
+
+    free_mat(temp);
+  }
 }
 
 // Does AI := inverse(A), where A is symmetric positive definite, of order *n
 void invertSPD(matrix *A, matrix *AI){
+
+  if( !(nrow_matrix(A)  == ncol_matrix(A) && 
+	nrow_matrix(AI) == ncol_matrix(AI) &&
+	nrow_matrix(A)  == ncol_matrix(AI)) ){
+    oops("Error: dimensions in invertSPD\n");
+  }
+
+  // Ensure that A and AI do not occupy the same memory. 
+  if(A != AI){
+    invertSPDunsafe(A, AI);
+  } else {
+    // if M and A occupy the same memory, store the results in a
+    // temporary matrix. 
+    matrix *temp;
+    malloc_mat(nrow_matrix(AI),ncol_matrix(AI),temp);
+
+    invertSPDunsafe(A, temp);
+    
+    // Copy these results into AI, then remove the temporary matrix
+    mat_copy(temp,AI);    
+    free_mat(temp);
+  }
+
+}
+
+// Does AI := inverse(A), where A is symmetric positive definite, of order *n
+void invertSPDunsafe(matrix *A, matrix *AI){
+  //unsafe because it assumes A and AI are both square and of the same
+  //dimensions, and that they occupy different memory
 
   char uplo = 'U';
   int i, j;
@@ -153,12 +180,6 @@ void invertSPD(matrix *A, matrix *AI){
   int rank = 0;
   int job;
   double tol = 1.0e-07;
-
-  if( !(nrow_matrix(A)  == ncol_matrix(A) && 
-	nrow_matrix(AI) == ncol_matrix(AI) &&
-	nrow_matrix(A)  == ncol_matrix(AI)) ){
-    oops("Error: dimensions in invertSPD\n");
-  }
   
   // First copy the matrix A into the matrix AI
   for(i = 0; i < n; i++){
@@ -198,7 +219,7 @@ void invertSPD(matrix *A, matrix *AI){
 
     // First find the Cholesky factorization of A,
     // stored as an upper triangular matrix
-    F77_CALL(dpotrf)(&uplo, &n, AI->entries, &lda, &info);
+    F77_CALL(dpotrf)(&uplo, &n, AI->entries, &lda, &info); 
 
     if(info < 0){
       printf("Error in invertSPD: arg %d of DPOTRF\n",-info);
@@ -218,10 +239,11 @@ void invertSPD(matrix *A, matrix *AI){
     // is the relevant part returned by dpotrf
     for(i = 0; i < n; i++){
       for(j = 0; j < i; j++){
-	ME(AI,j,i) = ME(AI,i,j);
+	ME(AI,i,j) = ME(AI,j,i);
       }
     }
   }
+
 }
 
 // v2 := M %*% v1
@@ -243,8 +265,23 @@ void Mv(matrix *M, vector *v1, vector *v2){
     oops("Error: dimensions in Mv\n");
   }
   
-  F77_CALL(dgemv)(&trans, &nrow, &ncol, &alpha, M->entries, &nrow,
-		v1->entries, &incx, &beta, v2->entries, &incy);
+  // Ensure that v1 and v2 do not occupy the same memory. 
+  if(v1 != v2){
+    F77_CALL(dgemv)(&trans, &nrow, &ncol, &alpha, M->entries, &nrow,
+		    v1->entries, &incx, &beta, v2->entries, &incy);
+  } else {
+    // if v1 and v2 occupy the same memory, store the results in a
+    // temporary vector. 
+    vector *temp;
+    malloc_vec(length_vector(v2),temp);
+
+    F77_CALL(dgemv)(&trans, &nrow, &ncol, &alpha, M->entries, &nrow,
+		    v1->entries, &incx, &beta, temp->entries, &incy);
+    
+    // Copy these results into A, then remove the temporary matrix
+    vec_copy(temp,v2);    
+    free_vec(temp);
+  }
   
 }
 
@@ -267,8 +304,23 @@ void vM(matrix *M, vector *v1, vector *v2){
     oops("Error: dimensions in vM\n");
   }
   
-  F77_CALL(dgemv)(&trans, &nrow, &ncol, &alpha, M->entries, &nrow,
-		v1->entries, &incx, &beta, v2->entries, &incy);
+  // Ensure that v1 and v2 do not occupy the same memory. 
+  if(v1 != v2){
+    F77_CALL(dgemv)(&trans, &nrow, &ncol, &alpha, M->entries, &nrow,
+		    v1->entries, &incx, &beta, v2->entries, &incy);
+  } else {
+    // if v1 and v2 occupy the same memory, store the results in a
+    // temporary vector. 
+    vector *temp;
+    malloc_vec(length_vector(v2),temp);
+
+    F77_CALL(dgemv)(&trans, &nrow, &ncol, &alpha, M->entries, &nrow,
+		    v1->entries, &incx, &beta, temp->entries, &incy);
+    
+    // Copy these results into A, then remove the temporary matrix
+    vec_copy(temp,v2);    
+    free_vec(temp);
+  }
 }
 
 // v3 := v1 * v2, where * is the Hadamard (componentwise) product of the 
@@ -291,6 +343,25 @@ vector *vec_star(vector *v1, vector *v2, vector *v3){
   
 }
 
+// := v1^T * v2, inner product  
+// two vectors
+double vec_prod(vector *v1, vector *v2){
+  
+  double sum = 0.0;
+  int i;
+  int n = length_vector(v1);
+
+  if( !(length_vector(v2) == n) ){
+    oops("Error: dimensions in vec_star\n");
+  }
+
+  for(i = 0; i < n; i++){
+    sum += VE(v1,i)*VE(v2,i);
+  }
+
+  return sum;
+  
+}
 
 // Sums the entries of a vector of length n
 double vec_sum(vector *v){
@@ -368,7 +439,6 @@ void print_mat(matrix *M){
  
   int j, k;
 
-printf(" rows %d, cols %d \n",nrow_matrix(M),ncol_matrix(M)); 
   for(j=0; j < nrow_matrix(M); j++){
     for(k = 0; k < ncol_matrix(M); k++){
       printf("%5.5g ", ME(M,j,k));
@@ -410,7 +480,6 @@ void print_vec(vector *v){
  
   int j;
 
-  printf(" vector length %d \n",length_vector(v)); 
   for(j=0; j < length_vector(v); j++){
     printf("%5.5g ", VE(v,j));
   }  
@@ -546,6 +615,10 @@ matrix *mat_copy(matrix *m1, matrix *m2){
     oops("Error: dimensions in copy_matrix\n");
   }
 
+  if(m1 == m2){
+    oops("copy_matrix was asked to write one matrix into its own memory\nThere may be an error...\n");
+  }
+
   for(i=0; i < m; i++){
     for(j=0; j < n; j++){
       ME(m2,i,j) = ME(m1,i,j);
@@ -564,6 +637,10 @@ vector *vec_copy(vector *v1, vector *v2){
 
   if( !(length_vector(v2) == l) ){
     oops("Error: dimensions in copy_vector\n");
+  }
+
+  if(v1 == v2){
+    oops("copy_vector was asked to write one matrix into its own memory\nThere may be an error...\n");
   }
 
   for(i=0; i < l; i++){
@@ -591,6 +668,10 @@ void mat_subsec(matrix *m1, int rowStart, int colStart,
     oops("Error: trying to access non-existing rows or cols in mat_subsec\n");
   }
 
+  if(m1 == m2){
+    oops("matrix_subsec was asked to write one matrix into its own memory\nThere may be an error...\n");
+  }
+
   for(i=rowStart; i < rowStop; i++){
     for(j=colStart; j < colStop; j++){
       ME(m2,i-rowStart,j-colStart) = ME(m1,i,j);
@@ -610,10 +691,30 @@ matrix *mat_transp(matrix *m1, matrix *m2){
     oops("Error: dimensions in mat_transp\n");
   }
 
-  for(i=0; i < m; i++){
-    for(j=0; j < n; j++){
-      ME(m2,j,i) = ME(m1,i,j);
+  // Ensure that m1 and m2 do not occupy the same memory. 
+  if(m1 != m2){
+
+    for(i=0; i < m; i++){
+      for(j=0; j < n; j++){
+	ME(m2,j,i) = ME(m1,i,j);
+      }
     }
+
+  } else {
+    // if v1 and v2 occupy the same memory, store the results in a
+    // temporary vector. 
+    matrix *temp;
+    malloc_mat(nrow_matrix(m2),ncol_matrix(m2),temp);
+
+    for(i=0; i < m; i++){
+      for(j=0; j < n; j++){
+	ME(temp,j,i) = ME(m1,i,j);
+      }
+    }
+    
+    // Copy these results into A, then remove the temporary matrix
+    mat_copy(temp,m2);    
+    free_mat(temp);
   }
 
   return(m2);
@@ -699,9 +800,26 @@ void MtA(matrix *M, matrix *A, matrix *Mout){
     oops("Error: dimensions in MtA\n");
   }
  
-  // the results of 1.0 * t(M) %*% A + 0.0 * Mout is stored in Mout
-  F77_CALL(dgemm)(&transa, &transb, &m, &n, &k, &alpha, M->entries,
-		  &lda, A->entries, &ldb, &beta, Mout->entries, &ldc);
+  // Ensure that Mout does not occupy the same memory as M or A 
+  if(Mout != A && Mout != M){
+    // the results of 1.0 * t(M) %*% A + 0.0 * Mout is stored in Mout
+    F77_CALL(dgemm)(&transa, &transb, &m, &n, &k, &alpha, M->entries,
+		    &lda, A->entries, &ldb, &beta, Mout->entries, &ldc);
+  } else {
+    // if M and A occupy the same memory, store the results in a
+    // temporary matrix. 
+    matrix *temp;
+    malloc_mat(nrow_matrix(Mout),ncol_matrix(Mout),temp);
+
+    // the results of 1.0 * t(M) %*% A + 0.0 * Mout is stored in temp
+    F77_CALL(dgemm)(&transa, &transb, &m, &n, &k, &alpha, M->entries,
+		    &lda, A->entries, &ldb, &beta, temp->entries, &ldc);
+    
+    // Copy these results into A, then remove the temporary matrix
+    mat_copy(temp,Mout);    
+    free_mat(temp);
+  }
+
 
 }
 
@@ -726,14 +844,59 @@ void MAt(matrix *M, matrix *A, matrix *Mout){
     oops("Error: dimensions in MAt\n");
   }
  
-  // the results of 1.0 * t(M) %*% A + 0.0 * Mout is stored in Mout
-  F77_CALL(dgemm)(&transa, &transb, &m, &n, &k, &alpha, M->entries,
-		  &lda, A->entries, &ldb, &beta, Mout->entries, &ldc);
+  // Ensure that Mout does not occupy the same memory as M or A 
+  if(Mout != A && Mout != M){
+    // the results of 1.0 * t(M) %*% A + 0.0 * Mout is stored in Mout
+    F77_CALL(dgemm)(&transa, &transb, &m, &n, &k, &alpha, M->entries,
+		    &lda, A->entries, &ldb, &beta, Mout->entries, &ldc);
+  } else {
+    // if M and A occupy the same memory, store the results in a
+    // temporary matrix. 
+    matrix *temp;
+    malloc_mat(nrow_matrix(Mout),ncol_matrix(Mout),temp);
+
+    // the results of 1.0 * t(M) %*% A + 0.0 * Mout is stored in temp
+    F77_CALL(dgemm)(&transa, &transb, &m, &n, &k, &alpha, M->entries,
+		    &lda, A->entries, &ldb, &beta, temp->entries, &ldc);
+    
+    // Copy these results into Mout, then remove the temporary matrix
+    mat_copy(temp,Mout);    
+    free_mat(temp);
+  }
+
 
 }
 
 // Does Ainv := inverse(A), where A is a square matrix
 void invert(matrix *A, matrix *Ainv){
+
+  if( !(nrow_matrix(A)  == ncol_matrix(A) && 
+	nrow_matrix(Ainv) == ncol_matrix(Ainv) &&
+	nrow_matrix(A)  == ncol_matrix(Ainv)) ){
+    oops("Error: dimensions in invert\n");
+  }
+
+  // Ensure that A and Ainv do not occupy the same memory. 
+  if(A != Ainv){
+    invertUnsafe(A, Ainv);
+  } else {
+    // if A and Ainv occupy the same memory, store the results in a
+    // temporary matrix. 
+    matrix *temp;
+    malloc_mat(nrow_matrix(Ainv),ncol_matrix(Ainv),temp);
+
+    invertUnsafe(A, temp);
+    
+    // Copy these results into Ainv, then remove the temporary matrix
+    mat_copy(temp,Ainv);    
+    free_mat(temp);
+  }
+}
+
+// Does Ainv := inverse(A), where A is a square matrix
+void invertUnsafe(matrix *A, matrix *Ainv){
+  //unsafe because it assumes A and Ainv are both square and of the
+  //same dimensions, and that they occupy different memory
 
   //char uplo = 'U';
   int i, j;
@@ -743,12 +906,6 @@ void invert(matrix *A, matrix *Ainv){
   int lwork = n * n;
   double *work = malloc(n * n * sizeof(double));
   int info = -999;
-
-  if( !(nrow_matrix(A)  == ncol_matrix(A) && 
-	nrow_matrix(Ainv) == ncol_matrix(Ainv) &&
-	nrow_matrix(A)  == ncol_matrix(Ainv)) ){
-    oops("Error: dimensions in invert\n");
-  }
 
   // First turn the matrix A into the vector a
 
@@ -763,7 +920,8 @@ void invert(matrix *A, matrix *Ainv){
   F77_CALL(dgetrf)(&n, &n, Ainv->entries, &lda, ipiv, &info);
 
   if(info != 0){
-    printf("Error in invert: DGETRF returned info = %d \n",info);
+    //Avoid printing this error message
+    //printf("Error in invert: DGETRF returned info = %d \n",info);
     mat_zeros(Ainv);
   } else {
 
@@ -802,10 +960,28 @@ void MxA(matrix *M, matrix *A, matrix *Mout){
     oops("Error: dimensions in MxA\n");
   }
 
-  // the results of 1.0 * M %*% A + 0.0 * c is stored in c
-  // therfore we do not need to initialise c
-  F77_CALL(dgemm)(&transa, &transb, &m, &n, &k, &alpha, M->entries, &lda,
-		A->entries, &ldb, &beta, Mout->entries, &ldc);
+  // Ensure that Mout does not occupy the same memory as M or A 
+  if(Mout != A && Mout != M){
+    // the results of 1.0 * M %*% A + 0.0 * c is stored in c
+    // therfore we do not need to initialise c
+    F77_CALL(dgemm)(&transa, &transb, &m, &n, &k, &alpha, M->entries, &lda,
+		    A->entries, &ldb, &beta, Mout->entries, &ldc);
+  } else {
+    // if M and A occupy the same memory, store the results in a
+    // temporary matrix. 
+    matrix *temp;
+    malloc_mat(nrow_matrix(Mout),ncol_matrix(Mout),temp);
+
+    // the results of 1.0 * M %*% A + 0.0 * c is stored in c
+    // therfore we do not need to initialise c
+    F77_CALL(dgemm)(&transa, &transb, &m, &n, &k, &alpha, M->entries, &lda,
+		    A->entries, &ldb, &beta, temp->entries, &ldc);
+    
+    // Copy these results into Mout, then remove the temporary matrix
+    mat_copy(temp,Mout);    
+    free_mat(temp);
+  }
+
 
 }
 

@@ -2,7 +2,7 @@
 
 .First.lib <- function(lib, pkg) {
   library.dynam("timereg", pkg, lib)
-  cat("This is timereg 1.0-9 \n\n");
+  cat("This is timereg 1.1-2 \n\n");
   cat("aalen.test    : semiparametric additive model with
 improved test for constant effects and offsets \n")
   cat("aalen         : semiparametric additive model\n")
@@ -24,7 +24,6 @@ improved test for constant effects and offsets \n")
   library.dynam.unload("timereg",lib)
 }
 
-
 aalen<-function (formula = formula(data),
                  data = sys.parent(), start.time = 0, max.time = NULL, 
                  robust=1, id=NULL, clusters=NULL, residuals = 0, n.sim = 1000,  
@@ -32,18 +31,16 @@ aalen<-function (formula = formula(data),
 ###deltaweight<-1; # always default
   if (n.sim == 0) sim <- 0 else sim <- 1
   if (resample.iid==1 & robust==0) {
-    cat("When robust=0 no iid representaion computed\n"); 
-    resample.iid<-0;}
+    cat("When robust=0 no iid representaion computed\n"); resample.iid<-0;}
   if (covariance==1 & robust==0) {
     cat("When robust=0 no covariance computed \n"); 
     cat("Covariance based on robust iid representation\n")
     covariance<-0;}
   if (sim==1 & robust==0) {
-    cat("When robust=0, No simulations \n"); 
-    cat("n.sim set to 0\n"); n.sim<-0;}
-  if (residuals==1 & robust==0) {
-    cat("When robust=0, no martingale residuals \n"); 
-    residuals<-0;}
+    cat("When robust=0, No simulations \n"); cat("n.sim set to 0\n"); n.sim<-0;}
+#if (residuals==1 & robust==0) {
+#cat("When robust=0, no martingale residuals \n"); 
+#residuals<-0;}
   if (n.sim>0 & n.sim<50) {n.sim<-50 ; cat("Minimum 50 simulations\n");}
   call <- match.call()
   m <- match.call(expand = FALSE)
