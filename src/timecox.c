@@ -13,10 +13,12 @@ int *nx,*p,*antpers,*Ntimes,*nb,*it,*degree,*id,*status,*sim,*antsim,*rani,*retu
   vector *cumhatA[*antpers],*cumA[*antpers],*cum,*dN1;
   int i,j,k,l,s,c,count,pers=0,imin[1],itt,coef[1],ps[1];
   double ahati,time,dummy,dtime;
-  double vcudif[(*Ntimes)*(*p+1)],sbhat[(*Ntimes)*(*p+1)],
-    sscore[(*Ntimes)*(*p+1)],ssscore[(*Ntimes)*(*p+1)]; 
+  double *vcudif=calloc((*Ntimes)*(*p+1),sizeof(double)),
+	 *sbhat=calloc((*Ntimes)*(*p+1),sizeof(double)),
+         *sscore=calloc((*Ntimes)*(*p+1),sizeof(double)); 
   void comptest(),smoothB(); 
   long idum; idum=*rani;
+
 
   malloc_mats(*antpers,*p,&ldesignX,&cdesignX,NULL);
   malloc_mats(*p,*p,&Vcov,&A,&AI,NULL);
@@ -69,9 +71,9 @@ int *nx,*p,*antpers,*Ntimes,*nb,*it,*degree,*id,*status,*sim,*antsim,*rani,*retu
 	  vec_subtr(xi,vtmp1,vtmp1); vec_add(vtmp1,score,score); 
 
 	  for (k=1;k<=*p;k++) sscore[k*(*Ntimes)+s]=VE(score,k-1); 
+	   sscore[s]=time; 
 
 	  cu[s]=time; vcu[s]=time; robvcu[s]=time; sbhat[s]=time;
-	  sscore[s]=time; ssscore[s]=time;
 	  if (itt==0) 
 	    for (k=1;k<=*p;k++) sbhat[k*(*Ntimes)+s-1]=bhat[k*(*Ntimes)+s-1];
 
@@ -79,6 +81,7 @@ int *nx,*p,*antpers,*Ntimes,*nb,*it,*degree,*id,*status,*sim,*antsim,*rani,*retu
 	    cu[k*(*Ntimes)+s]=cu[k*(*Ntimes)+(s-1)]+dtime*VE(bhatt,k-1)+VE(AIXdM,k-1);
 	    sbhat[k*(*Ntimes)+s-1]=bhat[k*(*Ntimes)+s-1]+VE(AIXdM,k-1); 
 	    /*
+	     ssscore[s]=time;
 	      printf(" %lf %lf ",sbhat[k*(*Ntimes)+s-1]-bhat[k*(*Ntimes)+s-1],
 	      ssscore[k*(*Ntimes)+s-1]); printf("\n"); 
 	    */
@@ -154,6 +157,7 @@ int *nx,*p,*antpers,*Ntimes,*nb,*it,*degree,*id,*status,*sim,*antsim,*rani,*retu
 
   free_mats(&Vcov,&ldesignX,&A,&AI,&cdesignX,NULL);
   free_vecs(&dM,&difX,&rowX,&xi,&vtmp,&vtmp1,&diag,&dB,&dN,&VdB,&AIXdN,&AIXlamt,&ta,&bhatt,&pbhat,&plamt,&lrisk,&cum,NULL);
+  free(vcudif); free(sbhat); free(sscore); 
 }
 
 void OSsemicox(times,Ntimes,designX,nx,px,designG,ng,pg,
@@ -177,9 +181,9 @@ int
   vector *xi,*rowX,*rowZ,*difX,*zi,*z1,*tmpv1,*tmpv2,*lrisk;
   int itt,i,j,k,l,s,c,count,pers=0,imin[1],pmax,coef[1],ps[1];
   double time,dummy,dtime,hati,tau;
-  double vcudif[(*Ntimes)*(*px+1)];
+  double *vcudif=calloc((*Ntimes)*(*px+1),sizeof(double));
   void comptest(),smoothB();
-  long ipers[*Ntimes];
+  int *ipers=calloc(*Ntimes,sizeof(int));
   long idum; idum=*rani;
 
   if (*robust==1) 
@@ -409,4 +413,5 @@ int
   if (*robust==1) 
     for (j=0;j<*antpers;j++) {free_mat(W3t[j]); free_mat(W4t[j]);
       free_mat(AIxit[j]); free_vec(W2[j]); free_vec(W3[j]); }
+      free(vcudif); free(ipers); 
 }

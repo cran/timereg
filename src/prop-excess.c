@@ -23,8 +23,6 @@ gcc -shared -Wl -o  addmult.so addmult.o -L/coll/local/lib -lm meschach.a
 /*#include <S.h>*/
 
 
-
-
 /* #########################################################*/
 
 

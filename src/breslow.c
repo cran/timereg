@@ -13,8 +13,8 @@ int
   matrix *cumBL[*antpers],*cumB[*antpers],*BLsubbetaLam[*antpers],*varBL, *Delta2,*Delta,*tmpM1,*tmpM2; 
   int supsup=0,itt,i,j,k,s,c,count,pers=0,imin[1],coef[1],ps[1];// unused var:l,sing
   double time2,rr,time=0,time1,dummy,dtime,S0,lam0t,sdBt,tau,random;
-  double Basei[*antpers],rvarbase,vcudif[(*Ntimes)*(*p+2)];
-  double sbhat[(*Ntimes)*(*p+2)];
+  double *Basei=calloc(*antpers,sizeof(double)),rvarbase,
+	 *vcudif=calloc((*Ntimes)*(*p+2),sizeof(double));
   void smoothB(),smooth2B(),comptest(); 
   long idum; idum=*rani;
   double norm_rand();
@@ -131,10 +131,10 @@ int
       schoen[s]=time; cu[s]=time; vcu[s]=time; rvcu[s]=time; 
       cu[1*(*Ntimes)+s]=cu[1*(*Ntimes)+s-1]+(1/S0); vcu[1*(*Ntimes)+s]=0; 
 
-      sbhat[s]=time; sbhat[1*(*Ntimes)+s]=0;
       for (k=2;k<=(*p)+1;k++){
 	cu[k*(*Ntimes)+s]=cu[k*(*Ntimes)+s-1]+dtime*VE(bhatt,k-2)+VE(dB,k-2)/lam0t;   
 	/*
+      sbhat[s]=time; sbhat[1*(*Ntimes)+s]=0;
 	  sbhat[k*(*Ntimes)+s]=bhat[k*(*Ntimes)+s]+dB->ve[k-2];
 	  printf(" %lf %lf ",sbhat[k*(*Ntimes)+s-1],bhat[k*(*Ntimes)+s-1]);
 	*/
@@ -864,4 +864,5 @@ int *nx,*px,*antpers,*Ntimes,*nb,*ng,*pg,*it,*degree,*sim,*antsim,
       free_mat(AIxit[j]);
     }
   }
+  free(vcudif); free(Basei); 
 }

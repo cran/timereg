@@ -94,6 +94,144 @@ extern void
 F77_SUB(dgetri)(const int* n, double* a, const int* lda,
                  int* ipiv, double* work, const int* lwork, int* info);
 
+// cumsum of matrix apply(X,2,cusum)
+// rev=1 apply(X[n:1,],2,cumsum)[n:1,]
+// for rev=1 possible to return only apply(X[n:1,],2,cumsum)[nindex,]
+void cumsumM(matrix *M, matrix *Mout,int rev,int weighted,double *weights)   {
+  int i,j,p=ncol_matrix(M),n=nrow_matrix(M); 
+  double lweights[n]; 
+
+  matrix *temp; 
+  malloc_mat(n,p,temp); 
+
+  if( !( 
+	(ncol_matrix(M) == ncol_matrix(Mout)) ))  {
+    oops("Error: dimensions in cumsumM\n");
+  }
+
+  for(i=0;i<n;i++)if (weighted==0)lweights[i]=1.0; else lweights[i]=weights[i]; 
+
+  if (rev==0) {
+    for(j = 0; j < n; j++) ME(Mout,0,j)=ME(M,0,j)*lweights[0]; 
+    for(i = 1; i < n; i++) 
+      for(j = 0; j < n; j++) ME(Mout,i,j)= ME(Mout,i-1,j)+ ME(M,i,j)*lweights[i]; 
+  }
+
+  if (rev==1) {
+    matrix *temp; 
+    malloc_mat(n,p,temp); 
+
+    for(j = 0; j < p; j++) ME(temp,0,j)=ME(M,n-1,j)*lweights[n-1]; 
+    for(i = 1; i < n; i++) 
+      for(j = 0; j < p; j++) ME(temp,i,j)= ME(temp,i-1,j)+ME(M,n-1-i,j)*lweights[n-1-i]; 
+
+    for(i = 0; i < n; i++) 
+      for(j = 0; j < p; j++) ME(Mout,i,j)=ME(temp,n-1-i,j);
+    free_mat(temp); 
+  }
+
+}
+
+// returns cumsum X^T %*% Z  , rev=1 does the reverse sum 
+// and index only returns certain indeces of the cumsum only for rev=1
+// see a cumsumM
+void cumsumM1pM2(matrix *M1, matrix *M2,matrix *At[],int rev,int weighted,double *weights,int nindex, int *index){
+  int i,j,k,p1=ncol_matrix(M1),p2=ncol_matrix(M2),n=nrow_matrix(M1); 
+  double lweights[n]; 
+
+  if( !( (p1== nrow_matrix(At[0])) && 
+	 (p2== ncol_matrix(At[0])) )){
+    oops("Error: dimensions in cumsumM1pM2\n");
+  }
+
+  for(i = 0; i < n; i++)if (weighted==0)lweights[i]=1.0; else lweights[i]=weights[i]; 
+
+  if (rev==0) {
+    for(j = 0; j < p1; j++) 
+      for(k = 0; k < p2; k++) ME(At[0],j,k)=ME(M1,0,j)*ME(M2,0,k)*lweights[0]; 
+
+    for(i = 1; i < n; i++) 
+      for(j = 0; j < p1; j++) 
+	for(k = 0; k < p2; k++) ME(At[i],j,k)= ME(At[i-1],j,k)+
+	  ME(M1,i,j)*ME(M2,i,k)*lweights[i]; 
+  }
+
+  if (rev==1) {
+    matrix *temp[n]; 
+    for(i = 0; i < n; i++) malloc_mat(p1,p2,temp[i]); 
+
+    for(j = 0; j < p1; j++) 
+      for(k = 0; k < p2; k++) ME(temp[0],j,k)=ME(M1,n-1,j)*ME(M2,n-1,k)*lweights[n-1]; 
+
+    for(i = 1; i < n; i++) 
+      for(j = 0; j < p1; j++) 
+	for(k = 0; k < p2; k++) ME(temp[i],j,k)= ME(temp[i-1],j,k)+
+	  ME(M1,n-i-1,j)*ME(M2,n-i-1,k)*lweights[n-i-1]; 
+
+    if (nindex>1) 
+      for(i = 0; i < nindex; i++)  mat_copy(temp[index[i]],At[nindex-i-1]);  
+    else for(i = 0; i < n; i++)  mat_copy(temp[i],At[n-i-1]);  
+
+    for(i = 0;i<n;i++)  free_mat(temp[i]);  
+  }
+
+}
+
+// returns cumsum X^T %*% Z  , rev=1 does the reverse sum 
+// and index only returns certain indeces of the cumsum only for rev=1
+// see a cumsumM
+void cumsumMpM(matrix *M1,matrix *At[],int rev,int weighted,double *weights,
+		int nindex,int *index){
+int i,j,k,p1=ncol_matrix(M1),p2=ncol_matrix(M1),n=nrow_matrix(M1); 
+double lweights[n]; 
+
+// head_matrix(M1); head_matrix(At[0]); 
+
+  if( !( 
+	(p1== nrow_matrix(At[0])) && 
+	(p2== ncol_matrix(At[0])) )){
+    oops("Error: dimensions in cumsumMpM\n");
+  }
+
+  for(i = 0; i < n; i++)if (weighted==0)lweights[i]=1.0; else lweights[i]=weights[i]; 
+
+if (rev==0) {
+  for(j = 0; j < p1; j++) 
+  for(k = 0; k < p2; k++) ME(At[0],j,k)=ME(M1,0,j)*ME(M1,0,k)*lweights[0]; 
+
+  for(i = 1; i < n; i++) 
+  for(j = 0; j < p1; j++) 
+  for(k = 0; k < p2; k++) ME(At[i],j,k)= ME(At[i-1],j,k)+
+                          ME(M1,i,j)*ME(M1,i,k)*lweights[i]; 
+}
+
+if (rev==1) {
+  matrix *temp[n],*temp1[n]; 
+  for(i = 0; i < n; i++) { 
+	  malloc_mat(p1,p2,temp[i]); malloc_mat(p1,p2,temp1[i]); }
+
+  for(j = 0; j < p1; j++) 
+  for(k = 0; k < p2; k++) ME(temp[0],j,k)=ME(M1,n-1,j)*ME(M1,n-1,k)*lweights[n-1]; 
+
+  for(i = 1; i < n; i++) 
+  for(j = 0; j < p1; j++) 
+  for(k = 0; k < p2; k++) ME(temp[i],j,k)= ME(temp[i-1],j,k)+
+	                  ME(M1,n-i-1,j)*ME(M1,n-i-1,k)*lweights[n-i-1]; 
+
+  for(i = 0; i < n; i++)  mat_copy(temp[i],temp1[n-i-1]);  
+
+if (nindex>0) 
+  for(i = 0;i<nindex;i++)  {
+	  mat_copy(temp1[index[i]],At[i]);  
+  }
+  else for(i = 0; i < n; i++)  mat_copy(temp[i],At[n-i-1]);  
+
+  for(i = 0;i<n;i++)  { free_mat(temp[i]); free_mat(temp1[i]); }  
+}
+
+}
+
+
 // Performs A := t(M) %*% M, where A is an nRowM x nColM matrix, 
 // and A is an nColM x nColM matrix
 void MtM(matrix *M, matrix *A){
@@ -439,9 +577,12 @@ void print_mat(matrix *M){
  
   int j, k;
 
+  printf("Matrix nrow=%d ncol=%d \n",nrow_matrix(M),ncol_matrix(M)); 
   for(j=0; j < nrow_matrix(M); j++){
     for(k = 0; k < ncol_matrix(M); k++){
-      printf("%5.5g ", ME(M,j,k));
+//      printf("%5.5g ", ME(M,j,k));
+      // printf("%+15.15g ", ME(M,j,k));
+      printf("%lf ", ME(M,j,k));
     }
     printf("\n");
   }  
@@ -453,9 +594,11 @@ void head_matrix(matrix *M){
  
   int j, k;
 
+  printf("head:Matrix nrow=%d ncol=%d \n",nrow_matrix(M),ncol_matrix(M)); 
   for(j=0; j < min(nrow_matrix(M),6); j++){
     for(k = 0; k < min(ncol_matrix(M),6); k++){
-      printf("%5.5g ", ME(M,j,k));
+      //printf("%5.5g ", ME(M,j,k));
+      printf("%lf ", ME(M,j,k));
     }
     printf("\n");
   }  
@@ -467,8 +610,9 @@ void head_vector(vector *V){
  
   int j;
 
+  printf("head:Vector lengthn=%d \n",length_vector(V)); 
   for(j=0; j < min(length_vector(V),6); j++){
-    printf("%5.5g ", VE(V,j));
+    printf("%lf ", VE(V,j));
   }  
   printf("\n");
 
@@ -480,8 +624,9 @@ void print_vec(vector *v){
  
   int j;
 
+  printf("Vector lengthn=%d \n",length_vector(v)); 
   for(j=0; j < length_vector(v); j++){
-    printf("%5.5g ", VE(v,j));
+    printf("%lf ", VE(v,j));
   }  
   printf("\n");
   
@@ -904,8 +1049,13 @@ void invertUnsafe(matrix *A, matrix *Ainv){
   int lda = n; // matrix A has dimensions n x n
   int *ipiv = malloc(n * sizeof(int));
   int lwork = n * n;
-  double *work = malloc(n * n * sizeof(double));
   int info = -999;
+  double anorm = -999.0;
+  double rcond = -999.0;
+  double tol = 1.0e-07;
+  double *dwork = malloc(4 * n * sizeof(double));
+  int *iwork = malloc(n * sizeof(int));
+  double *work = malloc(n * n * sizeof(double));
 
   // First turn the matrix A into the vector a
 
@@ -915,15 +1065,35 @@ void invertUnsafe(matrix *A, matrix *Ainv){
     }
   }
 
+  anorm = F77_NAME(dlange)("O", &n, &n, Ainv->entries, &lda, dwork);
+
   // First find the LU factorization of A,
   // stored as an upper triangular matrix
   F77_CALL(dgetrf)(&n, &n, Ainv->entries, &lda, ipiv, &info);
 
   if(info != 0){
     //Avoid printing this error message
-    //printf("Error in invert: DGETRF returned info = %d \n",info);
+    printf("Error in invert: DGETRF returned info = %d \n",info);
     mat_zeros(Ainv);
   } else {
+  
+    for(i = 0; i < n; i++){
+      iwork[i]= ipiv[i];
+    }
+    F77_CALL(dgecon)("O", &n, Ainv->entries, &lda, &anorm, &rcond, dwork, iwork,  &info);
+    
+    if(info != 0){
+      //Avoid printing this error message
+      printf("Error in invert: DGETRF returned info = %d \n",info);
+      mat_zeros(Ainv);
+      return;
+    } 
+    
+    if(rcond < tol){
+      printf("Error in invert: estimated reciprocal condition number = %7.7e\n",rcond); 
+      mat_zeros(Ainv);
+      return;
+    }
 
     // then use this factorization to compute the inverse of A
     F77_CALL(dgetri)(&n, Ainv->entries, &lda, ipiv, work, &lwork, &info);
@@ -932,33 +1102,41 @@ void invertUnsafe(matrix *A, matrix *Ainv){
       printf("Error in invert: DPOTRI returned info = %d \n",info);
       mat_zeros(Ainv);
     }
+
+    if (fabs(ME(Ainv,0,0))>99999999999999)  { // TS 23-10
+      print_mat(Ainv);
+      printf("Inversion, unstable large elements  \n");
+      mat_zeros(Ainv);
+    }
   }
-
-  free(ipiv);
+  
   free(work);
-
+  free(iwork);
+  free(dwork);
+  free(ipiv);
+    
 }
 
 // Performs Mout := M %*% A, where M is an nRowM x nColM matrix, 
 // and A is an nColM x nColA matrix, and Mout is a nRowM x nColA matrix
 void MxA(matrix *M, matrix *A, matrix *Mout){
 
-  char transa = 'n';
-  char transb = 'n';
-  double alpha = 1.0;
-  double beta = 0.0;
-  int m = nrow_matrix(M);
-  int n = ncol_matrix(A);
-  int k = ncol_matrix(M);
-  int lda = nrow_matrix(M);
-  int ldb = ncol_matrix(M);
-  int ldc = nrow_matrix(M);
+	char transa = 'n';
+	char transb = 'n';
+	double alpha = 1.0;
+	double beta = 0.0;
+	int m = nrow_matrix(M);
+	int n = ncol_matrix(A);
+	int k = ncol_matrix(M);
+	int lda = nrow_matrix(M);
+	int ldb = ncol_matrix(M);
+	int ldc = nrow_matrix(M);
 
-  if( !(ncol_matrix(M)    == nrow_matrix(A) && 
-	nrow_matrix(Mout) == nrow_matrix(M) &&	
-	ncol_matrix(Mout) == ncol_matrix(A)) ){
-    oops("Error: dimensions in MxA\n");
-  }
+	if( !(ncol_matrix(M)    == nrow_matrix(A) && 
+				nrow_matrix(Mout) == nrow_matrix(M) &&	
+				ncol_matrix(Mout) == ncol_matrix(A)) ){
+		oops("Error: dimensions in MxA\n");
+	}
 
   // Ensure that Mout does not occupy the same memory as M or A 
   if(Mout != A && Mout != M){

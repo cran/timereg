@@ -28,11 +28,17 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,*ratesim,*robust,
   vector *vthetascore,*vtheta1,*vtheta2,*dtheta,*thetaiid[*antclust]; 
   vector *dAiid[*antclust]; 
   int c,pers=0,i,j,k,l,s,it,count,sing,pmax,cluster[*antpers];
-  double Nt[*antclust],dtime,time,dummy,ll,lle,llo;
-  double tau,hati,scale,sumscore=999,Nti[*antpers],theta0=0;
-  double
-  thetaiidscale[*antclust],NH[*antclust],HeH[*antclust],H2eH[*antclust],Rtheta[*antclust],Hik[*antpers],Dthetanu=1,DDthetanu=1,nu=1; 
-  long ipers[*Ntimes];
+  double *Nt=calloc(*antclust,sizeof(double)),dtime,time,dummy,ll,lle,llo;
+  double tau,hati,scale,sumscore=999,*Nti=calloc(*antpers,sizeof(double)), theta0=0;
+  double *thetaiidscale=calloc(*antclust,sizeof(double)),
+         *NH=calloc(*antclust,sizeof(double)),
+	 *HeH=calloc(*antclust,sizeof(double)),
+	 *H2eH=calloc(*antclust,sizeof(double)),
+	 *Rtheta=calloc(*antclust,sizeof(double)),
+         *Hik=calloc(*antpers,sizeof(double)),
+	 Dthetanu=1,DDthetanu=1,nu=1; 
+  int *ipers=calloc(*Ntimes,sizeof(int));
+
 
   for (j=0;j<*antclust;j++) { Nt[j]=0; NH[j]=0; 
     malloc_vec(*pg,dbetaNH[j]); malloc_vec(*px,dANH[j]);  malloc_vec(*ptheta,dAiid[j]); 
@@ -477,4 +483,6 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,*ratesim,*robust,
 	      &vthetascore,&vtheta1,&dtheta,&vtheta2,
 	      &reszpbeta, &res1dim,NULL); 
 
+  free(Nt); free(Nti); free(thetaiidscale); free(NH); free(HeH); free(H2eH); 
+  free(Rtheta); free(Hik); 
 }

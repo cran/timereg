@@ -143,6 +143,13 @@ predict.comprisk<-function(object,newdata=NULL,X=NULL,
       P1=1-exp(-cumhaz-constant.part %*% time)
     }
     RR<-NULL; 
+  } else if (modelType == '1-additive') { # P1=exp(-x^T b(t) - z^t gamma) 
+      if (semi==FALSE){
+         P1=exp(-cumhaz);
+       } else {
+         P1<-exp(-cumhaz-matrix(constant.part,nobs,nt));
+       }
+       RR<-1;
   } else if (modelType == 'prop') {     #model proportional 
     if (semi==FALSE){
       RR<-exp(cumhaz);
@@ -150,6 +157,13 @@ predict.comprisk<-function(object,newdata=NULL,X=NULL,
       RR<-exp(cumhaz+matrix(constant.part,nobs,nt));
     }
     P1<-1-exp(-RR);
+  } else if (modelType == 'logistic') { #model logistic
+    if (semi==FALSE){
+      RR<-exp(cumhaz);
+    } else {
+      RR<-exp(cumhaz+matrix(constant.part,nobs,nt));
+    }
+    P1<-RR/(1+RR);
   } else if (modelType == "aalen") {    #Aalen model
     if (semi==FALSE){
       S0=exp(-cumhaz);
@@ -192,22 +206,29 @@ predict.comprisk<-function(object,newdata=NULL,X=NULL,
       }
 
       if (semi==TRUE){
-        if(modelType=="additive" || modelType == "aalen"){
+        if(modelType=="additive" || modelType == "aalen") {
+           # || modelType=="1-additive") {
           tmp<-tmp+tmp.const %*% matrix(time,1,nt)
-        } else if (modelType=="prop") {
+        } else if (modelType=="prop" || modelType=="1-additive") {
           tmp<-RR*tmp+RR*matrix(tmp.const,nobs,nt);
 	  ## modification of jeremy's code RR
         } else if (modelType=="cox.aalen") {
           tmp <- RR * tmp + RR * cumhaz * matrix(tmp.const,nobs,nt);
         }
       }
-
       delta<-cbind(delta,c(tmp)); 
     }
     se<-apply(delta^2,1,sum)^.5
     if(modelType == 'additive' || modelType == 'prop'){
       se.P1<-matrix(se,nobs,nt)*(1-P1) 
-    } else if (modelType == 'aalen' || modelType == 'cox.aalen'){
+    } 
+    else if(modelType == '1-additive'){
+      se.P1<-matrix(se,nobs,nt)*(P1) 
+    } 
+    else if (modelType == 'logistic'){
+      se.P1<-matrix(se,nobs,nt)*P1/(1+RR)
+    } 
+    else if (modelType == 'aalen' || modelType == 'cox.aalen'){
       se.S0<-matrix(se,nobs,nt)*S0
     }
 
@@ -231,7 +252,8 @@ predict.comprisk<-function(object,newdata=NULL,X=NULL,
     uband<-NULL;
   }
 
-  if(modelType == 'additive' || modelType == 'prop'){
+  if(modelType == 'additive' || modelType == 'prop' || modelType=="logistic"
+     || modelType=='1-additive'){
     P1<-matrix(P1,nrow=nobs);
   } else if (modelType == 'aalen' || modelType == 'cox.aalen'){
     S0<-matrix(S0,nrow=nobs);
@@ -240,14 +262,15 @@ predict.comprisk<-function(object,newdata=NULL,X=NULL,
   out<-list(time=time,unif.band=uband,model=modelType,alpha=alpha,
             newdata=list(X = time.vars, Z = constant.covs),RR=RR,
             call=sys.calls()[[1]], initial.call = attr(object,'Call'));
-  if(modelType == 'additive' || modelType == 'prop'){
+  if(modelType == 'additive' || modelType == 'prop' || modelType=="logistic"
+     || modelType=='1-additive'){
     out$P1 <- P1;
     out$se.P1 <- se.P1;    
   } else if (modelType == 'aalen' || modelType == 'cox.aalen'){
     out$S0 <- S0;
     out$se.S0 <- se.S0;    
   }
-                                        # e.g. for an compound risk model, className = predictComprisk
+   # e.g. for an compound risk model, className = predictComprisk
   className <- switch(class(object),aalen='predictAalen',cox.aalen='predictCoxAalen',comprisk='predictComprisk')
   class(out) <- className
 
@@ -266,9 +289,21 @@ plot.predictCoxAalen <-  function(x,...){
 
 }
 
-plot.predictComprisk<-function(x,uniform=1,new=1,
-se=1,col=1,lty=1,lwd=1,multiple=0,specific.comps=0,
-xlab="Time",ylab="Probability",...){
+
+pava = function(x, w=rep(1,length(x)))  # R interface to the compiled code
+{
+  n = length(x)
+  if (n != length(w)) return (0)    # error
+  result  = .C("pava",
+        y = as.double(x),
+        as.double(w),
+        as.integer(n) )
+  result[["y"]]
+}
+
+
+plot.predictComprisk<-function(x,uniform=1,new=1,se=1,col=1,lty=1,lwd=2,multiple=0,specific.comps=0,
+xlab="Time",ylab="Probability",transparency=FALSE,monotone=TRUE,...){
   object <- x; rm(x);
   modelType <- object$model;
   time<-object$time;
@@ -283,9 +318,15 @@ xlab="Time",ylab="Probability",...){
   
   if (modelType == 'aalen' || modelType == 'cox.aalen'){
     mainLine <- object$S0;
+    if (monotone==TRUE) { mainLine<--t(apply(as.matrix(-mainLine),1,pava)); 
+    mainLine[mainLine<0]<-0; 
+    }
     mainLine.se <- object$se.S0;    
-  } else if(modelType == 'additive' || modelType == 'prop'){
+  } else if(modelType == 'additive' || modelType == 'prop' || modelType=="logistic" || modelType=="1-additive"){
     mainLine <- object$P1;
+    if (monotone==TRUE) { mainLine<-t(apply(as.matrix(mainLine),1,pava)); 
+                           mainLine[mainLine<0]<-0; 
+    }
     mainLine.se <- object$se.P1;    
   }
   
@@ -295,37 +336,65 @@ xlab="Time",ylab="Probability",...){
   if (length(lty)!=nobs){
     lty<-rep(lty[1],nobs); 
 
-    }
+  }
   if (length(lwd)!=nobs){
     lwd<-rep(lwd[1],nobs); 
   }
-  if ((specific.comps)==0){
+  if (sum(specific.comps)==0){
     comps<-1:nobs
   } else {
     comps<-specific.comps
   }
-  
+
   for (i in comps) {
     if (new==1 & (multiple!=1 | i==comps[1])) {
       plot(time,mainLine[i,],type="s",ylim=c(0,1),xlab=xlab,ylab=ylab,col=col[i],lty=lty[i],lwd=lwd[i],...)
     } else {
       lines(time,mainLine[i,],type="s",col=col[i],lty=lty[i],lwd=lwd[i])
     }
-#      if (object$model=="additive"){           
-#        dh<-1-P1[i,]
-#      } else if(object$model=="prop")  {
-#        dh<-(1-P1[i,])*RR[i,]
-#      }     
+
     if (se==1 & is.null(mainLine.se)==FALSE ) {
-      lines(time,mainLine[i,]-qnorm(1-alpha/2)*mainLine.se[i,],type="s",col=col[i],lty=2,lwd=lwd[i]);
-      lines(time,mainLine[i,]+qnorm(1-alpha/2)*mainLine.se[i,],type="s",col=col[i],lty=2,lwd=lwd[i]);
+      lines(time,mainLine[i,]-qnorm(1-alpha/2)*mainLine.se[i,],type="s",col=col[i],lty=3,lwd=lwd[i]/2);
+      lines(time,mainLine[i,]+qnorm(1-alpha/2)*mainLine.se[i,],type="s",col=col[i],lty=3,lwd=lwd[i]/2);
     }
+
     if (uniform==1 & is.null(uband)==FALSE ) {
-      lines(time,mainLine[i,]-uband[i]*mainLine.se[i,],type="s",col=col[i],lty=3,lwd=lwd[i]);
-      lines(time,mainLine[i,]+uband[i]*mainLine.se[i,],type="s",col=col[i],lty=3,lwd=lwd[i]);
+      #if (level!=0.05) c.alpha<-percen(object$sim.test[,i],1-level)
+      #else c.alpha<-object$conf.band.cumz[i];
+      c.alpha=uband[i]; 
+      ul<-mainLine[i,]-uband[i]*mainLine.se[i,];
+      ll<-mainLine[i,]+uband[i]*mainLine.se[i,];
+      if (transparency==0 || transparency==2) {
+      lines(time,ul,type="s",col=col[i],lty=2,lwd=lwd[i]/2);
+      lines(time,ll,type="s",col=col[i],lty=2,lwd=lwd[i]/2);
+      }
+
+    ## Prediction bandds ## {{{
+    if (transparency>=1) {
+     col.alpha<-0.2
+     col.ci<-"darkblue"
+     col.ci<-col[i]; 
+     lty.ci<-2
+      if (col.alpha==0) col.trans <- col.ci
+      else
+      col.trans <- sapply(col.ci, FUN=function(x) do.call(rgb,as.list(c(col2rgb(x)/255,col.alpha))))
+
+      #print(t); print(ci)
+      n<-length(time)
+      tt<-seq(time[1],time[n],length=n*10); 
+      ud<-Cpred(cbind(time,ul,ll),tt)[,2:3]
+      tt <- c(tt, rev(tt))
+      yy <- c(ul, rev(ll))
+#      tt <- c(time, rev(time))
+#      yy <- c(ul, rev(ll))
+     yy <- c(ud[,1], rev(ud[,2]))
+      polygon(tt,yy, col=col.trans, lty=0)      
+  } ## }}}
+
     }
   }
 }
+
 
 print.predictAalen <- function(x,...){
 
@@ -552,52 +621,15 @@ plot.comprisk <-  function (x, pointwise.ci=1, hw.ci=0,
     
   # We print information about object:  
   cat("Competing risks Model \n\n")
+  
+  modelType<-object$model
+  #if (modelType=="additive" || modelType=="1-additive") 
+  if (modelType=="additive") 
+    hyp.label<-"p-value H_0: B(t)=b t" else hyp.label<-"p-value H_0: B(t)=b"
 
-  cat("Test for nonparametric terms \n")
-  if (is.null(object$conf.band)==TRUE)  mtest<-FALSE else mtest<-TRUE; 
-  if (mtest==FALSE) cat("Test not computed, sim=0 \n\n")
-  if (mtest==TRUE) { 
-    test0<-cbind(object$obs.testBeq0,object$pval.testBeq0)
-    testC<-cbind(object$obs.testBeqC,object$pval.testBeqC) 
-    colnames(test0)<-c("sup| hat B(t)/SD(t) |","p-value H_0: B(t)=0")
-    colnames(testC)<-c("supremum test","p-value H_0: B(t)=b t")  
-    if (is.null(object$obs.testBeqC.is)!=TRUE)  {
-      testCis<-cbind(object$obs.testBeqC.is,object$pval.testBeqC.is) 
-      colnames(testCis) <-c("int (b(t)-g(t,gam))^2dt","p-value H_0:constant effect ")  
-    }
-    cat("\n")
-    cat("Test for non-significant effects \n")
-    prmatrix(signif(test0,digits))
-    cat("Test for time invariant effects \n")
-    prmatrix(signif(testC,digits))
-    cat("\n")
-    if (is.null(object$obs.testBeqC.is)!=TRUE)  prmatrix(signif(testCis,digits))
-    cat("\n")
-  }
+  timetest(object,digits=digits,hyp.label=hyp.label); 
 
-  if (semi) {
-    cat("Parametric terms :  ");        #cat(rownames(object$gamma)); 
-  }
-  cat("   \n");  
-
-  if (semi) {
-    res <- cbind(object$gamma,
-                 diag(object$var.gamma)^.5,diag(object$robvar.gamma)^.5)
-    wald<-object$gamma/diag(object$var.gamma)^.5 
-    waldp<-(1-pnorm(abs(wald)))*2
-    res<-as.matrix(cbind(res,wald,waldp)); 
-    colnames(res) <- c("Coef.", "SE", "Robust SE","z","P-val")  
-    prmatrix(signif(res, digits))
-
-    if (is.null(object$pstest.pval)==FALSE) {
-      res<-cbind(object$sup.pscore,object$pstest.pval);
-      colnames(res)<-c("sup of score test","p-value H_0:constant effect");  
-      cat(" \n");  
-      cat("Test for time invariant effects \n")
-      prmatrix(signif(res,digits))
-    }
-  }
-  cat("   \n");  
+  if (semi) { cat("Parametric terms : \n"); coef(object); cat("   \n"); }
 
   cat("  Call: \n")
   dput(attr(object, "Call"))

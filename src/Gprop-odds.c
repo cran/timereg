@@ -30,7 +30,7 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*sim,*antsim,*rani,*id,*status
   int t,c,robust=1,pers=0,i,j,k,l,s,it,count,sing,pmax; 
   double dtime,time=0,dummy,ll,lle,llo; 
   double S0,tau,hati=0,random,sumscore; 
-  long idum,ipers[*Ntimes],nap; 
+  int idum,*ipers=calloc(*Ntimes,sizeof(int)),nap; 
   double norm_rand(); 
   void GetRNGstate(),PutRNGstate();  
 
@@ -695,5 +695,6 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*sim,*antsim,*rani,*id,*status
     for(i=0;i<=j;i++) free_mat(Fst[j*(*Ntimes)+i]); 
   } 
 
+  free(ipers); 
 
 }

@@ -27,11 +27,25 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,
   vector *ahatt,*phit[*Ntimes],*dbetaNH,*dANH; 
   vector *tmpv1,*tmpv2,*rowX,*rowZ,*difX,*VdB,*atrisk[*antpers]; 
   vector *W2[*antclust],*W3[*antclust],*reszpbeta,*res1dim,*dAt[*Ntimes]; 
-  int c,pers=0,i,j,k,s,it,count,sing,pmax,cluster[*antpers];
+  int c,pers=0,i,j,k,s,it,count,sing,pmax,
+      *cluster=calloc(*antpers,sizeof(int));
   double Nt[*antclust],dtime,time,dummy,ll,lle,llo;
-  double tau,hati,scale,sumscore,d2Utheta=0,Nti[*antpers];
-  double HeHi[*antpers],H2eHi[*antpers],Rthetai[*antpers],NH[*antclust],HeH[*antclust],H2eH[*antclust],Rtheta[*antclust],dtheta,Hik[*antpers],thetaiid[*antclust],Dthetanu=0,DDthetanu=0,nu,dAiid[*antclust]; 
-  long ipers[*Ntimes];
+  double tau,hati,scale,sumscore,d2Utheta=0;
+  double *HeHi=calloc(*antpers,sizeof(double)),
+         *Nti=calloc(*antpers,sizeof(double)),
+	 *H2eHi=calloc(*antpers,sizeof(double)),
+	 *Rthetai=calloc(*antpers,sizeof(double)),
+	 dtheta,*Hik=calloc(*antpers,sizeof(double)),
+	 *NH=calloc(*antclust,sizeof(double)),
+	 *HeH=calloc(*antclust,sizeof(double)),
+	 *H2eH=calloc(*antclust,sizeof(double)),
+	 *Rtheta=calloc(*antclust,sizeof(double)),
+	 *thetaiid=calloc(*antclust,sizeof(double)),
+	 Dthetanu=0,DDthetanu=0,nu,
+	 *dAiid=calloc(*antclust,sizeof(double)); 
+  int *ipers=calloc(*Ntimes,sizeof(int));
+
+
 
 
   for (j=0;j<*antclust;j++) { Nt[j]=0; NH[j]=0; dAiid[j]=0; }
@@ -65,7 +79,8 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,
 
   if (*px>=*pg) pmax=*px; else pmax=*pg; ll=0; 
   for(j=0;j<*pg;j++) VE(beta,j)=betaS[j]; 
-  for(j=0;j<*antpers;j++) {Hik[j]=0; VE(one,j)=1; VE(weight,j)=1; VE(offset,j)=1;} 
+  for(j=0;j<*antpers;j++) {Hik[j]=0; VE(one,j)=1; VE(weight,j)=1; 
+	  VE(offset,j)=1;} 
 
   for (it=0;it<*Nit;it++)
     {
@@ -90,19 +105,21 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,
 	  Mv(ldesignG,beta,Gbeta); 
 
 	  for (j=0;j<*antpers;j++)
-	    {extract_row(ldesignX,j,xi); 
-	      dummy=exp(VE(Gbeta,j));           /* W D(exp(z*beta))X */ 
-	      scl_vec_mult(VE(weight,j)*dummy,xi,xtilde); replace_row(cdesX,j,xtilde); 
-	    }
-	  if (it==(*Nit-1) && s==1) { ldesG0=mat_copy(ldesignG,ldesG0); 
-	    cdesX2=mat_copy(cdesX,cdesX2); }
+	  {extract_row(ldesignX,j,xi); 
+	   dummy=exp(VE(Gbeta,j));   /* W D(exp(z*beta))X */ 
+	   scl_vec_mult(VE(weight,j)*dummy,xi,xtilde); 
+	   replace_row(cdesX,j,xtilde); 
+	  }
+	  if (it==(*Nit-1) && s==1) { 
+		  ldesG0=mat_copy(ldesignG,ldesG0); 
+	          cdesX2=mat_copy(cdesX,cdesX2);}
 
 	  scale=VE(weight,pers); 
   
 	  MtA(cdesX,ldesignX,A); invert(A,AI); 
-	  for (i=0;i<*pg;i++) {
-	    if (ME(AI,i,i)==0)
-	      printf("X'X not invertible at time %lf \n",time); i=*pg;}
+	  if (ME(AI,0,0)==0) {
+		  printf("X'X not invertible at time %lf \n",time);
+	  }
 
 	  extract_row(ldesignX,pers,xi); scl_vec_mult(scale,xi,xi); 
 	  Mv(AI,xi,dA); MtA(ldesignG,cdesX,ZX); 
@@ -432,4 +449,7 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,
 	      &tmpv2,&rowZ,&zi,&U,&beta,&delta,&zav,&difzzav,&Uprofile,
 	      &reszpbeta,&res1dim,NULL); 
 
+  free(ipers); free(cluster);  free(Nti); 
+  free(HeHi); free(H2eHi); free(Rthetai); free(Hik); free(NH); free(HeH); 
+  free(H2eH); free(Rtheta); free(thetaiid); free(dAiid); 
 }

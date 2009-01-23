@@ -30,6 +30,7 @@
 \alias{two.stageBase}
 \alias{two.stageBase.reg}
 \alias{plot.cums}
+\alias{pava}
 \alias{plot.score}
 \alias{summary.comprisk}
 \alias{pred.cum}
@@ -42,6 +43,7 @@
 \alias{plot.predict}
 \alias{coef.aalen}
 \alias{coef.cox.aalen}
+\alias{coef.comprisk}
 \alias{coef.dynreg}
 \alias{coef.timecox}
 \alias{coef.two.stage}

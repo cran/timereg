@@ -16,10 +16,12 @@ int *detail,*nx,*px,*antpers,*Nalltimes,*Ntimes,*ng,*pg,*status,*mof,*mw,*Nit,*r
   vector *dA,*rowX,*dN,*AIXWdN,*bhatt,*pbhat,*plamt;
   vector *S1,*korG,*pghat,*rowZ,*gam,*dgam,*ZHdN,*VZHdN,*IZHdN,*zi,*offsets;
   int it,i,j,k,l,c,s,count,pers=0,pmax,coef[1],ps[1];
-  int stat,maxtime,ls[*Ntimes]; 
+  int stat,maxtime,
+      *ls=calloc(*Ntimes,sizeof(int)); 
   double S0,sumscore,dptime,time,dummy,dtime,random,fabs(),sqrt();
   double ghati,dMi,weights[*antpers];
-  double times[*Ntimes],cumoff[(*Nalltimes)*(*px+1)];
+  double *times=calloc(*Ntimes,sizeof(double)),
+	 *cumoff=calloc((*Nalltimes)*(*px+1),sizeof(double));
   long idum;  idum=*rani; 
   double norm_rand(); 
   void GetRNGstate(),PutRNGstate();  
@@ -240,4 +242,5 @@ int *detail,*nx,*px,*antpers,*Nalltimes,*Ntimes,*ng,*pg,*status,*mof,*mw,*Nit,*r
   for (j=0;j<*antpers;j++) { free_mat(Uti[j]);  free_mat(Utiid[j]); }
 
   free_vecs(&dA,&VdB,&difX,&xi,&tmpv1,&korG,&rowX,&AIXWdN,&bhatt,&S1,&gamoff,&zi,&tmpv2,&rowZ,&gam,&dgam,&ZHdN,&IZHdN,&VZHdN,&offsets,&dN,&pbhat,&pghat,&plamt,NULL);
+  free(ls); free(times); free(cumoff); 
 }

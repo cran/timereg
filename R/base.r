@@ -10,7 +10,7 @@ coefBase<- function(object, digits=3, d2logl=0) {
   prmatrix(signif(res, digits))
 }
 
-timetest<-function(object,digits=3)
+timetest<-function(object,digits=3,hyp.label="p-value H_0: B(t)=b t")
 { 
   cat("Test for nonparametric terms \n")
   if (is.null(object$conf.band)==TRUE)  mtest<-FALSE else mtest<-TRUE;
@@ -18,11 +18,11 @@ timetest<-function(object,digits=3)
   if (mtest==TRUE) {
   test0<-cbind(object$obs.testBeq0,object$pval.testBeq0)
   testC<-cbind(object$obs.testBeqC,object$pval.testBeqC)
-  colnames(test0)<-c("sup|  hat B(t)/SD(t) |","p-value H_0: B(t)=0")
-  colnames(testC)<-c("sup| B(t) - (t/tau)B(tau)|","p-value H_0: B(t)=b t")
+  colnames(test0)<-c("Supremum-test of significance","p-value H_0: B(t)=0")
+  colnames(testC)<-c("Kolmogorov-Smirnov test",hyp.label)
   if (is.null(object$obs.testBeqC.is)!=TRUE)  {
   testCis<-cbind(object$obs.testBeqC.is,object$pval.testBeqC.is)
-  colnames(testCis) <-c("int  (B(t)-(t/tau)B(tau))^2dt","p-value H_0: B(t)=b t")
+  colnames(testCis) <-c("Cramer von Mises test",hyp.label)
   }
   cat("\n")
   cat("Test for non-significant effects \n")

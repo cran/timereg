@@ -55,7 +55,7 @@
 \source{P.K. Andersen}
 \references{
 Schlichting, P., Christensen, E., Andersen, P., Fauerholds, L.,
-Juhl, E., Poulsen, H. and  Tygstrup, N. (1983), The {C}openhagen 
+Juhl, E., Poulsen, H. and  Tygstrup, N. (1983), The Copenhagen 
 Study Group for Liver Diseases, Hepatology 3, 889--895
 }
 \examples{

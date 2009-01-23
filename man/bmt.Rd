@@ -21,9 +21,10 @@ centered ((age-35)/15).}
 }
 }
 \source{
-What source ? 
+Simulated data  
 }
 \references{
+NN 
 }
 \examples{
 data(bmt)

@@ -11,7 +11,7 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*ng,*pg,*status,*id,*clusters,*antclust,
   int i,j,l,c,s,cluster[*antpers],count0;
   int stat,maxtime,pmax,count,pers=0;
   double time,dtime,fabs(),sqrt();
-  double times[*Ntimes];
+  double *times=calloc(*Ntimes,sizeof(double)); 
 
   malloc_mat(*nx,*px,X); if (*pg>0) malloc_mat(*nx,*pg,Z); if (*pg==0) malloc_mat(1,1,Z); 
 
@@ -93,6 +93,7 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*ng,*pg,*status,*id,*clusters,*antclust,
 
   free_mat(X); 
   if (*pg>0) free_mat(Z); 
+  free(times); 
 }
 
 void aalendesL(alltimes,Nalltimes,Ntimes,designX,nx,px,designG,ng,pg,

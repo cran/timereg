@@ -11,9 +11,10 @@ int *nx,*p,*antpers,*Ntimes,*sim,*retur,*rani,*antsim,*status,*id,*covariance,
   vector *diag,*dB,*dN,*VdB,*xi,*rowX,*rowcum,*difX,*vtmp,*cum,*offsets; 
   vector *vrisk,*cumhatA[*antclust],*cumA[*antclust];
   int i,j,k,l,s,c,count,pers=0,coef[1],ps[1],degree[1]; 
-  int stat,nap,cluster[*antpers];
+  int stat,nap,*cluster=calloc(*antpers,sizeof(int));
   double time,ahati,dt,dtime;
-  double tau,vcudif[(*Ntimes)*(*p+1)],weights[*antpers]; 
+  double tau,*vcudif=calloc((*Ntimes)*(*p+1),sizeof(double)),
+	 *weights=calloc(*antpers,sizeof(double)); 
   double fabs(),sqrt();
   void comptest(); 
   long idum; idum=*rani; 
@@ -138,6 +139,7 @@ int *nx,*p,*antpers,*Ntimes,*sim,*retur,*rani,*antsim,*status,*id,*covariance,
   free_mats(&Vcov,&ldesignX,NULL);
   if (*robust==1)
     for (i=0;i<*antclust;i++) {free_vec(cumA[i]);free_vec(cumhatA[i]);free_mat(cumAt[i]);}
+  free(weights); free(vcudif); free(cluster); 
 } /* robaalentest  main */ 
 
 
@@ -156,19 +158,22 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*
   vector *dB,*VdB,*difX,*xi,*tmpv1,*tmpv2,*gamoff,*vrisk;
   vector *dAoff,*dA,*rowX,*dN,*AIXWdN,*bhatt,*pbhat,*plamt; 
   vector *korG,*pghat,*rowZ,*gam,*dgam,*ZHdN,*VZHdN,*IZHdN,*zi,*offsets;
-  int m,i,j,k,l,c,s,count,pers=0,pmax,coef[1],ps[1],cluster[*antpers];
-  int stat,maxtime,ls[*Ntimes]; 
+  int m,i,j,k,l,c,s,count,pers=0,pmax,coef[1],ps[1],
+        *cluster=calloc(*antpers,sizeof(int)),
+        *ipers=calloc(*Ntimes,sizeof(int)),
+        *ls=calloc(*Ntimes,sizeof(int));
+  int stat,maxtime;
   double dptime,ddtime,time,dtime,random,fabs(),sqrt();
-  double ahati,ghati,hati,tau,dMi,weights[*antpers];
-  double vcudif[(*Ntimes)*(*px+1)],times[*Ntimes],cumoff[(*Nalltimes)*(*px+1)],
-         cuL[(*Nalltimes)*(*px+1)];
+  double ahati,ghati,hati,tau,dMi;
+  double *vcudif=calloc((*Ntimes)*(*px+1),sizeof(double)),
+         *times=calloc((*Ntimes),sizeof(double)),
+         *cumoff=calloc((*Nalltimes)*(*px+1),sizeof(double)),
+         *cuL=calloc((*Nalltimes)*(*px+1),sizeof(double)),
+         *weights=calloc((*antpers),sizeof(double));
   void comptest(); 
-  long ipers[*Ntimes]; 
-  long idum; 
-  idum=*rani; 
-  dptime=alltimes[0]; 
   double norm_rand(); 
-  void GetRNGstate(),PutRNGstate();  
+  long idum; idum=*rani; 
+  dptime=alltimes[0]; 
 
   for (j=0;j<=*px;j++) cuL[j*(*Nalltimes)+0]=0.0; 
   if (*pseudoscore>=1) {
@@ -511,4 +516,6 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*
     free_mats(&tmpM1,&Delta,NULL); 
     for (j=0;j<*Ntimes;j++) free_mat(iZHZt[j]); 
     for (j=0;j<*antclust;j++) free_mat(Scoret[j]); }
+  free(vcudif); free(times); free(cumoff); free(cuL); free(ipers);
+  free(cluster); free(weights); 
 }

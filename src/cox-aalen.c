@@ -24,10 +24,11 @@ int*covariance,*nx,*px,*ng,*pg,*antpers,*Ntimes,*mw,*Nit,*detail,*mof,*sim,*ants
   vector *ta,*ahatt,*vrisk; 
   vector *tmpv1,*tmpv2,*rowX,*rowZ,*difX,*VdB; 
   vector *W2[*antclust],*W3[*antclust],*reszpbeta,*res1dim,*dAt[*Ntimes]; 
-  int ci,c,pers=0,i,j,k,l,s,it,count,sing,imin[1],pmax,cluster[*antpers];
+  int ci,c,pers=0,i,j,k,l,s,it,count,sing,imin[1],pmax,
+      *cluster=calloc(*antpers,sizeof(int));
   double dtime,time=0,dummy,ll,lle,llo;
   double tau,hati,random,scale,sumscore;
-  long idum,ipers[*Ntimes],nap;
+  int idum,*ipers=calloc(*Ntimes,sizeof(int)),nap;
   double norm_rand();
   void GetRNGstate(),PutRNGstate();
 
@@ -491,6 +492,7 @@ int*covariance,*nx,*px,*ng,*pg,*antpers,*Ntimes,*mw,*Nit,*detail,*mof,*sim,*ants
   for (j=0;j<*Ntimes;j++) {
     free_mat(dYIt[j]); free_vec(dAt[j]); free_mat(C[j]);free_mat(M1M2[j]);free_mat(ZXAIs[j]);
     free_vec(ZXdA[j]);free_mat(St[j]); } 
+    free(cluster); free(ipers); 
 
 
 }

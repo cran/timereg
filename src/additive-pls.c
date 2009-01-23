@@ -11,9 +11,9 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*ng,*pg,*status,*weighted,*deltaweight,*
   vector *xi,*tmpv2,*tmpv1,*PLScomp,*Xi,*dA,*rowX,*AIXWdN,*korG,*rowZ,*gam,*ZHdN,
     *IZHdN,*zi;
   int i,j,k,l,c,s,count,pers=0,pmax,coef[1],ps[1];
-  int stat,maxtime,ls[*Ntimes],pls; 
+  int stat,maxtime,*ls=calloc(*Ntimes,sizeof(int)),pls; 
   double time,dtime,fabs(),sqrt();
-  long ipers[*Ntimes]; 
+  int *ipers=calloc(*Ntimes,sizeof(int)); 
 
   if (*semipls==0) px[0]=px[0]+1; 
   malloc_mats(*antpers,*px,&X,NULL);
@@ -108,4 +108,5 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*ng,*pg,*status,*weighted,*deltaweight,*
 
   for (j=0;j<*Nalltimes;j++) free_mat(C[j]);
 
+  free(ipers); free(ls); 
 }

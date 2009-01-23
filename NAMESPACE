@@ -44,6 +44,7 @@ export("aalen",
        "prop.excessBase",
        "prop.odds",
        "pval",
+       "pava",
        "read.design",
        "read.surv",
        "semiaalen",	
@@ -78,6 +79,7 @@ S3method(plot,two.stage)
 
 S3method(print,aalen)
 S3method(print,cox.aalen)
+S3method(print,comprisk)
 S3method(print,cum.residuals)
 S3method(print,dynreg)
 S3method(print,pe.sasieni)
@@ -126,6 +128,7 @@ export("plot.aalen",
        "plot.two.stage",
        "print.aalen",
        "print.cox.aalen",
+       "print.comprisk",
        "print.cum.residuals",
        "print.dynreg",
        "print.pe.sasieni",
@@ -154,11 +157,8 @@ export("plot.aalen",
        "predict.cox.aalen",
        "coef.aalen",
        "coef.cox.aalen",
+       "coef.comprisk",
        "coef.dynreg",
        "coef.timecox",
        "coef.two.stage")
-
-
-
-
 

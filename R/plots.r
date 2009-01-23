@@ -1,7 +1,7 @@
 plot.cums <-  function (object, pointwise.ci=1, hw.ci=0,
 sim.ci=0, robust=0, specific.comps=FALSE,level=0.05, start.time = 0, 
 stop.time = 0, add.to.plot=FALSE, mains=TRUE, xlab="Time",
-ylab ="Cumulative coefficients") 
+ylab ="Cumulative coefficients",...) 
 {
  B<-object$cum; V<-object$var.cum; p<-dim(B)[[2]]; 
  if (robust>=1) {V<-object$robvar.cum;}

@@ -25,7 +25,7 @@ int *nx,*px,*antpers,*Ntimes,*Nit,*detail,*sim,*antsim,*rani,*id,*status,*weight
   int pg[1],c,robust=1,pers=0,i,j,k,l,s,t,it,count,sing;
   double S0p,S0star,dtime,time,dummy,ll;
   double S0cox,S0,tau,random,scale,sumscore;
-  long idum,ipers[*Ntimes],nap;
+  int idum,*ipers=calloc(*Ntimes,sizeof(int)),nap;
   double norm_rand();
   void GetRNGstate(),PutRNGstate();
 
@@ -494,4 +494,5 @@ int *nx,*px,*antpers,*Ntimes,*Nit,*detail,*sim,*antsim,*rani,*id,*status,*weight
     free_mat(dYIt[j]); free_vec(dAt[j]); free_mat(C[j]);free_mat(M1M2[j]);free_mat(ZXAIs[j]);
     free_vec(ZXdA[j]); free_mat(St[j]); free_mat(d2G[j]); free_vec(dG[j]);  
     free_vec(varUthat[j]);} 
+    free(ipers); 
 }

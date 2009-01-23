@@ -4,9 +4,16 @@ causeS=1,cens.code=0,detail=0,interval=0.01,resample.iid=1,
 cens.model="KM",time.pow=0){
 # trans=1 P_1=1-exp(- ( x' b(b)+ z' gam t) ), 
 # trans=2 P_1=1-exp(-exp(x a(t)+ z` b )
-# trans=2 P_1=1-exp(-x a(t) exp(z` b )) is not good numerically
-  if (model=="additive") trans<-1; if (model=="prop") trans<-2; 
+# trans=not done P_1=1-exp(-x a(t) exp(z` b )) is not good numerically
+# trans=3 P_1=exp(-exp(x a(t)+ z` b )
+  if (model=="additive") trans<-1; 
+  if (model=="prop") trans<-2; 
+  if (model=="logistic") trans<-3; 
+  if (model=="1-additive") trans<-4; 
+  ## if (is.null(line)) {
   if (trans==1) line<-1; if (trans==2) line<-0; 
+  if (trans==3) line<-0; if (trans==4) line<-0; 
+  ## }
 # line=1 indicates that it is tested that "b(t) = gamma t".
 # line=0 indicates that it is tested that "b(t) = gamma ".
   m<-match.call(expand = FALSE);
@@ -54,11 +61,13 @@ cens.model="KM",time.pow=0){
     
   pxz <-px+pz;
 
-  if (is.null(times)) { times<-sort(unique(time2[cause==causeS])); times<-times[-c(1:5)];}
+  if (is.null(times)) {times<-sort(unique(time2[cause==causeS])); 
+                       times<-times[-c(1:5)];}
 
   n<-nrow(X); ntimes<-length(times);
   if (npar==TRUE) {Z<-matrix(0,n,1); pg<-1; fixed<-0;} else {fixed<-1;pg<-pz;} 
   delta<-(cause!=cens.code)
+
   if (cens.model=="KM") {
     ud.cens<-survfit(Surv(time2,cause==cens.code)); 
     Gfit<-cbind(ud.cens$time,ud.cens$surv)
@@ -77,8 +86,9 @@ cens.model="KM",time.pow=0){
     if (npar==TRUE) XZ<-X[,-1] else XZ<-cbind(X,Z)[,-1];
     ud.cens<-aalen(Surv(time2,cause==cens.code)~XZ,n.sim=0,robust=0);
     Gcx<-Cpred(ud.cens$cum,time2)[,-1];
-    Gcx<-exp(-XZ %*% Gcx); Gcx[,Gcx>1]<-1; Gcx[,Gcx<1]<-0
-print(Gcx); 
+    XZ<-cbind(1,XZ); 
+    Gcx<-exp(-apply(Gcx*XZ,1,sum))
+    Gcx[Gcx>1]<-1; Gcx[Gcx<0]<-0
     Gfit<-rbind(c(0,1),cbind(time2,Gcx)); 
     Gctimes<-Cpred(Gfit,times)[,2];
     } else { stop('Unknown censoring model') }
@@ -86,8 +96,8 @@ print(Gcx);
    times<-times[Gctimes>interval]; ntimes<-length(times); 
 
   if (resample.iid == 1) {
-    biid <- matrix(0, ntimes, n * px);
-    gamiid<- matrix(0, n ,pg);
+    biid <- double(ntimes* antclust * px);
+    gamiid<- double(antclust *pg);
   } else {
     gamiid <- biid <- NULL;
   }
@@ -135,7 +145,7 @@ print(Gcx);
     if (fixed==1) gamiid<-matrix(out[[35]],antclust,pg) else gamiid<-NULL; 
     B.iid<-list();
     for (i in (0:(antclust-1))*px) {
-      B.iid[[i/px+1]]<-matrix(biid[,i+(1:px)],ncol=px);
+    B.iid[[i/px+1]]<-matrix(biid[,i+(1:px)],ncol=px);
       colnames(B.iid[[i/px+1]])<-covnamesX; }
     if (fixed==1) colnames(gamiid)<-covnamesZ
   } else B.iid<-gamiid<-NULL;
@@ -158,11 +168,10 @@ print(Gcx);
     sim.testBeq0<-as.matrix(test[,1:p]);
     sim.testBeqC<-as.matrix(test[,(p+1):(2*p)]);
     sim.testBeqC.is<-as.matrix(test[,(2*p+1):(3*p)]);
-  } else {test<-FALSE; unifCI<-FALSE; Ut<-FALSE; UIt<-FALSE;
-          pval.testBeq0<-FALSE;pval.testBeqC<-FALSE; obs.testBeq0<-FALSE;obs.testBeqC<-FALSE;
-          sim.testBeq0<-FALSE;sim.testBeqC<-FALSE;
-          sim.testBeqC.is<-FALSE; pval.testBeqC.is<-FALSE;
-          obs.testBeqC.is<-FALSE;
+  } else {test<-unifCI<-Ut<-UIt<-pval.testBeq0<-pval.testBeqC<-obs.testBeq0<-
+          obs.testBeqC<- sim.testBeq0<-sim.testBeqC<-
+          sim.testBeqC.is<- pval.testBeqC.is<-
+          obs.testBeqC.is<-NULL;
         }
 
   est<-matrix(out[[14]],ntimes,ps+1); 
@@ -200,16 +209,16 @@ print(Gcx);
   ud$formula<-formula; class(ud)<-"comprisk"; 
   attr(ud, "Call") <- sys.call()
   attr(ud, "Formula") <- formula
+  attr(ud, "time.pow") <- time.pow
   return(ud); 
 }
 
 print.comprisk <- function (x,...) {
   object <- x; rm(x);
   if (!inherits(object, 'comprisk')) stop ("Must be an comprisk object")
-
   if (is.null(object$gamma)==TRUE) semi<-FALSE else semi<-TRUE
     
-                                        # We print information about object:  
+   # We print information about object:  
   cat(paste(" Competing risks model with", object$model,"subdistribution hazard function\n\n"))
   cat(" Nonparametric terms : ");
   cat(colnames(object$cum)[-1]); cat("   \n");  
@@ -220,5 +229,10 @@ print.comprisk <- function (x,...) {
   } 
   cat("   \n");  
 
-  cat("  Call: \n"); dput(attr(object, "Call")); cat("\n"); 
+    }
+
+coef.comprisk <- function(object, digits=3,...) {
+
+   coefBase(object,digits=digits)
 }
+

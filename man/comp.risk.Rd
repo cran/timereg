@@ -4,24 +4,43 @@
 \description{
 Fits a semiparametric model for the cause-specific quantities :
 \deqn{
-P(T \leq t, cause=1 | x) = P_1(t,x) = 1 - \exp(- g(t,x) )
+P(T \leq t, cause=1 | x,z) = P_1(t,x,z) = h( - g(t,x,z) )
 }
+for a known link-function \eqn{h()}
+and known prediction-function \eqn{g(t,x,z)}
 for the probability of dying from cause 1 in a situation with 
 competing causes of death. 
 
-The model is considered in two situations : 
+We consider the following models :  
+1) the additive model where
+\eqn{h(x)=1-\exp(x)} and 
 \deqn{
 g(t,x,z) = x^T A(t) + (diag(t^p) z)^T \beta
 }
-the additive situation (with additive subdistribution hazard) and 
+2)  
 the proportional setting that includes the Fine & Gray (FG) model and
-some extensions
+some extensions where 
+\eqn{h(x)=1-\exp(-\exp(x))} and 
 \deqn{
 g(t,x,z) = \exp(x^T A(t) + (diag(t^p) z)^T \beta)
 }
-The FG model is obtained when \eqn{x=1}. Where p is 1 for the additive
-model and 0 for the proportional model. In general p may be
-powers of the same length as z. 
+The FG model is obtained when \eqn{x=1}. 
+
+3) a logistic model where 
+\eqn{h(x)=\exp(x)/( 1+\exp(x))} and 
+\deqn{
+g(t,x,z) = x^T A(t) + (diag(t^p) z)^T \beta
+}
+
+4) the "1-additive" model where
+\eqn{h(x)=\exp(x)} and 
+\deqn{
+g(t,x,z) = x^T A(t) + (diag(t^p) z)^T \beta
+}) 
+
+Where p by default is 1 for the additive model and 0 for 
+the other models.
+In general p may be powers of the same length as z. 
 }
 \usage{
 comp.risk(formula,data=sys.parent(),cause,times,Nit=50,
@@ -47,7 +66,7 @@ cens.model="KM",time.pow=0)
 \item{gamma}{starting value for constant effects.}
 \item{n.sim}{number of simulations in resampling.}
 \item{weighted}{Not implemented. To compute a variance weighted version of the test-processes used for testing time-varying effects.}
-\item{model}{"additive" or "prop"ortional.}
+\item{model}{"additive", "prop"ortional or "logistic".}
 \item{causeS}{specificies which cause we consider.}
 \item{cens.code}{specificies the code for the censoring.}
 \item{detail}{if 0 no details are printed during iterations, if 1 details are given.}
@@ -80,12 +99,12 @@ observed cumulative and estimate under null of constant effect.}
 \item{sim.test.procBeqC}{50 resample processes for for testing of time-varying effects}
 }
 \references{
-Scheike, Zhang and Gerds (2007), Predicting cumulative
+Scheike, Zhang and Gerds (2008), Predicting cumulative
 incidence probability by direct binomial regression,
-Biometrika, to appear. 
+Biometrika. 
 
-Scheike and Zhang (2007), Flexible competing risks regression
-modelling and goodness of fit, work in progress. 
+Scheike and Zhang (2008), Flexible competing risks regression
+modelling and goodness of fit, LIDA.
 }
 \author{Thomas Scheike}
 \examples{

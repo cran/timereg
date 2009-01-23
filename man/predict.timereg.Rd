@@ -12,7 +12,7 @@ confidence bands based on resampling.
 }
 \usage{
 \method{predict}{comprisk}(object,newdata=NULL,X=NULL,Z=NULL,
-n.sim=500, uniform=TRUE,se=TRUE,alpha=0.05,...)
+n.sim=500,uniform=TRUE,se=TRUE,alpha=0.05,...)
 }
 \arguments{
   \item{object}{an object belonging to one of the following

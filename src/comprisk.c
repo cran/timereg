@@ -16,7 +16,8 @@ int *n,*px,*Ntimes,*Nit,*cause,*delta,*sim,*antsim,*rani,*weighted,
     *rr,*rowX,*difbeta,*qs,*bhatub,*betaub,*dcovs,*pcovs,*zi,*rowZ,*zgam; 
   vector *cumhatA[*antclust],*cumA[*antclust],*bet1,*gam,*dp,*dp1,*dp2; 
   int ps,sing,sc,c,i,j,k,l,s,it;
-  double time,sumscore,totrisk,vcudif[(*Ntimes)*(*px+1)],zgamt; 
+  double time,sumscore,totrisk,zgamt, 
+	 *vcudif=calloc((*Ntimes)*(*px+1),sizeof(double));
   long idum;
   float gasdev(),expdev(),ran1();
   void comptestfunc(),itfitsemi(); 
@@ -57,12 +58,11 @@ for (s=0;s<*Ntimes;s++)
   for (it=0;it<*Nit;it++)
   {
     totrisk=0; 
-
     for (j=0;j<*n;j++) { 
       VE(risk,j)=(x[j]>=time); totrisk=totrisk+VE(risk,j);
       extract_row(X,j,xi); 
 
-      vec_star(xi,bet1,rowX); VE(bhat,j)=vec_sum(rowX); 
+      VE(bhat,j)=vec_prod(xi,bet1); 
 
       if (*trans==1) {VE(pbhat,j)=1-exp(-VE(bhat,j));
 	scl_vec_mult(1-VE(pbhat,j),xi,dp);}
@@ -70,6 +70,15 @@ for (s=0;s<*Ntimes;s++)
 	VE(pbhat,j)=1-exp(-exp(VE(bhat,j))); 
 	scl_vec_mult((1-VE(pbhat,j))*exp(VE(bhat,j)),xi,dp); }
       if (*trans==3) {
+	    VE(pbhat,j)=exp(VE(bhat,j))/(1+exp(VE(bhat,j))); 
+	scl_vec_mult(exp(VE(bhat,j))/pow((1+exp(VE(bhat,j))),2),xi,dp);
+      // VE(pbhat,j)=exp(-VE(bhat,j)); scl_vec_mult(-exp(-VE(pbhat,j)),xi,dp);
+      }
+      if (*trans==4) {
+         VE(pbhat,j)=exp(-VE(bhat,j)); 
+	 scl_vec_mult(-exp(-VE(pbhat,j)),xi,dp);
+      }
+      if (*trans==8) { // not implemented 
 	extract_row(Z,j,zi); vec_star(zi,gam,zgam); zgamt=vec_sum(zgam); 
 	VE(rr,j)=exp(zgamt);  
 	VE(pbhat,j)=1-(VE(bhat,j)*VE(rr,j))/(1+(VE(bhat,j)*VE(rr,j))); 
@@ -87,24 +96,23 @@ for (s=0;s<*Ntimes;s++)
       else VE(Y,j)=(VE(Y,j)/KMc[j])-VE(pbhat,j);
     }
     totrisk=vec_sum(risk); MtA(cX,cX,A); invert(A,AI); sing=0; 
+    // head_matrix(cX); print_mat(A); print_mat(AI); 
 
-    for (i=0;i<*px;i++) if (fabs(ME(AI,i,i))<.0000001) {sing=1;}
-
-    if (sing==1) {printf(" non-invertible design time %lf\n",time); 
+    if (fabs(ME(AI,0,0))<.0000001) {
+      sing=1;
+      printf(" non-invertible design time %lf\n",time); 
       it=*Nit-1;  
       for (c=0;c<ps;c++) VE(beta,c)=betaS[c]; 
       for (c=0;c<*px;c++) VE(bet1,c)=betaS[c]; 
     }
     if (sing==0) {
-      /* 
-	 print_vec(Y); print_vec(SCORE); print_vec(difbeta); 
-      */ 
+      /* print_vec(Y); print_vec(SCORE); print_vec(difbeta); */ 
       vM(cX,Y,SCORE); 
       Mv(AI,SCORE,difbeta); vec_add(beta,difbeta,beta); 
 
       for (i=0;i<*px;i++) VE(bet1,i)=VE(beta,i); 
 
-      if (*trans>=2) {for (i=0;i<*pg;i++) VE(gam,i)=VE(beta,*px+i);}
+      // if (*trans==2) {for (i=0;i<*pg;i++) VE(gam,i)=VE(beta,*px+i);}
 
       sumscore=0; 
       for (k=0;k<*px;k++) sumscore=sumscore+fabs(VE(difbeta,k)); 
@@ -181,6 +189,7 @@ vec_zeros(VdB); mat_zeros(VAR);
     free_mat(cumAt[i]);}
 
   }
+free(vcudif); 
 }
 
 void itfitsemi(times,Ntimes,x,delta,cause,KMc,z,antpers,px,Nit,
@@ -202,15 +211,14 @@ int *antpers,*px,*Ntimes,*Nit,*cause,*delta,*sim,*antsim,*rani,*weighted,
   vector *korG,*pghat,*rowG,*gam,*dgam,*ZGdN,*IZGdN,*ZGlamt,*IZGlamt;
   vector *covsx,*covsz,*qs,*Y,*rr,*bhatub,*xi,*rowX,*rowZ,*difX,*zi,*z1,
     *tmpv1,*tmpv2,*lrisk;
-  int nb[1],itt,i,j,k,l,s,c,pmax,coef[1],
-    totrisk,ps[1],n[1],nx[1],retur[1];
+  int nb[1],itt,i,j,k,l,s,c,pmax,coef[1],totrisk,ps[1],n[1],nx[1],retur[1];
   double time,dummy,dtime,timem;
-  double vcudif[(*Ntimes)*(*px+1)],inc[(*Ntimes)*(*px+1)];
-  double lrr,fabs();
-  double pow(); 
-  long robust[1],idum,fixedcov; 
+  double *vcudif=calloc((*Ntimes)*(*px+1),sizeof(double)),
+	 *inc=calloc((*Ntimes)*(*px+1),sizeof(double));
+  double lrr,fabs(), pow(); 
+  int robust[1],idum,fixedcov; 
   void comptestfunc();
-  float gasdev(),expdev(),ran1();
+  // float gasdev(),expdev(),ran1();
   idum=*rani; robust[0]=1; fixedcov=1; 
   n[0]=antpers[0]; retur[0]=0; nx[0]=antpers[0]; nb[0]=Ntimes[0]; 
   timem=0; 
@@ -289,6 +297,32 @@ int *antpers,*px,*Ntimes,*Nit,*cause,*delta,*sim,*antsim,*rani,*weighted,
 	      if (timem>0) for (l=0;l<*pg;l++) VE(zi,l)=
 		pow(time,timepow[l])*VE(zi,l); 
 	    }
+            if (*trans==3) {
+              if (timem>0)  { 
+	        for (l=0;l<*pg;l++) lrr=lrr+VE(gam,l)*VE(zi,l)*
+		  pow(time,timepow[l]); } 
+	      else lrr=VE(pghat,j);  
+	      VE(rr,j)=exp(lrr);  
+	      VE(plamt,j)=exp(VE(pbhat,j)+lrr)/(1+exp(VE(pbhat,j)+lrr)); 
+	      dummy=VE(plamt,j)/(1+exp(VE(pbhat,j)+lrr)); 
+	      scl_vec_mult(dummy,xi,xi); 
+	      scl_vec_mult(dummy,zi,zi); 
+	      if (timem>0) for (l=0;l<*pg;l++) VE(zi,l)=
+		pow(time,timepow[l])*VE(zi,l); 
+           }
+	   if (*trans==4) {
+             if (timem>0)  { 
+	        for (l=0;l<*pg;l++) lrr=lrr+VE(gam,l)*VE(zi,l)*
+		  pow(time,timepow[l]); } 
+	      else lrr=VE(pghat,j);  
+	      VE(rr,j)=lrr;  
+	      VE(plamt,j)=exp(-VE(pbhat,j)-lrr); 
+	      scl_vec_mult(-VE(plamt,j),xi,xi); 
+	      scl_vec_mult(-VE(plamt,j),zi,zi); 
+	      if (timem>0) for (l=0;l<*pg;l++) VE(zi,l)=
+		pow(time,timepow[l])*VE(zi,l); 
+           }
+
 	    replace_row(cdesignX,j,xi); replace_row(cdesignG,j,zi); 
 	    /*
 	      if (itt==*Nit-1) {
@@ -410,6 +444,8 @@ int *antpers,*px,*Ntimes,*Nit,*cause,*delta,*sim,*antsim,*rani,*weighted,
   for (j=0;j<*Ntimes;j++) {free_mat(Acorb[j]);free_mat(C[j]);free_mat(M1M2[j]);}
   for (j=0;j<*antclust;j++) {free_mat(W3t[j]); free_mat(W4t[j]);
     free_vec(W2[j]); free_vec(W3[j]); }
+  free(vcudif); 
+  free(inc); 
 }
 
 double mypow(double x,double p)

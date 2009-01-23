@@ -38,7 +38,7 @@ a numeric vector code. Survival status. 1: dead from melanoma, 0: alive or
   }
 }
 \source{
-  Andersen, P.K., Borgan {\O}, Gill R.D., Keiding N. (1993),
+  Andersen, P.K., Borgan O, Gill R.D., Keiding N. (1993),
   \emph{Statistical Models Based on 
   Counting Processes}, Springer-Verlag. 
 }

@@ -33,7 +33,7 @@ a numeric vector code. 0: female, 1: male.
 }
 }
 \source{
-  Andersen, P.K., Borgan {\O}, Gill R.D., Keiding N. (1993),
+  Andersen, P.K., Borgan O, Gill R.D., Keiding N. (1993),
   \emph{Statistical Models Based on 
   Counting Processes}, Springer-Verlag. 
 

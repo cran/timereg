@@ -4,7 +4,8 @@ read.design<-function(m,Terms,model="aalen"){
 
   XZ<-model.matrix(Terms,m)[, drop = FALSE]
 
-  clusterTerms<- grep("^cluster[(][A-z0-9._:]*[)]$", colnames(XZ))
+  clusterTerms<- grep("^cluster[(][A-z0-9._:]*",colnames(XZ),perl=TRUE)
+
   if(length(clusterTerms) == 1){
     l.cols<-length(attributes(XZ)$assign) - 1
     clusters <- as.vector(XZ[,clusterTerms]);
@@ -54,7 +55,7 @@ Zterms<-semicov # ts 25-6-2008
   if (npar == FALSE){
     Z <- data.matrix(Z)
   }else {
-    Z <- NULL; covnamesZ<-FALSE
+    Z <- NULL; covnamesZ<-NULL
   }
   if(length(clusterTerms) > 0){
     clusters <- as.vector(clusters)

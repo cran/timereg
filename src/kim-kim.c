@@ -8,7 +8,7 @@ int *px,*detail,*Nit;
 {
   matrix *iD;
   vector *Db,*betav,*dL,*tmpv1;
-  int index,it,i,j;// unused var:index01k
+  int index,it,i,j;
   double k,lg,bDb,bd,dummy,fabs(),sqrt(),L0,L1,Lk,fdL; 
 
   malloc_mats(*px,*px,&iD,NULL);

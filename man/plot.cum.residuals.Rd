@@ -10,7 +10,7 @@ processes under the model.
 \method{plot}{cum.residuals}(x,pointwise.ci=1,hw.ci=0,sim.ci=0,
 robust=1, specific.comps=FALSE,level=0.05,start.time=0,stop.time=0,
 add.to.plot=FALSE,mains=TRUE,xlab="Time",
-ylab ="Cumulative Residuals",ylim=NULL,score=0,...)
+ylab ="Cumulative Residuals",ylim=NULL,score=0,conf.band=FALSE,...)
 }
 \arguments{
 \item{x}{the output from the "cum.residuals" function.}
@@ -48,6 +48,10 @@ Estimates thus plotted from [start.time, max.time].}
   random realizations under model, if '2' plots residuals versus
   continuous covariates of model with random realizations under the
   model.}
+\item{conf.band}{makes simulation based confidence bands for the test processes 
+under the 0 based on variance of these processes limits for y-axis. These will
+give additional information of whether the observed cumulative residuals are 
+extreme or not when based on a variance weighted test.}
 \item{...}{unused arguments - for S3 compatibility}
 
 }

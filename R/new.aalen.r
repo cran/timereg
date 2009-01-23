@@ -182,11 +182,11 @@ function (object,digits = 3,...)
   
   if (is.null(aalen.object$gamma)==TRUE) semi<-FALSE else semi<-TRUE
     
-                                        # We print information about object:  
+  # We print information about object:  
   cat("Additive Aalen Model \n\n")
-                                        #cat(paste("loglikelihood : ",round(aalen.object$deviance,3),"\n"))
-                                        #cat("Nonparametric terms : "); cat(colnames(aalen.object$cum)[-1]);
-                                        #cat("   \n");  
+  #cat(paste("loglikelihood : ",round(aalen.object$deviance,3),"\n"))
+  #cat("Nonparametric terms : "); cat(colnames(aalen.object$cum)[-1]);
+  #cat("   \n");  
 
   timetest(obj,digits=digits); 
 

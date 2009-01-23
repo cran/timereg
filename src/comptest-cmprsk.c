@@ -18,7 +18,7 @@ matrix **W4t;
   void GetRNGstate(),PutRNGstate();  
   int i,k,l,s,c;
   double xij,vardif,tau,time,dtime,random,fabs(),sqrt(),stime,mtime;// unused var:x
-  double cumweight[*px];
+  double *cumweight=calloc(*px,sizeof(double));
 
   malloc_vecs(*px,&tmpv1t,&tmpv1,&rowX,&xi,&difX,&ssrow,&VdB,&gammavt,&gammav,NULL); 
   malloc_mat(*Ntimes,*px,Delta); malloc_mat(*Ntimes,*px,tmpM1);
@@ -149,4 +149,5 @@ matrix **W4t;
   free_mats(&Delta,&tmpM1,NULL); 
   free_vecs(&gammavt,&tmpv1t,&VdB,&rowX,&difX,&xi,&tmpv1,&ssrow,&gammav,NULL); 
   for (i=0;i<*antpers;i++) free_vec(gammai[i]);  
+  free(cumweight); 
 }

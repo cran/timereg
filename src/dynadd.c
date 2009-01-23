@@ -17,13 +17,12 @@ int *sim,*antsim,*retur,*nxval,*nx,*px,*na,*pa,*antpers,*Ntimes,*mw,*rani,*statu
   vector *dAt[*Ntimes];
   matrix *cumBt[*antpers];
   vector *cumhatB[*antpers],*cumB[*antpers],*cum;
-
   int pers=0,i,j,k,s,c,count,sing=1,imin[1],pmax,nmax,risk;
   int coef[1],ps[1],degree[1]; 
   double time,dummy,zpers=0,dif,dtime,YoneN,kia;
   FILE *fp; int VERBOSE=0;
   double tukey(); 
-  double vcudif[(*Ntimes)*(*px+1)];
+  double *vcudif=calloc((*Ntimes)*(*px+1),sizeof(double));
   void comptest(),smoothB();
   long idum=*rani; 
   if (VERBOSE==1) fp=fopen("dump.dout","a");
@@ -171,6 +170,7 @@ int *sim,*antsim,*retur,*nxval,*nx,*px,*na,*pa,*antpers,*Ntimes,*mw,*rani,*statu
 
   free_mats(&XWX,&cdesignA,&ldesignX,&cdesignX,&ldesignA,&Aa,&AaI,&A,&AI,&XbXa,NULL); 
   free_vecs(&VdBly,&korf,&dB,&dA,&dR,&ahatt,&xt,&pdA,&diag,&xai,&sumx,&vone,&itot,&VdB,&VdB0,&VdBf,&fkor,&dkorB,&tmpv,&tmpv1,&tmpv2,&tmpv3,&tmpv4,&pahat,&pbhat,&bhatt,&pbahat,&pdbahat,&dBly,&cum,NULL);
+  free(vcudif); 
 }
 
 
@@ -202,10 +202,10 @@ int *naval,*nxval,*nx,*px,*na,*pa,*ng,*pg,*antpers,*Ntimes,*mw,
   vector *korgamly,*korgam,*gamstart;
   vector *rowX,*rowZ,*difX,*dgamef,*gammsd,*ai; 
   int i,j,k,s,c,count,sing,imin[1],pmax,nmax,pers=0;
-  int robust=1,ipers[*Ntimes]; 
+  int robust=1,*ipers=calloc(*Ntimes,sizeof(int)); 
   double time,dummy,dtime,zpers,risk,YoneN,dif,dif2,ctime;
-  double tau,C[(*pg)*(*pg)];
-  double vcudif[(*Ntimes)*(*px+1)];
+  double tau,*C=calloc((*pg)*(*pg),sizeof(double));
+  double *vcudif=calloc((*Ntimes)*(*px+1),sizeof(double));
   void comptest(); 
   long idum; 
   int enpar[1],gamdt[1]; 
@@ -497,4 +497,5 @@ int *naval,*nxval,*nx,*px,*na,*pa,*ng,*pg,*antpers,*Ntimes,*mw,
 	      &korgamly,&korgam,&gamstart,
 	      &rowX,&rowZ,&difX,NULL); 
 
+  free(C); free(vcudif); free(ipers); 
 }

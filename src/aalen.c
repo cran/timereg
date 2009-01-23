@@ -167,13 +167,10 @@ int *nx,*p,*antpers,*Ntimes,*sim,*retur,*rani,*antsim,*status,*id,*covariance,
 	for (i=0;i<*antpers;i++)
 	{
           ci=cluster[i]; 
-	  // printf(" %d %d   \n",i,ci); 
-	  extract_row(ldesignX,i,xi);
-	  ahati=vec_prod(xi,dB);
-	  // ahati = vec_sum(vtmp);
+	  extract_row(ldesignX,i,xi); ahati=vec_prod(xi,dB);
+	  Mv(AI,xi,rowX); 
 	  if (*robust==1) {
 	  if (i==pers) { vec_add(rowX,cumhatA[ci],cumhatA[ci]); }
-	    Mv(AI,xi,rowX); 
 	    scl_vec_mult(ahati,rowX,rowX);
 	    vec_add(rowX,cumA[ci],cumA[ci]);
 	  }

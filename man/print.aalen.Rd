@@ -1,6 +1,7 @@
 \name{print.aalen}
 \alias{print.aalen}
 \alias{print.cox.aalen}
+\alias{print.comprisk}
 \alias{print.prop.excess}
 \alias{print.dynreg}
 \alias{print.timecox}
