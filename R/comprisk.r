@@ -69,7 +69,7 @@ cens.model="KM",time.pow=0){
   delta<-(cause!=cens.code)
 
   if (cens.model=="KM") {
-    ud.cens<-survfit(Surv(time2,cause==cens.code)); 
+    ud.cens<-survfit(Surv(time2,cause==cens.code)~+1); 
     Gfit<-cbind(ud.cens$time,ud.cens$surv)
     Gfit<-rbind(c(0,1),Gfit); 
     Gcx<-Cpred(Gfit,time2)[,2];

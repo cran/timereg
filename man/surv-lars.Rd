@@ -52,15 +52,16 @@ LARS, Efron et al.
 \author{Thomas Scheike}
 \examples{
 ## makes data for pbc complete case
-data(pbc)
-pbc$time<-pbc$time+runif(418); pbc$time<-pbc$time/365
-pbc[pbc==-9]<-NA; rsum<-apply(pbc,1,sum); 
-pbc<-pbc[!is.na(rsum),]
-covs<-as.matrix(pbc[,-c(10,17)])
+data(mypbc)
+pbc<-mypbc
+pbc$time<-pbc$time+runif(418)*0.1; pbc$time<-pbc$time/365
+pbc<-subset(pbc,complete.cases(pbc)); 
+covs<-as.matrix(pbc[,-c(1:3,6)])
+covs<-cbind(covs[,c(1:6,16)],log(covs[,7:15]))
 
 ## computes the matrices needed for the least squares 
 ## criterion 
-#out<-des.aalen(Surv(time,status)~const(covs),pbc)
+#out<-des.aalen(Surv(time,status>=1)~const(covs),pbc)
 #x<-as.matrix(out[,1:17]); y<-out$Y
 
 ## lasso for survival data 

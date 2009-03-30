@@ -1,6 +1,7 @@
 \name{pval}
 \alias{pval}
 \alias{CsmoothB}
+\alias{mypbc}
 \alias{Csmooth2B}
 \alias{pval}
 \alias{kernel}

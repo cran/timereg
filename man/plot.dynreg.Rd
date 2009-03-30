@@ -58,7 +58,7 @@ indi.m<-rep(1,length(csl$lt))
 # Fits time-varying regression model
 out<-dynreg(prot~treat+prot.prev+sex+age,csl,
 Surv(lt,rt,indi.m)~+1,start.time=0,max.time=3,id=csl$id,
-n.sim=500,bandwidth=0.3,meansub=0)
+n.sim=500,bandwidth=0.7,meansub=0)
 
 par(mfrow=c(2,3))
 # plots estimates 

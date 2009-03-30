@@ -320,12 +320,14 @@ xlab="Time",ylab="Probability",transparency=FALSE,monotone=TRUE,...){
     mainLine <- object$S0;
     if (monotone==TRUE) { mainLine<--t(apply(as.matrix(-mainLine),1,pava)); 
     mainLine[mainLine<0]<-0; 
+    mainLine[mainLine>1]<-1; 
     }
     mainLine.se <- object$se.S0;    
   } else if(modelType == 'additive' || modelType == 'prop' || modelType=="logistic" || modelType=="1-additive"){
     mainLine <- object$P1;
     if (monotone==TRUE) { mainLine<-t(apply(as.matrix(mainLine),1,pava)); 
                            mainLine[mainLine<0]<-0; 
+                           mainLine[mainLine>1]<-1; 
     }
     mainLine.se <- object$se.P1;    
   }

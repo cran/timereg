@@ -1,10 +1,10 @@
 dynreg<-function(formula,data=sys.parent(),aalenmod,
-bandwidth=0.5,id=NULL, 
-bhat=NULL,start.time=0,max.time=NULL,n.sim=500,residuals=0,
-meansub=1,weighted.test=0)
+bandwidth=0.5,id=NULL,bhat=NULL,start.time=0,
+max.time=NULL,n.sim=500,meansub=1,weighted.test=0)
 {
   if (n.sim==0) sim<-0 else sim<-1; smoothXX<-0
-  if (n.sim>0 & n.sim<50) {n.sim<-50 ; cat("Minimum 50 simulations\n");}
+  if (n.sim>0 & n.sim<50) {n.sim<-50 ; cat("Minimum 50 simulations\n");} 
+  residuals<-0; 
 
   b<-bandwidth
   call <- match.call()
@@ -106,22 +106,22 @@ meansub=1,weighted.test=0)
       bhat<-bhat[,1:(px+1)]; 
     } else {bhat<-cbind(xval,matrix(0,30,px)); gamma<-rep(0,pz);}
 
-                                        #if (is.null(bhat)==TRUE) {
-                                        #ud<-dynregBase(times,status,Y,ldata,
-                                        #X,covarA,id,bhat=bhat, 
-                                        #sim=0,retur=0,antsim=0,b=b,smoothXX=smoothXX,
-                                        #weighted.test=weighted.test);
-    ##pcregci(ud$cum,ud$var.cum,0,3); 
-                                        #xval<-seq(times[1],times[Ntimes],length=30); 
-                                        #bhat<-CsmoothB(ud$cum,xval,b); 
-                                        #gamma<-ud$cum[signif(Ntimes*3/4),(px+2):(px+pz+1)]/
-                                        #       ud$cum[signif(Ntimes*3/4),1];
-                                        #};
-                                        #print(apply(cbind(X[,1:(pxz+1)],X[,(pxz+2):(pxz+pa+1)]),2,mean))
-                                        #print(ud$cum[200,]); 
+#if (is.null(bhat)==TRUE) {
+#ud<-dynregBase(times,status,Y,ldata,
+#X,covarA,id,bhat=bhat, 
+#sim=0,retur=0,antsim=0,b=b,smoothXX=smoothXX,
+#weighted.test=weighted.test);
+##pcregci(ud$cum,ud$var.cum,0,3); 
+#xval<-seq(times[1],times[Ntimes],length=30); 
+#bhat<-CsmoothB(ud$cum,xval,b); 
+#gamma<-ud$cum[signif(Ntimes*3/4),(px+2):(px+pz+1)]/
+#       ud$cum[signif(Ntimes*3/4),1];
+#};
+#print(apply(cbind(X[,1:(pxz+1)],X[,(pxz+2):(pxz+pa+1)]),2,mean))
+#print(ud$cum[200,]); 
 
-    ud<-semiregBase(times,status,Y,ldata,X,Z,covarA,id,
-                    bhat=bhat,sim=sim,antsim=n.sim,b=b,gamma=gamma,weighted.test=weighted.test);
+ud<-semiregBase(times,status,Y,ldata,X,Z,covarA,id,
+ bhat=bhat,sim=sim,antsim=n.sim,b=b,gamma=gamma,weighted.test=weighted.test);
 
     if (px>0) {
       colnames(ud$cum)<- colnames(ud$var.cum)<- colnames(ud$cum0)<- 
@@ -143,16 +143,16 @@ meansub=1,weighted.test=0)
     ud$gamma.ms<-nameestimate(ud$gamma.ms,covnamesZ); 
     ud$gamma0<-nameestimate(ud$gamma0,covnamesZ); 
     ud$gamma.ly<-nameestimate(ud$gamma.ly,covnamesZ); 
-                                        #ud$gamma.ef<-nameestimate(ud$gamma.ef,covnamesZ); 
-                                        #ud$gamma.efms<-nameestimate(ud$gamma.efms,covnamesZ); 
+#ud$gamma.ef<-nameestimate(ud$gamma.ef,covnamesZ); 
+#ud$gamma.efms<-nameestimate(ud$gamma.efms,covnamesZ); 
 
     ud$var.gamma<-namematrix(ud$var.gamma,covnamesZ); 
     ud$robvar.gamma<-namematrix(ud$robvar.gamma,covnamesZ); 
     ud$var.gamma.ms<-namematrix(ud$var.gamma.ms,covnamesZ); 
     ud$var.gamma.ly<-namematrix(ud$var.gamma.ly,covnamesZ); 
-                                        #ud$var.gamma.ef<-namematrix(ud$var.gamma.ef,covnamesZ); 
-                                        #ud$robvar.gamma.ef<-namematrix(ud$robvar.gamma.ef,covnamesZ); 
-    ud$mean.response<-meanY;
+#ud$var.gamma.ef<-namematrix(ud$var.gamma.ef,covnamesZ); 
+#ud$robvar.gamma.ef<-namematrix(ud$robvar.gamma.ef,covnamesZ); 
+ud$mean.response<-meanY;
   }
   attr(ud,"Call")<-sys.call(); 
   class(ud)<-"dynreg"

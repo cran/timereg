@@ -18,7 +18,7 @@ timevarying effects.
 }
 \usage{
 dynreg(formula,data=sys.parent(),aalenmod,bandwidth=0.5,id=NULL,
-bhat=NULL,start.time=0,max.time=NULL,n.sim=500,residuals=0,
+bhat=NULL,start.time=0,max.time=NULL,n.sim=500,
 meansub=1,weighted.test=0)
 }
 \arguments{
@@ -34,8 +34,6 @@ associate each record with the id of a subject.}
 \item{n.sim}{number of simulations in resampling.}
 \item{weighted.test}{to compute a variance weighted version of the 
 test-processes used for testing time-varying effects.}
-\item{residuals}{to returns residuals that can be used for
-model validation in the function 'cum.residuals'.}
 \item{aalenmod}{Aalen model for measurement times. Specified as a 
 survival model (see aalen function).} 
 \item{bandwidth}{bandwidth for local iterations. Default is 50\%
@@ -116,8 +114,6 @@ model.
 }
 \item{var.gamma.ms}{estimate of variance of parametric component of 
 model.}
-\item{residuals}{list of residuals. Estimated martingale increments (dM) and
-corresponding time vector (time).}
 \item{obs.testBeq0}{observed absolute value of supremum of
 cumulative components scaled with the variance.}
 \item{pval.testBeq0}{p-value for covariate effects based on supremum test.}
@@ -160,7 +156,7 @@ plot(out)
 # Fits time-varying semi-parametric regression model.
 outS<-dynreg(prot~treat+const(prot.prev)+const(sex)+const(age),csl,
 Surv(lt,rt,indi.m)~+1,start.time=0,max.time=2,id=csl$id,
-n.sim=200,bandwidth=0.6,meansub=0)
+n.sim=200,bandwidth=0.7,meansub=0)
 summary(outS)
 }
 \keyword{survival}
