@@ -22,7 +22,7 @@ int *nx,*px,*antpers,*Ntimes,*Nit,*detail,*sim,*antsim,*rani,*id,*status,*weight
   vector *ahatt,*risk,*tmpv1,*tmpv2,*rowX,*rowZ,*difX,*VdB; 
   vector *W2[*antpers],*W3[*antpers],*reszpbeta,*res1dim,*dAt[*Ntimes]; 
   vector *dLamt[*antpers];
-  int pg[1],c,robust=1,pers=0,i,j,k,l,s,t,it,count,sing;
+  int *pg=calloc(1,sizeof(int)),c,robust=1,pers=0,i,j,k,l,s,t,it,count,sing;
   double S0p,S0star,dtime,time,dummy,ll;
   double S0cox,S0,tau,random,scale,sumscore;
   int idum,*ipers=calloc(*Ntimes,sizeof(int)),nap;
@@ -495,4 +495,5 @@ int *nx,*px,*antpers,*Ntimes,*Nit,*detail,*sim,*antsim,*rani,*id,*status,*weight
     free_vec(ZXdA[j]); free_mat(St[j]); free_mat(d2G[j]); free_vec(dG[j]);  
     free_vec(varUthat[j]);} 
     free(ipers); 
+    free(pg); 
 }

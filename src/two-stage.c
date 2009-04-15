@@ -27,11 +27,11 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,
   vector *ahatt,*phit[*Ntimes],*dbetaNH,*dANH; 
   vector *tmpv1,*tmpv2,*rowX,*rowZ,*difX,*VdB,*atrisk[*antpers]; 
   vector *W2[*antclust],*W3[*antclust],*reszpbeta,*res1dim,*dAt[*Ntimes]; 
-  int c,pers=0,i,j,k,s,it,count,sing,pmax,
-      *cluster=calloc(*antpers,sizeof(int));
-  double Nt[*antclust],dtime,time,dummy,ll,lle,llo;
+  int c,pers=0,i,j,k,s,it,count,sing,pmax, *cluster=calloc(*antpers,sizeof(int));
+  double dtime,time,dummy,ll,lle,llo;
   double tau,hati,scale,sumscore,d2Utheta=0;
-  double *HeHi=calloc(*antpers,sizeof(double)),
+  double *Nt=calloc(*antclust,sizeof(double)),
+	 *HeHi=calloc(*antpers,sizeof(double)),
          *Nti=calloc(*antpers,sizeof(double)),
 	 *H2eHi=calloc(*antpers,sizeof(double)),
 	 *Rthetai=calloc(*antpers,sizeof(double)),
@@ -44,9 +44,6 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,
 	 Dthetanu=0,DDthetanu=0,nu,
 	 *dAiid=calloc(*antclust,sizeof(double)); 
   int *ipers=calloc(*Ntimes,sizeof(int));
-
-
-
 
   for (j=0;j<*antclust;j++) { Nt[j]=0; NH[j]=0; dAiid[j]=0; }
   for (i=0;i<*antpers;i++) { HeHi[j]=0; H2eHi[j]=0; Rthetai[j]=0; 
@@ -452,4 +449,5 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,
   free(ipers); free(cluster);  free(Nti); 
   free(HeHi); free(H2eHi); free(Rthetai); free(Hik); free(NH); free(HeH); 
   free(H2eH); free(Rtheta); free(thetaiid); free(dAiid); 
+  free(Nt); 
 }

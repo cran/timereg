@@ -17,8 +17,9 @@ int *sim,*antsim,*retur,*nxval,*nx,*px,*na,*pa,*antpers,*Ntimes,*mw,*rani,*statu
   vector *dAt[*Ntimes];
   matrix *cumBt[*antpers];
   vector *cumhatB[*antpers],*cumB[*antpers],*cum;
-  int pers=0,i,j,k,s,c,count,sing=1,imin[1],pmax,nmax,risk;
-  int coef[1],ps[1],degree[1]; 
+  int pers=0,i,j,k,s,c,count,sing=1,pmax,nmax,risk;
+  int *coef=calloc(1,sizeof(int)),*imin=calloc(1,sizeof(int)),
+      *ps=calloc(1,sizeof(int)),*degree=calloc(1,sizeof(int));
   double time,dummy,zpers=0,dif,dtime,YoneN,kia;
   FILE *fp; int VERBOSE=0;
   double tukey(); 
@@ -171,6 +172,8 @@ int *sim,*antsim,*retur,*nxval,*nx,*px,*na,*pa,*antpers,*Ntimes,*mw,*rani,*statu
   free_mats(&XWX,&cdesignA,&ldesignX,&cdesignX,&ldesignA,&Aa,&AaI,&A,&AI,&XbXa,NULL); 
   free_vecs(&VdBly,&korf,&dB,&dA,&dR,&ahatt,&xt,&pdA,&diag,&xai,&sumx,&vone,&itot,&VdB,&VdB0,&VdBf,&fkor,&dkorB,&tmpv,&tmpv1,&tmpv2,&tmpv3,&tmpv4,&pahat,&pbhat,&bhatt,&pbahat,&pdbahat,&dBly,&cum,NULL);
   free(vcudif); 
+free(coef); free(ps); free(degree); free(imin); 
+
 }
 
 
@@ -201,15 +204,14 @@ int *naval,*nxval,*nx,*px,*na,*pa,*ng,*pg,*antpers,*Ntimes,*mw,
   vector *tmpv,*tmpv1,*tmpv2,*tmpv3,*tmpv4,*zi,*xi,*ZHdp,*IZHdp,*IZHdN,*ZHdN;
   vector *korgamly,*korgam,*gamstart;
   vector *rowX,*rowZ,*difX,*dgamef,*gammsd,*ai; 
-  int i,j,k,s,c,count,sing,imin[1],pmax,nmax,pers=0;
-  int robust=1,*ipers=calloc(*Ntimes,sizeof(int)); 
+  int i,j,k,s,c,count,sing,pmax,nmax,pers=0;
+  int robust=1,*ipers=calloc(*Ntimes,sizeof(int)), 
+      *imin=calloc(1,sizeof(int)); 
   double time,dummy,dtime,zpers,risk,YoneN,dif,dif2,ctime;
   double tau,*C=calloc((*pg)*(*pg),sizeof(double));
   double *vcudif=calloc((*Ntimes)*(*px+1),sizeof(double));
   void comptest(); 
   long idum; 
-  int enpar[1],gamdt[1]; 
-  enpar[0]=1; gamdt[0]=1; 
   idum=*rani;ctime=0;  
  
   malloc_mats(*antpers,*px,&ldesignX,&cdesignX,NULL);
@@ -498,4 +500,5 @@ int *naval,*nxval,*nx,*px,*na,*pa,*ng,*pg,*antpers,*Ntimes,*mw,
 	      &rowX,&rowZ,&difX,NULL); 
 
   free(C); free(vcudif); free(ipers); 
+  free(imin); 
 }

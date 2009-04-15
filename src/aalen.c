@@ -85,22 +85,15 @@ int *nx,*p,*antpers,*Ntimes,*sim,*retur,*rani,*antsim,*status,*id,*covariance,
   matrix *cumAt[*antclust];
   vector  *vrisk,*diag,*dB,*dN,*VdB,*xi,*rowX,*rowcum,*difX,*ta,*vtmp;
   vector *cumhatA[*antclust],*cumA[*antclust],*cum;
-  int ci,i,j,k,l,s,c,count,pers=0,coef[1],ps[1],degree[1];
-  int var1,var2,nb[1],cluster[*antpers]; 
-  double time,ahati,band[1],bhat[(*Ntimes)*(*p+1)],dt,tau;
-  double vcudif[(*Ntimes)*(*p+1)];
+  int ci,i,j,k,l,s,c,count,pers=0,*cluster=calloc(*antpers,sizeof(int));
+  int var1,var2;
+  double time,ahati,dt,tau,*vcudif=calloc((*Ntimes)*(*p+1),sizeof(double));
   double fabs(),sqrt();
   void comptest();
   long idum; 
   
-  *rani = -8021;
-
-  idum=*rani; 
-
-  coef[0]=1; ps[0]=*p+1; degree[0]=1; band[0]=0.8; nb[0]=30; 
-  dt=times[*Ntimes-1]-times[0]; 
-  for (i=0;i<nb[0];i++) bhat[i]=times[0]+dt*i/(nb[0]-1); 
-  var1=1; var2=0; 
+  *rani = -8021; idum=*rani; 
+  dt=times[*Ntimes-1]-times[0]; var1=1; var2=0; 
 
   if (*robust==1) {
     for (i=0;i<*antclust;i++) { malloc_vec(*p,cumhatA[i]); 
@@ -115,7 +108,6 @@ int *nx,*p,*antpers,*Ntimes,*sim,*retur,*rani,*antsim,*status,*id,*covariance,
 
   malloc_vec(*p,diag); malloc_vec(*p,dB); malloc_vec(*p,VdB); malloc_vec(*p,xi);
   malloc_vec(*p,rowX); malloc_vec(*p,rowcum); malloc_vec(*p,difX); malloc_vec(*p,vtmp);
-  malloc_vec(nb[0],ta);
   malloc_vec(*antpers,vrisk); 
 
   for (j=0;j<*antpers;j++) cluster[j]=0;
@@ -227,6 +219,8 @@ int *nx,*p,*antpers,*Ntimes,*sim,*retur,*rani,*antsim,*status,*id,*covariance,
   if (*robust==1){
     for (i=0;i<*antclust;i++) {
       free_vec(cumA[i]); free_vec(cumhatA[i]); if (*sim==1) free_mat(cumAt[i]); } }
+  free(cluster); 
+  free(vcudif); 
 }
 
 void semiaalen(alltimes,Nalltimes,Ntimes,designX,nx,px,designG,ng,pg,antpers,start,stop,nb,bhat,cu,vcu,Robvcu,gamma,Vgamma,RobVgamma,sim,antsim,test,rani,testOBS,robust,status,Ut,simUt,id,weighted,cumAit,retur,covariance,covs,resample,gammaiid,Biid,clusters,antclust,loglike,intZHZ,intZHdN,deltaweight)
@@ -244,13 +238,15 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*
   vector *VdB,*difX,*xi,*tmpv1,*tmpv2,*vrisk; 
   vector *dA,*rowX,*dN,*AIXWdN,*ta,*bhatt,*pbhat,*plamt;
   vector *korG,*pghat,*rowZ,*gam,*dgam,*ZHdN,*IZHdN,*zi;
-  int ci,i,j,k,l,c,s,count,pers=0,pmax,coef[1],ps[1],cluster[*antpers];
-  int stat,maxtime,ls[*Ntimes]; 
+  int ci,i,j,k,l,c,s,count,pers=0,pmax,stat,maxtime,
+      *cluster=calloc(*antpers,sizeof(int)),
+      *ls=calloc(*Ntimes,sizeof(int)),
+      *ipers=calloc(*Ntimes,sizeof(int));
   double time,dtime,dtime1,fabs(),sqrt();
   double ahati,ghati,hati,tau,dMi;
-  double vcudif[(*Ntimes)*(*px+1)],times[*Ntimes];
+  double *vcudif=calloc((*Ntimes)*(*px+1),sizeof(double)),
+	 *times=calloc(*Ntimes,sizeof(double));
   void comptest(); 
-  long ipers[*Ntimes]; 
   long idum; 
   idum=*rani; 
 
@@ -290,8 +286,7 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*
   }
   for (j=0;j<*antpers;j++) cluster[j]=0;
 
-  coef[0]=1; 
-  ps[0]=*px+1; pmax=max(*pg,*px); 
+  pmax=max(*pg,*px); 
   mat_zeros(Ct); mat_zeros(CGam); vec_zeros(IZHdN);
   times[0]=alltimes[0]; l=0; 
   maxtime=alltimes[*Nalltimes]; 
@@ -586,4 +581,5 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*
       free_vec(W3[j]);
     } 
   }
+  free(vcudif); free(times); free(cluster); free(ls); free(ipers); 
 }

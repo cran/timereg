@@ -33,6 +33,7 @@ if (class(object)=="cox.aalen")
   X<-ldata$X; 
   time<-ldata$time; time2<-ldata$time2; 
   covar<-X; 
+  time2<-attr(object,"time2"); 
 
   status<-ldata$status; 
   if (coxaalen==1) {
@@ -97,7 +98,7 @@ if (class(object)=="cox.aalen")
   if (pcumz>0) {
     antX<-(sum(ant[1:px]>2)) 
     if (antX>0) {inX<-(1:px)[(ant[1:px]>2)]; inXorZ[1:antX]<-1} else {inX<-c();} 
-    if (coxaalen==1) {inZ<-(1:pg)[(ant[(px+1):pg]>2)]; }  else inZ<-c()
+    if (coxaalen==1) {inZ<-(1:pg)[(ant[(px+1):(px+pg)]>2)]; }  else inZ<-c()
     inXZ<-c(inX,inZ); 
     inXZ<-inXZ-1
   } else {inXZ<-0; inXorZ<-0} 

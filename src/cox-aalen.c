@@ -24,7 +24,8 @@ int*covariance,*nx,*px,*ng,*pg,*antpers,*Ntimes,*mw,*Nit,*detail,*mof,*sim,*ants
   vector *ta,*ahatt,*vrisk; 
   vector *tmpv1,*tmpv2,*rowX,*rowZ,*difX,*VdB; 
   vector *W2[*antclust],*W3[*antclust],*reszpbeta,*res1dim,*dAt[*Ntimes]; 
-  int ci,c,pers=0,i,j,k,l,s,it,count,sing,imin[1],pmax,
+  int ci,c,pers=0,i,j,k,l,s,it,count,sing,pmax,
+      *imin=calloc(1,sizeof(int)),
       *cluster=calloc(*antpers,sizeof(int));
   double dtime,time=0,dummy,ll,lle,llo;
   double tau,hati,random,scale,sumscore;
@@ -470,7 +471,6 @@ int*covariance,*nx,*px,*ng,*pg,*antpers,*Ntimes,*mw,*Nit,*detail,*mof,*sim,*ants
 
   PutRNGstate();  /* to use R random normals */
 
-
   if (*sim==1) free_mats(&Delta,&Delta2,&tmpM2,&tmpM1,NULL); 
 
   free_mats(&Vcov,&Utt,&VU,&ZX,&COV,&dM1M2,&AI,&A,&ZXAI,&tmp1,&tmp2,&tmp3,NULL);
@@ -492,7 +492,6 @@ int*covariance,*nx,*px,*ng,*pg,*antpers,*Ntimes,*mw,*Nit,*detail,*mof,*sim,*ants
   for (j=0;j<*Ntimes;j++) {
     free_mat(dYIt[j]); free_vec(dAt[j]); free_mat(C[j]);free_mat(M1M2[j]);free_mat(ZXAIs[j]);
     free_vec(ZXdA[j]);free_mat(St[j]); } 
-    free(cluster); free(ipers); 
-
+    free(cluster); free(ipers); free(imin); 
 
 }

@@ -15,11 +15,11 @@ int *detail,*nx,*px,*antpers,*Nalltimes,*Ntimes,*ng,*pg,*status,*mof,*mw,*Nit,*r
   vector *VdB,*difX,*xi,*tmpv1,*tmpv2,*gamoff; 
   vector *dA,*rowX,*dN,*AIXWdN,*bhatt,*pbhat,*plamt;
   vector *S1,*korG,*pghat,*rowZ,*gam,*dgam,*ZHdN,*VZHdN,*IZHdN,*zi,*offsets;
-  int it,i,j,k,l,c,s,count,pers=0,pmax,coef[1],ps[1];
+  int it,i,j,k,l,c,s,count,pers=0,pmax;
   int stat,maxtime,
       *ls=calloc(*Ntimes,sizeof(int)); 
   double S0,sumscore,dptime,time,dummy,dtime,random,fabs(),sqrt();
-  double ghati,dMi,weights[*antpers];
+  double ghati,dMi,*weights=calloc(*antpers,sizeof(double));
   double *times=calloc(*Ntimes,sizeof(double)),
 	 *cumoff=calloc((*Nalltimes)*(*px+1),sizeof(double));
   long idum;  idum=*rani; 
@@ -29,8 +29,8 @@ int *detail,*nx,*px,*antpers,*Nalltimes,*Ntimes,*ng,*pg,*status,*mof,*mw,*Nit,*r
 
   malloc_mats(*antpers,*px,&X,&WX,NULL);
   malloc_mats(*antpers,*pg,&Z,&WZ,NULL); 
-  malloc_mats(*px,*px,&Vcov,&A,&AI,&GCdM1M2,&VarKorG,NULL); // changed dims of VarKorG
-  malloc_mats(*pg,*pg,&S2,&S2I,&tmpM2,&ZWZ,&Vargam,&dVargam,&ICGam,&CGam,&dCGam,NULL); // Changed dims of VarKorG
+  malloc_mats(*px,*px,&Vcov,&A,&AI,&GCdM1M2,&VarKorG,NULL); 
+  malloc_mats(*pg,*pg,&S2,&S2I,&tmpM2,&ZWZ,&Vargam,&dVargam,&ICGam,&CGam,&dCGam,NULL); 
   malloc_mats(*px,*antpers,&AIXW,NULL);
   malloc_mats(*px,*pg,&tmpM4,&tmpM3,&Ct,&dC,&XWZ,&XWZAI,&dM1M2,&M1M2t,NULL);
 
@@ -48,7 +48,7 @@ int *detail,*nx,*px,*antpers,*Nalltimes,*Ntimes,*ng,*pg,*status,*mof,*mw,*Nit,*r
   malloc_vecs(*pg,&S1,&gamoff,&zi,&tmpv2,&rowZ,&gam,&dgam,&ZHdN,&IZHdN,&VZHdN,NULL);
   malloc_vecs(*antpers,&offsets,&dN,&pbhat,&pghat,&plamt,NULL);
 
-  coef[0]=1; ps[0]=*px+1; if (*px>=*pg) pmax=*px; else pmax=*pg; 
+  if (*px>=*pg) pmax=*px; else pmax=*pg; 
   times[0]=alltimes[0]; maxtime=alltimes[*Nalltimes]; 
   for (s=0;s<*pg;s++) VE(gam,s)=gamma[s]; 
 
@@ -243,4 +243,5 @@ int *detail,*nx,*px,*antpers,*Nalltimes,*Ntimes,*ng,*pg,*status,*mof,*mw,*Nit,*r
 
   free_vecs(&dA,&VdB,&difX,&xi,&tmpv1,&korG,&rowX,&AIXWdN,&bhatt,&S1,&gamoff,&zi,&tmpv2,&rowZ,&gam,&dgam,&ZHdN,&IZHdN,&VZHdN,&offsets,&dN,&pbhat,&pghat,&plamt,NULL);
   free(ls); free(times); free(cumoff); 
+  free(weights); 
 }

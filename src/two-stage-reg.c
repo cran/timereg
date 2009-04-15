@@ -27,7 +27,8 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,*ratesim,*robust,
   vector *W2[*antclust],*W3[*antclust],*reszpbeta,*res1dim,*dAt[*Ntimes]; 
   vector *vthetascore,*vtheta1,*vtheta2,*dtheta,*thetaiid[*antclust]; 
   vector *dAiid[*antclust]; 
-  int c,pers=0,i,j,k,l,s,it,count,sing,pmax,cluster[*antpers];
+  int c,pers=0,i,j,k,l,s,it,count,sing,pmax,
+      *cluster=calloc(*antpers,sizeof(int));
   double *Nt=calloc(*antclust,sizeof(double)),dtime,time,dummy,ll,lle,llo;
   double tau,hati,scale,sumscore=999,*Nti=calloc(*antpers,sizeof(double)), theta0=0;
   double *thetaiidscale=calloc(*antclust,sizeof(double)),
@@ -485,4 +486,5 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,*ratesim,*robust,
 
   free(Nt); free(Nti); free(thetaiidscale); free(NH); free(HeH); free(H2eH); 
   free(Rtheta); free(Hik); 
+  free(cluster); 
 }

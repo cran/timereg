@@ -10,7 +10,7 @@ int *nx,*p,*antpers,*Ntimes,*sim,*retur,*rani,*antsim,*status,*id,*covariance,
   matrix *WX,*ldesignX,*A,*AI,*Vcov,*cumAt[*antclust];
   vector *diag,*dB,*dN,*VdB,*xi,*rowX,*rowcum,*difX,*vtmp,*cum,*offsets; 
   vector *vrisk,*cumhatA[*antclust],*cumA[*antclust];
-  int i,j,k,l,s,c,count,pers=0,coef[1],ps[1],degree[1]; 
+  int i,j,k,l,s,c,count,pers=0;
   int stat,nap,*cluster=calloc(*antpers,sizeof(int));
   double time,ahati,dt,dtime;
   double tau,*vcudif=calloc((*Ntimes)*(*p+1),sizeof(double)),
@@ -19,7 +19,7 @@ int *nx,*p,*antpers,*Ntimes,*sim,*retur,*rani,*antsim,*status,*id,*covariance,
   void comptest(); 
   long idum; idum=*rani; 
 
-  nap=floor(*antsim/50); coef[0]=1; ps[0]=*p+1; degree[0]=1; 
+  nap=floor(*antsim/50); 
   dt=times[*Ntimes-1]-times[0]; 
 
   if (*robust==1) {
@@ -158,7 +158,7 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*
   vector *dB,*VdB,*difX,*xi,*tmpv1,*tmpv2,*gamoff,*vrisk;
   vector *dAoff,*dA,*rowX,*dN,*AIXWdN,*bhatt,*pbhat,*plamt; 
   vector *korG,*pghat,*rowZ,*gam,*dgam,*ZHdN,*VZHdN,*IZHdN,*zi,*offsets;
-  int m,i,j,k,l,c,s,count,pers=0,pmax,coef[1],ps[1],
+  int m,i,j,k,l,c,s,count,pers=0,pmax,
         *cluster=calloc(*antpers,sizeof(int)),
         *ipers=calloc(*Ntimes,sizeof(int)),
         *ls=calloc(*Ntimes,sizeof(int));
@@ -202,7 +202,7 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*
       malloc_vec(*px,W3[j]); }
     for (j=0;j<*antpers;j++) malloc_mat(*Nalltimes,*px,AIxit[j]);  } 
 
-  coef[0]=1; ps[0]=*px+1; if (*px>=*pg) pmax=*px; else pmax=*pg; 
+  if (*px>=*pg) pmax=*px; else pmax=*pg; 
   mat_zeros(Ct); mat_zeros(CGam); vec_zeros(IZHdN); times[0]=alltimes[0]; l=0; 
   maxtime=alltimes[*Nalltimes]; 
   for (s=0;s<*pg;s++) VE(gam,s)=gamma[s]; 

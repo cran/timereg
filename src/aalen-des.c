@@ -8,7 +8,7 @@ double *designX,*alltimes,*start,*stop,*designG,*desret;
 int *nx,*px,*antpers,*Nalltimes,*Ntimes,*ng,*pg,*status,*id,*clusters,*antclust,*deltaweight;
 {
   matrix *X,*Z;
-  int i,j,l,c,s,cluster[*antpers],count0;
+  int i,j,l,c,s,*cluster=calloc(*antpers,sizeof(int)),count0;
   int stat,maxtime,pmax,count,pers=0;
   double time,dtime,fabs(),sqrt();
   double *times=calloc(*Ntimes,sizeof(double)); 
@@ -94,6 +94,7 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*ng,*pg,*status,*id,*clusters,*antclust,
   free_mat(X); 
   if (*pg>0) free_mat(Z); 
   free(times); 
+  free(cluster); 
 }
 
 void aalendesL(alltimes,Nalltimes,Ntimes,designX,nx,px,designG,ng,pg,

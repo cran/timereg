@@ -207,20 +207,22 @@ int *antpers,*px,*Ntimes,*Nit,*cause,*delta,*sim,*antsim,*rani,*weighted,
   matrix *Vargam,*dVargam,*M1M2[*Ntimes],*Delta,*dM1M2,*M1M2t,*RobVargam;
   matrix *W3t[*antclust],*W4t[*antclust];
   vector *W2[*antclust],*W3[*antclust];
-  vector *diag,*dB,*dN,*VdB,*AIXdN,*AIXlamt,*ta,*bhatt,*pbhat,*plamt;
+  vector *diag,*dB,*dN,*VdB,*AIXdN,*AIXlamt,*bhatt,*pbhat,*plamt;
   vector *korG,*pghat,*rowG,*gam,*dgam,*ZGdN,*IZGdN,*ZGlamt,*IZGlamt;
   vector *covsx,*covsz,*qs,*Y,*rr,*bhatub,*xi,*rowX,*rowZ,*difX,*zi,*z1,
     *tmpv1,*tmpv2,*lrisk;
-  int nb[1],itt,i,j,k,l,s,c,pmax,coef[1],totrisk,ps[1],n[1],nx[1],retur[1];
+  int itt,i,j,k,l,s,c,pmax,totrisk,
+      *n= calloc(1,sizeof(int)), *nx= calloc(1,sizeof(int)),
+      *robust= calloc(1,sizeof(int));
   double time,dummy,dtime,timem;
   double *vcudif=calloc((*Ntimes)*(*px+1),sizeof(double)),
 	 *inc=calloc((*Ntimes)*(*px+1),sizeof(double));
   double lrr,fabs(), pow(); 
-  int robust[1],idum,fixedcov; 
+  int idum,fixedcov; 
   void comptestfunc();
   // float gasdev(),expdev(),ran1();
   idum=*rani; robust[0]=1; fixedcov=1; 
-  n[0]=antpers[0]; retur[0]=0; nx[0]=antpers[0]; nb[0]=Ntimes[0]; 
+  n[0]=antpers[0]; nx[0]=antpers[0];
   timem=0; 
   if (*trans==1) for (j=0;j<*pg;j++) if (timepow[j]!= 1) {timem=1;break;}
   if (*trans==2) for (j=0;j<*pg;j++) if (timepow[j]!= 0) {timem=1;break;}
@@ -242,10 +244,8 @@ int *antpers,*px,*Ntimes,*Nit,*cause,*delta,*sim,*antsim,*rani,*weighted,
   malloc_vecs(*px,&covsx,&xi,&rowX,&difX,&tmpv1,&korG,&diag,&dB,&VdB,&AIXdN,&AIXlamt,&bhatt,NULL);
   malloc_vecs(*pg,&covsz,&zi,&rowZ,&tmpv2,&zi,&z1,&rowG,&gam,&dgam,&ZGdN,&IZGdN,&ZGlamt,&IZGlamt,NULL);
   malloc_vecs(*antpers,&Y,&bhatub,&rr,&lrisk,&dN,&pbhat,&pghat,&plamt,NULL);
-  malloc_vecs(*nb,&ta,NULL);
   malloc_vec((*px)+(*pg),qs); 
 
-  coef[0]=1; ps[0]=*px+1; 
   if (*px>=*pg) pmax=*px; else pmax=*pg; 
   for (j=0;j<*pg;j++) VE(gam,j)=gamma[j]; 
 
@@ -436,7 +436,7 @@ int *antpers,*px,*Ntimes,*Nit,*cause,*delta,*sim,*antsim,*rani,*weighted,
 	      &Ct,&tmpM1,&tmpM2,&tmpM3,&tmpM4,&Vargam,&dVargam,
 	      &Delta,&dM1M2,&M1M2t,&RobVargam,NULL); 
 
-  free_vecs(&qs,&Y,&rr,&bhatub,&diag,&dB,&dN,&VdB,&AIXdN,&AIXlamt,&ta,
+  free_vecs(&qs,&Y,&rr,&bhatub,&diag,&dB,&dN,&VdB,&AIXdN,&AIXlamt,
 	      &bhatt,&pbhat,&plamt,&korG,&pghat,&rowG,&gam,&dgam,&ZGdN,&IZGdN,
 	      &ZGlamt,&IZGlamt,&xi,&rowX,&rowZ,&difX,&zi,&z1,&tmpv1,&tmpv2,&lrisk,
 	      NULL); 
@@ -444,8 +444,8 @@ int *antpers,*px,*Ntimes,*Nit,*cause,*delta,*sim,*antsim,*rani,*weighted,
   for (j=0;j<*Ntimes;j++) {free_mat(Acorb[j]);free_mat(C[j]);free_mat(M1M2[j]);}
   for (j=0;j<*antclust;j++) {free_mat(W3t[j]); free_mat(W4t[j]);
     free_vec(W2[j]); free_vec(W3[j]); }
-  free(vcudif); 
-  free(inc); 
+  free(vcudif); free(inc); 
+  free(n); free(nx);  free(robust); 
 }
 
 double mypow(double x,double p)

@@ -11,7 +11,8 @@ int
   vector *diag,*dB,*dN,*VdB,*AIXdN,*AIXlamt,*ta,*bhatt,*pbhat,*plamt,*avx,*lrisk;
   vector *ssrow2,*ssrow,*vtmp,*xi,*rowX,*cumi[*antpers],*difX,*cumBLi[*antpers],*Btau,*Base[*antpers],*score; 
   matrix *cumBL[*antpers],*cumB[*antpers],*BLsubbetaLam[*antpers],*varBL, *Delta2,*Delta,*tmpM1,*tmpM2; 
-  int supsup=0,itt,i,j,k,s,c,count,pers=0,imin[1],coef[1],ps[1];// unused var:l,sing
+  int supsup=0,itt,i,j,k,s,c,count,pers=0,
+      *imin=calloc(1,sizeof(int)), *coef=calloc(1,sizeof(int)),*ps=calloc(1,sizeof(int));
   double time2,rr,time=0,time1,dummy,dtime,S0,lam0t,sdBt,tau,random;
   double *Basei=calloc(*antpers,sizeof(double)),rvarbase,
 	 *vcudif=calloc((*Ntimes)*(*p+2),sizeof(double));
@@ -445,6 +446,8 @@ int
   free_vec(Btau); 
   free_mat(ldesignX); free_mat(A); free_mat(AI); free_mat(AIX); free_mat(cdesignX); 
   free_mat(XmavX); free_mat(cXmavX); free_mat(Aav); 
+  free(coef); free(ps); free(imin);
+  free(vcudif); free(Basei); 
 }
 
 void semibreslow(times,Ntimes,designX, nx,px,designG,
@@ -466,9 +469,11 @@ int *nx,*px,*antpers,*Ntimes,*nb,*ng,*pg,*it,*degree,*sim,*antsim,
   vector *zi,*z1,*lrisk,*avx,*avz,*rowG,*xi,*rowX,*rowZ,*tmpv2;
   vector *cumi[*antpers],*W2[*antpers],*W3[*antpers];
   vector *Base[*antpers]; 
-  int itt,i,j,k,s,c,count,imin[1],pers=0,pmax,coef[1],ps[1];
-  double time,dummy,dtime,lam0t,S0,Basei[*antpers],
-    vcudif[(*Ntimes)*(*px+2)],dum2,rvarbase; 
+  int itt,i,j,k,s,c,count,pers=0,pmax,
+        *imin=calloc(1,sizeof(int)), *coef=calloc(1,sizeof(int)),*ps=calloc(1,sizeof(int));
+  double time,dummy,dtime,lam0t,S0,
+	 *Basei=calloc((*antpers),sizeof(double)),
+         *vcudif=calloc((*Ntimes)*(*px+2),sizeof(double)),dum2,rvarbase; 
   void comptest(),smoothB();
   long idum; idum=*rani;
 
@@ -865,4 +870,5 @@ int *nx,*px,*antpers,*Ntimes,*nb,*ng,*pg,*it,*degree,*sim,*antsim,
     }
   }
   free(vcudif); free(Basei); 
+  free(coef); free(ps); free(imin);
 }

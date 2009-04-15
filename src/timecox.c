@@ -11,7 +11,9 @@ int *nx,*p,*antpers,*Ntimes,*nb,*it,*degree,*id,*status,*sim,*antsim,*rani,*retu
   matrix *cumAt[*antpers];
   vector *difX,*rowX,*xi,*vtmp,*vtmp1,*diag,*dB,*dN,*dM,*VdB,*AIXdM,*AIXdN,*AIXlamt,*ta,*bhatt,*pbhat,*plamt,*lrisk,*score;
   vector *cumhatA[*antpers],*cumA[*antpers],*cum,*dN1;
-  int i,j,k,l,s,c,count,pers=0,imin[1],itt,coef[1],ps[1];
+  int i,j,k,l,s,c,count,pers=0,itt,
+        *coef=calloc(1,sizeof(int)),
+        *ps=calloc(1,sizeof(int)),*imin=calloc(1,sizeof(int));;
   double ahati,time,dummy,dtime;
   double *vcudif=calloc((*Ntimes)*(*p+1),sizeof(double)),
 	 *sbhat=calloc((*Ntimes)*(*p+1),sizeof(double)),
@@ -158,6 +160,7 @@ int *nx,*p,*antpers,*Ntimes,*nb,*it,*degree,*id,*status,*sim,*antsim,*rani,*retu
   free_mats(&Vcov,&ldesignX,&A,&AI,&cdesignX,NULL);
   free_vecs(&dM,&difX,&rowX,&xi,&vtmp,&vtmp1,&diag,&dB,&dN,&VdB,&AIXdN,&AIXlamt,&ta,&bhatt,&pbhat,&plamt,&lrisk,&cum,NULL);
   free(vcudif); free(sbhat); free(sscore); 
+  free(coef); free(ps); free(imin);
 }
 
 void OSsemicox(times,Ntimes,designX,nx,px,designG,ng,pg,
@@ -179,7 +182,9 @@ int
   vector *diag,*dB,*dN,*VdB,*AIXdN,*AIXlamt,*ta,*bhatt,*pbhat,*plamt;
   vector *korG,*pghat,*rowG,*gam,*dgam,*ZGdN,*IZGdN,*ZGlamt,*IZGlamt;
   vector *xi,*rowX,*rowZ,*difX,*zi,*z1,*tmpv1,*tmpv2,*lrisk;
-  int itt,i,j,k,l,s,c,count,pers=0,imin[1],pmax,coef[1],ps[1];
+  int itt,i,j,k,l,s,c,count,pers=0,pmax,
+      *coef=calloc(1,sizeof(int)),*ps=calloc(1,sizeof(int)),
+      *imin=calloc(1,sizeof(int));;
   double time,dummy,dtime,hati,tau;
   double *vcudif=calloc((*Ntimes)*(*px+1),sizeof(double));
   void comptest(),smoothB();
@@ -414,4 +419,5 @@ int
     for (j=0;j<*antpers;j++) {free_mat(W3t[j]); free_mat(W4t[j]);
       free_mat(AIxit[j]); free_vec(W2[j]); free_vec(W3[j]); }
       free(vcudif); free(ipers); 
+      free(coef); free(ps); free(imin);
 }

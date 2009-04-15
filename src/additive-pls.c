@@ -10,10 +10,9 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*ng,*pg,*status,*weighted,*deltaweight,*
   matrix *X,*A,*AI,*AIXW,*Z,*dCGam,*CGam,*Ct,*ICGam,*XWZ,*ZWZ,*XWZAI,*C[*Nalltimes],*tmpM4,*tmpM2;
   vector *xi,*tmpv2,*tmpv1,*PLScomp,*Xi,*dA,*rowX,*AIXWdN,*korG,*rowZ,*gam,*ZHdN,
     *IZHdN,*zi;
-  int i,j,k,l,c,s,count,pers=0,pmax,coef[1],ps[1];
+  int i,j,k,l,c,s,count,pers=0,pmax,*ipers=calloc(*Ntimes,sizeof(int)); 
   int stat,maxtime,*ls=calloc(*Ntimes,sizeof(int)),pls; 
   double time,dtime,fabs(),sqrt();
-  int *ipers=calloc(*Ntimes,sizeof(int)); 
 
   if (*semipls==0) px[0]=px[0]+1; 
   malloc_mats(*antpers,*px,&X,NULL);
@@ -29,7 +28,7 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*ng,*pg,*status,*weighted,*deltaweight,*
   malloc_vecs(*pg,&zi,&tmpv2,&rowZ,&gam,&ZHdN,&IZHdN,NULL);
   malloc_vecs(*antpers,&PLScomp,&Xi,NULL);
 
-  coef[0]=1; ps[0]=*px+1; if (*px>=*pg) pmax=*px; else pmax=*pg; 
+  if (*px>=*pg) pmax=*px; else pmax=*pg; 
   maxtime=alltimes[*Nalltimes]; 
 
   for (pls=0;pls<*dimplscov;pls++){
