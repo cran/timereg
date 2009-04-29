@@ -1,7 +1,7 @@
 Package: timereg
 Title: timereg package for Flexible regression models for survival
         data.
-Version: 1.2-0
+Version: 1.2-2
 Date: 2009-29-04
 Author: Thomas Scheike with contributions from Torben Martinussen and
         Jeremy Silver
@@ -16,6 +16,6 @@ Depends: survival, lars, R (>= 2.4.0)
 Suggest: quadprog
 LazyLoad: no
 License: GPL (>= 2)
-Packaged: Mon Jun 8 14:31:50 2009; ts
+Packaged: Thu Jun 11 13:53:05 2009; ts
 Repository: CRAN
-Date/Publication: 2009-06-08 16:48:12
+Date/Publication: 2009-06-14 19:13:12

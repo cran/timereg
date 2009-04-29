@@ -253,7 +253,7 @@ predict.comprisk<-function(object,newdata=NULL,X=NULL,
   
       mpt <- matrix(mpt,n.sim,nobs,byrow = TRUE);
       uband <- apply(mpt,2,percen,per=1-alpha);
-    }
+    } else uband<-NULL; 
   } else {
     uband<-NULL;
   }
@@ -640,7 +640,7 @@ plot.comprisk <-  function (x, pointwise.ci=1, hw.ci=0,
   if (modelType=="additive") 
     hyp.label<-"p-value H_0: B(t)=b t" else hyp.label<-"p-value H_0: B(t)=b"
  
-  if (object$obs.testBeq0==FALSE) cat("No test for non-parametric terms\n") else
+  if (sum(object$obs.testBeq0)==FALSE) cat("No test for non-parametric terms\n") else
   timetest(object,digits=digits,hyp.label=hyp.label); 
 
   if (semi) { cat("Parametric terms : \n"); coef(object); cat("   \n"); }
