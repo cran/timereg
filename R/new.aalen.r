@@ -2,7 +2,6 @@
 
 .First.lib <- function(lib, pkg) {
   library.dynam("timereg", pkg, lib)
-  cat("This is timereg 1.1-2 \n\n");
   cat("aalen.test    : semiparametric additive model with
 improved test for constant effects and offsets \n")
   cat("aalen         : semiparametric additive model\n")
@@ -26,10 +25,12 @@ improved test for constant effects and offsets \n")
 
 aalen<-function (formula = formula(data),
                  data = sys.parent(), start.time = 0, max.time = NULL, 
-                 robust=1, id=NULL, clusters=NULL, residuals = 0, n.sim = 1000,  
-                 weighted.test= 0,covariance=0,resample.iid=0,deltaweight=1){
+                 robust=1, id=NULL, clusters=NULL, residuals = 0, n.sim = 1000, 
+                 weighted.test= 0,covariance=0,resample.iid=0,deltaweight=1,
+                 silent=0){
 ###deltaweight<-1; # always default
   if (n.sim == 0) sim <- 0 else sim <- 1
+  scale<-0;
   if (resample.iid==1 & robust==0) {
     cat("When robust=0 no iid representaion computed\n"); resample.iid<-0;}
   if (covariance==1 & robust==0) {
@@ -45,8 +46,8 @@ aalen<-function (formula = formula(data),
   call <- match.call()
   m <- match.call(expand = FALSE)
   m$start.time <- m$weighted.test <- m$max.time <- m$robust <- 
-    m$sim <- m$residuals <- m$n.sim <- m$id <- m$covariance <- 
-      m$resample.iid <- m$clusters <- m$deltaweight<- NULL
+  m$sim <- m$residuals <- m$n.sim <- m$id <- m$covariance <- 
+  m$resample.iid <- m$clusters <- m$deltaweight <- m$silent<- NULL
   special <- c("const","cluster") ###########
   Terms <- if (missing(data)){
     terms(formula, special)
@@ -65,6 +66,12 @@ aalen<-function (formula = formula(data),
   X<-des$X; Z<-des$Z; npar<-des$npar; px<-des$px; pz<-des$pz;
   covnamesX<-des$covnamesX; covnamesZ<-des$covnamesZ
 
+  if (scale==1) { X<-scale(as.matrix(X)); Z<-scale(as.matrix(Z)); 
+     sXscale<- attr(X,"scaled:scale"); sXcenter<- attr(X,"scaled:center") 
+     sZscale<- attr(Z,"scaled:scale"); sZcenter<- attr(Z,"scaled:center") 
+     X[,attr(X,"scaled:scale")==0]<-1; Z[,attr(Z,"scaled:scale")==0]<-1; 
+  }; 
+
   if(is.null(clusters)) clusters <- des$clusters ##########
   
   pxz <- px + pz; 
@@ -76,24 +83,21 @@ aalen<-function (formula = formula(data),
   ldata<-list(start=survs$start,stop=survs$stop,
               antpers=survs$antpers,antclust=survs$antclust);
 
-  if (npar== TRUE) {
-                                        #cat("Nonparametric Additive Risk Model\n")
+  if (npar== TRUE) { #cat("Nonparametric Additive Risk Model\n")
     ud <- aalenBase(times, ldata, X, status, id, clusters, robust = robust, 
                     sim = sim, retur = residuals, antsim = n.sim,
                     weighted.test = weighted.test,covariance=covariance,
-                    resample.iid=resample.iid,namesX=covnamesX)
-    colnames(ud$cum) <- colnames(ud$var.cum) <- c("time", 
-                                                  covnamesX)
-    if (robust == 1) 
-      colnames(ud$robvar.cum) <- c("time", covnamesX)
+                    resample.iid=resample.iid,namesX=covnamesX,silent=silent,scale=scale)
+    colnames(ud$cum) <- colnames(ud$var.cum) <- c("time", covnamesX)
+    if (robust == 1) colnames(ud$robvar.cum) <- c("time", covnamesX)
     if (sim >= 1) {
       colnames(ud$test.procBeqC) <- c("time", covnamesX)
       names(ud$conf.band) <- names(ud$pval.testBeq0) <- names(ud$pval.testBeqC) <- names(ud$pval.testBeqC.is) <- names(ud$obs.testBeq0) <- names(ud$obs.testBeqC) <- names(ud$obs.testBeqC.is) <- colnames(ud$sim.testBeq0) <- colnames(ud$sim.testBeqC) <- colnames(ud$sim.testBeqC.is) <- covnamesX
       ud$sim.testBeqC.is <- ud$sim.testBeqC <- FALSE
     }
+
   }
-  else {
-                                        #cat("Semiparametric Additive Risk Model\n")
+  else { #cat("Semiparametric Additive Risk Model\n")
     if (px == 0) 
       stop("No nonparametric terms (needs one!)")
     ud <- semiaalen(times, ldata, X, Z, 
@@ -101,7 +105,7 @@ aalen<-function (formula = formula(data),
                     weighted.test = weighted.test, retur =
                     residuals,covariance=covariance,
                     resample.iid=resample.iid,namesX=covnamesX,namesZ=covnamesZ,
-                    deltaweight=deltaweight)
+                    deltaweight=deltaweight,silent=silent,scale=scale)
 
     if (px > 0) {
       colnames(ud$cum) <- colnames(ud$var.cum) <- c("time", covnamesX)

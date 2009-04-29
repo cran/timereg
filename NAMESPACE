@@ -28,17 +28,16 @@ export("aalen",
        "dynregBase",	
        "Gprop.odds",
        "krylow.pls",
-       "lasso.boost",
-       "lasso.boostR",
-       "lasso.add.hazard",
        "localTimeReg",
-       "mylars",
+       "my.lars",
+       "myplot.lars",
        "nameestimate",	
        "namematrix",
        "pe.sasieni",
        "percen",
        "pred.cum",
        "pred.des",
+       "summary.pls",
        "prop",	
        "prop.excess",	
        "prop.excessBase",
@@ -54,7 +53,7 @@ export("aalen",
        "slaaop",
        "surv.lars",
        "surv.lars.cv",
-       "surv.lars.gcv",
+       "pls.surv.cv",
        "mycoef.lars",
        "mypredict.lars",	
        "timecox",
@@ -90,6 +89,7 @@ S3method(print,prop.excess)
 S3method(print,timecox)
 S3method(print,two.stage)
 S3method(print,two.stage.reg)
+S3method(print,pls)
 
 S3method(summary,aalen)
 S3method(summary,cox.aalen)
@@ -104,10 +104,12 @@ S3method(summary,prop.excess)
 S3method(summary,timecox)
 S3method(summary,two.stage)
 S3method(summary,two.stage.reg)
+S3method(summary,pls)
 
 S3method(predict,aalen)
 S3method(predict,comprisk)
 S3method(predict,cox.aalen)
+S3method(predict,pls)
 
 S3method(coef,aalen)
 S3method(coef,cox.aalen)
@@ -138,6 +140,7 @@ export("plot.aalen",
        "print.prop.excess",
        "print.timecox",
        "print.two.stage",
+       "print.pls",
        "print.two.stage.reg",
        "summary.aalen",
        "summary.cox.aalen",
@@ -145,6 +148,7 @@ export("plot.aalen",
        "summary.cum.residuals",
        "summary.dynreg",
        "summary.pe.sasieni",
+       "summary.pls",
        "summary.predictAalen",
        "summary.predictComprisk",
        "summary.predictCoxAalen",
@@ -153,6 +157,7 @@ export("plot.aalen",
        "summary.two.stage",
        "summary.two.stage.reg",
        "predict.aalen",
+       "predict.pls",
        "predict.comprisk",
        "predict.cox.aalen",
        "coef.aalen",

@@ -112,7 +112,7 @@ data(bmt);
 times<-bmt$time[bmt$cause==1]; 
 
 add<-comp.risk(Surv(time,cause>0)~platelet+age+tcell,bmt,
-bmt$cause,times[-1],causeS=1,resample.iid=1)
+bmt$cause,times[-1],causeS=1,resample.iid=1,n.sim=100)
 summary(add)
 
 par(mfrow=c(2,4))
@@ -127,7 +127,7 @@ plot(out,multiple=0,uniform=1,col=1:3,lty=1,se=1)
 ## fits additive model with some constant effects 
 add.sem<-comp.risk(Surv(time,cause>0)~
 const(platelet)+const(age)+const(tcell),bmt,
-bmt$cause,times[-1],causeS=1,resample.iid=1)
+bmt$cause,times[-1],causeS=1,resample.iid=1,n.sim=100)
 summary(add.sem)
 
 out<-predict(add.sem,ndata,uniform=1,n.sim=100)
@@ -137,7 +137,7 @@ plot(out,multiple=0,uniform=1,col=1:3,lty=1,se=0)
 ## Fine & Gray model 
 fg<-comp.risk(Surv(time,cause>0)~
 const(platelet)+const(age)+const(tcell),bmt,
-bmt$cause,times[-1],causeS=1,resample.iid=1,model="prop")
+bmt$cause,times[-1],causeS=1,resample.iid=1,model="prop",n.sim=100)
 summary(fg)
 
 out<-predict(fg,ndata,uniform=1,n.sim=100)
@@ -147,7 +147,7 @@ plot(out,multiple=1,uniform=0,col=1:3,lty=1,se=0)
 
 ## extended model with time-varying effects
 fg.npar<-comp.risk(Surv(time,cause>0)~platelet+age+const(tcell),
-bmt,bmt$cause,times[-1],causeS=1,resample.iid=1,model="prop")
+bmt,bmt$cause,times[-1],causeS=1,resample.iid=1,model="prop",n.sim=100)
 summary(fg.npar); 
 
 out<-predict(fg.npar,ndata,uniform=1,n.sim=100)

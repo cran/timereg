@@ -28,7 +28,7 @@ void comptest(times,Ntimes,px,cu,vcu,vcudif,antsim,test,idum,testOBS,Ut,
   malloc_mat(*Ntimes,*px,Delta);
   malloc_mat(*Ntimes,*px,tmpM1); 
 
-  printf("Simulations start N= %ld \n",(long int) *antsim); 
+// printf("Simulations start N= %ld \n",(long int) *antsim); 
 
   GetRNGstate();  /* to use R random normals */ 
 

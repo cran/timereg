@@ -1,14 +1,15 @@
-mypredict.lars<-function (object, newx, s, type = c("fit", "coefficients"), mode = c("step", 
-    "fraction", "norm"), ...) 
+mypredict.lars<-function (object, s, type = c("fit", "coefficients"), 
+mode = c("step", "fraction", "norm"), ...) 
 {
+    newx<-NULL
     mode <- match.arg(mode)
     type <- match.arg(type)
     if (missing(newx) & type == "fit") {
-        warning("Type=fit with no newx argument; type switched to coefficients")
+        # warning("Type=fit with no newx argument; type switched to coefficients")
         type <- "coefficients"
     }
     betas <- object$beta
-    #sbetas <- scale(betas, FALSE, 1/object$normx)
+    sbetas <- scale(betas, FALSE, 1/object$normx)
     sbetas<-betas; 
     kp <- dim(betas)
     k <- kp[1]
@@ -46,13 +47,12 @@ mypredict.lars<-function (object, newx, s, type = c("fit", "coefficients"), mode
         (sfrac - sbeta[left]) * betas[right, , drop = FALSE])/(sbeta[right] - 
         sbeta[left])
     newbetas[left == right, ] <- betas[left[left == right], ]
+    fitf<- apply(newbetas,1,function(x)  x %*% object$Gram %*% x) 
+    fitf<- fitf - 2 *newbetas %*% object$intZHdN 
     robject <- switch(type, coefficients = list(s = s, fraction = sfrac, 
-        mode = mode, coefficients = drop(newbetas)), fit = list(s = s, 
-        fraction = sfrac, mode = mode, 
-#fit = drop(scale(newx, object$meanx, FALSE) %*% t(newbetas)) + object$mu)
-fit = drop(newx %*% t(newbetas)) + object$mu)
-)
-    robject
+                mode = mode, coefficients = drop(newbetas)), 
+                fit = list(s = s, fraction = sfrac, mode = mode, fit = fitf)) 
+robject
 }
 
 mycoef.lars<- function (object, ...)

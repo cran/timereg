@@ -157,8 +157,9 @@ void cumsumM1pM2(matrix *M1, matrix *M2,matrix *At[],int rev,int weighted,double
   }
 
   if (rev==1) {
-    matrix *temp[n]; 
-    for(i = 0; i < n; i++) malloc_mat(p1,p2,temp[i]); 
+  matrix *temp[n],*temp1[n]; 
+  for(i = 0; i < n; i++) { 
+	  malloc_mat(p1,p2,temp[i]); malloc_mat(p1,p2,temp1[i]); }
 
     for(j = 0; j < p1; j++) 
       for(k = 0; k < p2; k++) ME(temp[0],j,k)=ME(M1,n-1,j)*ME(M2,n-1,k)*lweights[n-1]; 
@@ -168,12 +169,16 @@ void cumsumM1pM2(matrix *M1, matrix *M2,matrix *At[],int rev,int weighted,double
 	for(k = 0; k < p2; k++) ME(temp[i],j,k)= ME(temp[i-1],j,k)+
 	  ME(M1,n-i-1,j)*ME(M2,n-i-1,k)*lweights[n-i-1]; 
 
-    if (nindex>1) 
-      for(i = 0; i < nindex; i++)  mat_copy(temp[index[i]],At[nindex-i-1]);  
-    else for(i = 0; i < n; i++)  mat_copy(temp[i],At[n-i-1]);  
+  for(i = 0; i < n; i++)  mat_copy(temp[i],temp1[n-i-1]);  
 
-    for(i = 0;i<n;i++)  free_mat(temp[i]);  
+if (nindex>0) 
+  for(i = 0;i<nindex;i++)  {
+	  mat_copy(temp1[index[i]],At[i]);  
   }
+  else for(i = 0; i < n; i++)  mat_copy(temp[i],At[n-i-1]);  
+
+  for(i = 0;i<n;i++)  { free_mat(temp[i]); free_mat(temp1[i]); }  
+}
 
 }
 
@@ -1039,6 +1044,33 @@ void invert(matrix *A, matrix *Ainv){
 }
 
 // Does Ainv := inverse(A), where A is a square matrix
+void invertS(matrix *A, matrix *Ainv,int silent){
+
+  if( !(nrow_matrix(A)  == ncol_matrix(A) && 
+	nrow_matrix(Ainv) == ncol_matrix(Ainv) &&
+	nrow_matrix(A)  == ncol_matrix(Ainv))){
+    oops("Error: dimensions in invert\n");
+  }
+
+  // Ensure that A and Ainv do not occupy the same memory. 
+  if(A != Ainv){
+    invertUnsafeS(A, Ainv,silent);
+  } else {
+    // if A and Ainv occupy the same memory, store the results in a
+    // temporary matrix. 
+    matrix *temp;
+    malloc_mat(nrow_matrix(Ainv),ncol_matrix(Ainv),temp);
+
+    invertUnsafeS(A, temp,silent);
+    
+    // Copy these results into Ainv, then remove the temporary matrix
+    mat_copy(temp,Ainv);    
+    free_mat(temp);
+  }
+}
+
+
+// Does Ainv := inverse(A), where A is a square matrix
 void invertUnsafe(matrix *A, matrix *Ainv){
   //unsafe because it assumes A and Ainv are both square and of the
   //same dimensions, and that they occupy different memory
@@ -1116,6 +1148,84 @@ void invertUnsafe(matrix *A, matrix *Ainv){
   free(ipiv);
     
 }
+
+// Does Ainv := inverse(A), where A is a square matrix, possibly silent
+void invertUnsafeS(matrix *A, matrix *Ainv,int silent){
+  //unsafe because it assumes A and Ainv are both square and of the
+  //same dimensions, and that they occupy different memory
+
+  //char uplo = 'U';
+  int i, j;
+  int n = nrow_matrix(A);
+  int lda = n; // matrix A has dimensions n x n
+  int *ipiv = malloc(n * sizeof(int));
+  int lwork = n * n;
+  int info = -999;
+  double anorm = -999.0;
+  double rcond = -999.0;
+  double tol = 1.0e-07;
+  double *dwork = malloc(4 * n * sizeof(double));
+  int *iwork = malloc(n * sizeof(int));
+  double *work = malloc(n * n * sizeof(double));
+
+  // First turn the matrix A into the vector a
+
+  for(i = 0; i < n; i++){
+    for(j = 0; j < n; j++){
+      ME(Ainv,i,j) = ME(A,i,j);
+    }
+  }
+
+  anorm = F77_NAME(dlange)("O", &n, &n, Ainv->entries, &lda, dwork);
+
+  // First find the LU factorization of A,
+  // stored as an upper triangular matrix
+  F77_CALL(dgetrf)(&n, &n, Ainv->entries, &lda, ipiv, &info);
+
+  if(info != 0){
+    //Avoid printing this error message
+    if (invert==0) printf("Error in invert: DGETRF returned info = %d \n",info);
+    mat_zeros(Ainv);
+  } else {
+  
+    for(i = 0; i < n; i++){
+      iwork[i]= ipiv[i];
+    }
+    F77_CALL(dgecon)("O", &n, Ainv->entries, &lda, &anorm, &rcond, dwork, iwork,  &info);
+    
+    if(info != 0){
+      //Avoid printing this error message
+      if (silent==0) printf("Error in invert: DGETRF returned info = %d \n",info);
+      mat_zeros(Ainv);
+      return;
+    } 
+    
+    if(rcond < tol ){
+      if (silent==0) printf("Error in invert: estimated reciprocal condition number = %7.7e\n",rcond); 
+      mat_zeros(Ainv);
+      return;
+    }
+
+    // then use this factorization to compute the inverse of A
+    F77_CALL(dgetri)(&n, Ainv->entries, &lda, ipiv, work, &lwork, &info);
+
+    if(info != 0 ){
+      if (silent==0) printf("Error in invert: DPOTRI returned info = %d \n",info);
+      mat_zeros(Ainv);
+    }
+
+    if (fabs(ME(Ainv,0,0))>99999999999999 )  { // TS 23-10
+      if (silent==0) printf("Inversion, unstable large elements  \n");
+      mat_zeros(Ainv);
+    }
+  }
+  
+  free(work);
+  free(iwork);
+  free(dwork);
+  free(ipiv);
+}
+
 
 // Performs Mout := M %*% A, where M is an nRowM x nColM matrix, 
 // and A is an nColM x nColA matrix, and Mout is a nRowM x nColA matrix

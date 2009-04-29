@@ -401,7 +401,7 @@ int *nx,*px,*antpers,*Ntimes,*Nit,*detail,*sim,*antsim,*rani,*id,*status,*weight
 
 
   if (*sim==1) {
-    printf("Simulations start N= %d \n",*antsim);
+    // printf("Simulations start N= %d \n",*antsim);
     GetRNGstate();  /* to use R random normals */
 
     tau=times[*Ntimes-1]-times[0];

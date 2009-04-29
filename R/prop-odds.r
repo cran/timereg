@@ -36,14 +36,15 @@ Ntimes <- sum(status);
 
 # adds random noise to make survival times unique
 if (sum(duplicated(time2[status==1]))>0) {
-cat("Non unique survival times: break ties ! \n")
-cat("Break ties yourself\n");
+#cat("Non unique survival times: break ties ! \n")
+#cat("Break ties yourself\n");
+ties<-TRUE
 dtimes<-time2[status==1]
 index<-(1:length(time2))[status==1]
 ties<-duplicated(dtimes); nties<-sum(ties); index<-index[ties]
 dt<-diff(sort(time2)); dt<-min(dt[dt>0]);
 time2[index]<-time2[index]+runif(nties,0,min(0.001,dt/2));
-}
+} else ties<-FALSE; 
 
 start<-time; stop<-time2; 
 dtimes<-time2[status==1]; 

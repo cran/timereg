@@ -1,7 +1,7 @@
 aalenBaseTest<-function(times,fdata,designX,status,id,clusters,
                         robust=0,sim=0,retur=0,antsim=1000,
                         weighted.test=1,covariance=0,resample.iid=0,
-                        namesX=NULL,offsets=0,weights=0){
+                        namesX=NULL,offsets=0,weights=0,silent=0){
   Ntimes<-length(times)
   designX<-as.matrix(designX); 
   if(is.matrix(designX) == TRUE) p <- as.integer(dim(designX)[2])
@@ -36,7 +36,8 @@ aalenBaseTest<-function(times,fdata,designX,status,id,clusters,
                 as.integer(weighted.test),as.integer(robust),as.integer(covariance),
                 as.double(covs),as.integer(resample.iid),as.double(B.iid),
                 as.integer(clusters),as.integer(fdata$antclust),as.double(devi),
-                as.integer(mof),as.double(offsets),as.integer(mw),as.double(weights)
+                as.integer(mof),as.double(offsets),as.integer(mw),as.double(weights),
+                as.integer(silent)
                 ,PACKAGE="timereg")
 
   if (covariance==1)  {
@@ -103,7 +104,7 @@ semiaalenTest<-function(times,fdata,designX,designG,status,id,clusters,
 bhat=0,gamma=0,robust=0,sim=0,antsim=1000,weighted.test=1,retur=0,
 covariance=0,
 resample.iid=0,namesX=NULL,namesZ=NULL,deltaweight=1,weights=0,offsets=0,
-fixgam=0,pseudo.score=0)
+fixgam=0,pseudo.score=0,silent=0)
 {
 Nalltimes <- length(times);  
 Ntimes<-sum(status[(fdata$stop>times[1]) & (fdata$stop<=times[Nalltimes])])+1;
@@ -171,7 +172,7 @@ as.integer(mw),as.double(weights),
 as.integer(fixgam),
 as.integer(pseudo.score),as.double(pscoret),as.double(pscoreiid),
 as.double(IintZHZt),as.double(ptest),
-as.double(intHdN),as.double(intHZ),as.double(varintHdN), 
+as.double(intHdN),as.double(intHZ),as.double(varintHdN),as.integer(silent),
 PACKAGE="timereg"); 
 
 if (resample.iid==1)  {

@@ -3,7 +3,7 @@ aalen.test<-function (formula = formula(data),
 data = sys.parent(), start.time = 0, max.time = NULL, 
 robust=1, id=NULL, clusters=NULL, residuals = 0, n.sim = 1000,  
 weighted.test=0,covariance=0,resample.iid=0,weights=0,offsets=0,
-fix.gam=0,pseudo.score=0,approx="dt",gamma=0)
+fix.gam=0,pseudo.score=0,approx="dt",gamma=0,silent=0)
 {
   deltaweight<-1; 
   if (n.sim == 0) sim <- 0 else sim <- 1
@@ -29,7 +29,7 @@ fix.gam=0,pseudo.score=0,approx="dt",gamma=0)
   m$pseudo.score<-m$start.time <- m$weighted.test <- m$max.time <-
     m$robust <- m$sim <- m$residuals <- m$n.sim <- m$id <-
       m$fix.gam<- m$covariance <- m$resample.iid <- m$clusters <- 
-        m$weights<-m$offsets<- m$gamma<-m$deltaweight<-m$approx<-NULL
+        m$weights<-m$offsets<- m$gamma<-m$deltaweight<-m$approx<-m$silent<-NULL
   special <- c("const","cluster")
   Terms <- if (missing(data)) 
     terms(formula, special)
@@ -68,7 +68,7 @@ fix.gam=0,pseudo.score=0,approx="dt",gamma=0)
                         sim = sim, retur = residuals, antsim = n.sim,
                         weighted.test = weighted.test,covariance=covariance,
                         resample.iid=resample.iid,namesX=covnamesX,weights=weights,
-                        offsets=offsets)
+                        offsets=offsets,silent=silent)
     colnames(ud$cum) <- colnames(ud$var.cum) <- c("time", 
                                                   covnamesX)
     if (robust == 1) 
@@ -89,7 +89,8 @@ fix.gam=0,pseudo.score=0,approx="dt",gamma=0)
                         residuals,covariance=covariance,
                         resample.iid=resample.iid,namesX=covnamesX,namesZ=covnamesZ,
                         deltaweight=deltaweight,weights=weights,offsets=offsets,
-                        fixgam=fix.gam,gamma=gamma,pseudo.score=pseudo.score)
+                        fixgam=fix.gam,gamma=gamma,pseudo.score=pseudo.score,
+                        silent=silent)
     if (px > 0) {
       colnames(ud$cum) <- colnames(ud$var.cum) <- c("time", covnamesX)
       if (robust == 1) 

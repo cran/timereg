@@ -1,6 +1,7 @@
 \name{additive.pls}
 \alias{additive.pls}
 \alias{additive.plsR}
+\alias{pls.surv.cv}
 \title{Fits PLS for additive hazards model}
 \description{
 Fits the partial least squares estimator for the additive risk
@@ -26,7 +27,7 @@ for \eqn{i=1,...,p}
 \usage{
 additive.pls(formula = formula(data), data =
 sys.parent(), start.time=0,max.time=NULL,id=NULL, pls.dim=1, 
-scale=FALSE, weighted.pls=0, constant=1)
+scale=FALSE, weighted.pls=0,silent=0)
 }
 \arguments{
 \item{formula}{
@@ -36,7 +37,7 @@ The response must be a
 survival object as returned by the `Surv' function.
 
 The const terms are kept as fixed covariates that are not involved in the 
-pls variable reduction. This may covariates that are know to be of clinical 
+pls variable reduction. This may be covariates that are know to be of clinical 
 importance. 
 }
 \item{data}{a data.frame with the variables.}
@@ -48,8 +49,8 @@ associate each record with the id of a subject.}
 \item{pls.dim}{number of pls components}
 \item{scale}{to center and scale the covariates}
 \item{weighted.pls}{Gartwaith weights if 1.}
-\item{constant}{When 0 the coefficient \eqn{\gamma_j(t)} does not 
-depend on time.}
+\item{silent}{set to 1 to avoid printing of warnings for non-inverible
+design-matrices for different timepoints, default is 0.}
 }
 \details{
 const() specifies the \eqn{F(t)} covariates in the above model. 
@@ -70,26 +71,43 @@ Martinussen and Scheike, Dynamic Regression Models for
 Survival Data, Springer (2006).
 
 Martinussen and Scheike, The Aalen additive hazards model
-with high-dimensional regressors, submitted.
+with high-dimensional regressors, (2009), Lifetime Data Anal.
 }
 \author{Thomas Scheike}
 \examples{
-library(survival)
-data(sTRACE)
+data(mypbc)
+pbc<-mypbc
+pbc$time<-pbc$time+runif(418)*0.1; pbc$time<-pbc$time/365
+pbc<-subset(pbc,complete.cases(pbc));
+covs<-as.matrix(pbc[,-c(1:3,6)])
+covs<-cbind(covs[,c(1:6,16)],log(covs[,7:15]))
+covs<-scale(covs);
 
-### 2 PLS components for the 5 covariates 
+### 5 PLS components for the 16 covariates 
 ### based on Gui-Li approach with constant effects
-out<-additive.pls(Surv(time,status==9)~age+sex+
-vf+diabetes+chf,sTRACE,max.time=7,pls.dim=2,constant=1)
+out<-additive.pls(Surv(time,status>=1)~covs,pbc,max.time=7,pls.dim=5)
 
-### 2 PLS components for the 5 covariates 
-### based on Gui-Li approach with timevarying effects
-out<-additive.pls(Surv(time,status==9)~age+sex+
-vf+diabetes+chf,sTRACE,max.time=7,pls.dim=2,constant=0)
+### survival predictions
+par(mfrow=c(1,3))
+pout=predict.pls(out,Z=covs)
+matplot(pout$times,t(pout$surv[1:20,]),type="l",ylim=c(0,1),xlab="time",ylab="survival")
+
+### cross-validated number of pls components
+
+outcv<-pls.surv.cv(Surv(time,status>=1)~covs,pbc,max.time=7,pls.dims=0:2)
+plot(outcv$pls.dims,outcv$cv,type="l")
+
+out2<-additive.pls(Surv(time,status>=1)~covs,pbc,max.time=7,
+pls.dim=outcv$cv.dim)
+
+pout=predict.pls(out2, Z= covs)
+matplot(pout$times,t(pout$surv[1:20,]),type="l",ylim=c(0,1),
+xlab="time",ylab="survival")
 
 ### 2 PLS components for the 3 covariates 
 ### age and sex are fixed covariates 
+data(sTRACE)
 out<-additive.pls(Surv(time,status==9)~const(age)+const(sex)+
-vf+diabetes+chf,sTRACE,max.time=7,pls.dim=2)
+vf+diabetes+chf,sTRACE,max.time=7,pls.dim=2,silent=1)
 }
 \keyword{survival}

@@ -65,21 +65,21 @@ out<-aalen(Surv(time,status==9)~const(age)+const(sex)+
 const(diabetes)+chf+vf,
 sTRACE,max.time=7,n.sim=0,resample.iid=1)
 
-out<-predict(out,X=rbind(c(1,0,0),c(1,1,0)),
+pout<-predict(out,X=rbind(c(1,0,0),c(1,1,0)),
 Z=rbind(c(55,0,1),c(60,1,1)))
 par(mfrow=c(2,2))
-plot(out,multiple=1,se=0,uniform=0,col=1:2,lty=1:2)
-plot(out,multiple=0,se=1,uniform=1,col=1:2)
+plot(pout,multiple=1,se=0,uniform=0,col=1:2,lty=1:2)
+plot(pout,multiple=0,se=1,uniform=1,col=1:2)
 
 data(sTRACE)
 out<-cox.aalen(Surv(time,status==9)~prop(age)+prop(sex)+
 prop(diabetes)+chf+vf,
 sTRACE,max.time=7,n.sim=0,resample.iid=1)
 
-out<-predict(out,X=rbind(c(1,0,0),c(1,1,0)),
+pout<-predict(out,X=rbind(c(1,0,0),c(1,1,0)),
 Z=rbind(c(55,0,1),c(60,1,1)))
 par(mfrow=c(2,2))
-plot(out,multiple=1,se=0,uniform=0,col=1:2,lty=1:2)
-plot(out,multiple=0,se=1,uniform=1,col=1:2)
+plot(pout,multiple=1,se=0,uniform=0,col=1:2,lty=1:2)
+plot(pout,multiple=0,se=1,uniform=1,col=1:2)
 }
 \keyword{survival}

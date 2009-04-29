@@ -81,7 +81,7 @@ excess<-(melanoma$thick>=210)    # excess risk for thick tumors
 
 # Fits Proportional Excess hazards model 
 fit<-prop.excess(Surv(days/365,status==1)~sex+ulc+cox(sex)+
-                 cox(ulc)+cox(lt),melanoma,excess=excess,n.sim=2000)
+                 cox(ulc)+cox(lt),melanoma,excess=excess,n.sim=100)
 summary(fit)
 par(mfrow=c(2,3))
 plot(fit)

@@ -1,4 +1,4 @@
-aalenBase<-function(times,fdata,designX,status,id,clusters,robust=0,sim=0,retur=0,antsim=1000,weighted.test=1,covariance=0,resample.iid=0,namesX=NULL) 
+aalenBase<-function(times,fdata,designX,status,id,clusters,robust=0,sim=0,retur=0,antsim=1000,weighted.test=1,covariance=0,resample.iid=0,namesX=NULL,silent=0,scale=1) 
 {
 Ntimes<-length(times)
 designX<-as.matrix(designX); 
@@ -41,7 +41,7 @@ as.integer(status),as.double(Ut),as.double(simUt),as.integer(id),
 as.integer(weighted.test),as.integer(robust),as.integer(covariance),
 as.double(covs),as.integer(resample.iid),as.double(B.iid),
 as.integer(clusters),as.integer(fdata$antclust),as.double(devi),
-PACKAGE="timereg")
+as.integer(silent),PACKAGE="timereg")
 
 if (covariance==1)  {
 covit<-matrix(aalenout[[26]],Ntimes,p*p);
@@ -114,7 +114,7 @@ percen<-function(x,per)
 { n<-length(x); tag<-round(n*per)+1; ud<-sort(x)[tag]; return(ud) }
 
 semiaalen<-function(times,fdata,designX,designG,status,id,clusters,bhat=0,gamma=0,robust=0,sim=0,antsim=1000,weighted.test=1,retur=0,covariance=0,
-resample.iid=0,namesX=NULL,namesZ=NULL,deltaweight=1)
+resample.iid=0,namesX=NULL,namesZ=NULL,deltaweight=1,silent=0,scale=0)
 {
 Nalltimes <- length(times);  
 Ntimes<-sum(status[(fdata$stop>times[1]) & (fdata$stop<=times[Nalltimes])])+1;
@@ -168,7 +168,7 @@ as.integer(weighted.test),as.double(cumAi),as.integer(retur),as.integer(covarian
 as.integer(resample.iid),as.double(gamma.iid),as.double(B.iid),
 as.integer(clusters),as.integer(fdata$antclust),as.double(devi),
 as.double(intZHZ),as.double(intZHdN),as.integer(deltaweight),
-PACKAGE="timereg"); 
+as.integer(silent),PACKAGE="timereg"); 
 
 if (resample.iid==1)  {
 gamma.iid<-matrix(semiout[[37]],fdata$antclust,pg);

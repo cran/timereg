@@ -148,7 +148,7 @@ indi.m<-rep(1,length(csl$lt))
 # Fits time-varying regression model 
 out<-dynreg(prot~treat+prot.prev+sex+age,csl,
 Surv(lt,rt,indi.m)~+1,start.time=0,max.time=2,id=csl$id,
-n.sim=200,bandwidth=0.7,meansub=0)
+n.sim=100,bandwidth=0.7,meansub=0)
 summary(out)
 par(mfrow=c(2,3))
 plot(out)
@@ -156,7 +156,7 @@ plot(out)
 # Fits time-varying semi-parametric regression model.
 outS<-dynreg(prot~treat+const(prot.prev)+const(sex)+const(age),csl,
 Surv(lt,rt,indi.m)~+1,start.time=0,max.time=2,id=csl$id,
-n.sim=200,bandwidth=0.7,meansub=0)
+n.sim=100,bandwidth=0.7,meansub=0)
 summary(outS)
 }
 \keyword{survival}

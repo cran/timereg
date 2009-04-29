@@ -1,52 +1,64 @@
-mylars<-function (x, y, l1.weights=NULL, design=TRUE, 
-    type = c("lasso", "lar", "forward.stagewise"), 
-    trace = FALSE, Gram=NULL, eps = .Machine$double.eps,
-    max.steps=NULL, use.Gram = TRUE) 
+my.lars<-function (Gram, xy, n, y, type = c("lasso", "lar", "forward.stagewise", 
+    "stepwise"), trace = FALSE, normalize = FALSE, intercept = FALSE , 
+     eps = .Machine$double.eps, max.steps, use.Gram = TRUE) 
 {
+y<-rep(1,n); x<-rep(1,n)
     call <- match.call()
     type <- match.arg(type)
-    TYPE <- switch(type, lasso = "LASSO", lar = "LAR", forward.stagewise = "Forward Stagewise")
+    TYPE <- switch(type, lasso = "LASSO", lar = "LAR", forward.stagewise = "Forward Stagewise", 
+        stepwise = "Forward Stepwise")
     if (trace) 
         cat(paste(TYPE, "sequence\n"))
-    nm <- dim(x)
-    n <- nm[1]
-    m <- nm[2]
+    #nm <- dim(x)
+    #n <- nm[1]
+    #m <- nm[2]
+    m <- ncol(Gram)
     im <- inactive <- seq(m)
     one <- rep(1, n)
     vn <- dimnames(x)[[2]]
-    meanx <- drop(one %*% x)/n
-    if (is.null(l1.weights)==FALSE) x<-scale(x,FALSE,l1.weights)
-#    x <- scale(x, meanx, FALSE)
-    normx <- sqrt(drop(one %*% (x^2)))
-    nosignal <- normx/sqrt(n) < eps
-    if (any(nosignal)) {
-        ignores <- im[nosignal]
-        inactive <- im[-ignores]
-        normx[nosignal] <- eps * sqrt(n)
-        if (trace) 
-            cat("LARS Step 0 :\t", sum(nosignal), "Variables with Variance < eps; dropped for good\n")
+    if (intercept) {
+        meanx <- drop(one %*% x)/n
+        x <- scale(x, meanx, FALSE)
+        mu <- mean(y)
+        y <- drop(y - mu)
     }
-    else ignores <- NULL
-    names(normx) <- NULL
-#   x <- scale(x, FALSE, normx)
-    if (use.Gram & (is.null(Gram)==TRUE)) {
+    else {
+        meanx <- rep(0, m)
+        mu <- 0
+        y <- drop(y)
+    }
+    if (normalize) {
+        normx <- sqrt(drop(one %*% (x^2)))
+        nosignal <- normx/sqrt(n) < eps
+        if (any(nosignal)) {
+            ignores <- im[nosignal]
+            inactive <- im[-ignores]
+            normx[nosignal] <- eps * sqrt(n)
+            if (trace) 
+                cat("LARS Step 0 :\t", sum(nosignal), "Variables with Variance < eps; dropped for good\n")
+        }
+        else ignores <- NULL
+        names(normx) <- NULL
+        x <- scale(x, FALSE, normx)
+    }
+    else {
+        normx <- rep(1, m)
+        ignores <- NULL
+    }
+    if (use.Gram & missing(Gram)) {
         if (m > 500 && n < m) 
             cat("There are more than 500 variables and n<m;\nYou may wish to restart and set use.Gram=FALSE\n")
         if (trace) 
             cat("Computing X'X .....\n")
         Gram <- t(x) %*% x
-	#print(Gram)
     }
-    mu <- mean(y)
-    #y <- drop(y - mu)
-    y<-drop(y); 
-    Cvec <- drop(t(y) %*% x)
-    #print(Cvec); 
+    Cvec<-xy;
     ssy <- sum(y^2)
     residuals <- y
-    if (is.null(max.steps)) 
-        max.steps <- 8 * min(m, n - 1)
+    if (missing(max.steps)) 
+        max.steps <- 8 * min(m, n - intercept)
     beta <- matrix(0, max.steps + 1, m)
+    lambda = double(max.steps)
     Gamrat <- NULL
     arc.length <- NULL
     R2 <- 1
@@ -59,11 +71,17 @@ mylars<-function (x, y, l1.weights=NULL, design=TRUE,
     R <- NULL
     k <- 0
     while ((k < max.steps) & (length(active) < min(m - length(ignores), 
-        n - 1))) {
+        n - intercept))) {
         action <- NULL
-        k <- k + 1
         C <- Cvec[inactive]
         Cmax <- max(abs(C))
+        if (Cmax < eps * 100) {
+            if (trace) 
+                cat("Max |corr| = 0; exiting...\n")
+            break
+        }
+        k <- k + 1
+        lambda[k] = Cmax
         if (!any(drops)) {
             new <- abs(C) >= Cmax - eps
             C <- C[!new]
@@ -129,7 +147,8 @@ mylars<-function (x, y, l1.weights=NULL, design=TRUE,
         w <- A * Gi1
         if (!use.Gram) 
             u <- drop(x[, active, drop = FALSE] %*% w)
-        if (length(active) >= min(n - 1, m - length(ignores))) {
+        if ((length(active) >= min(n - intercept, m - length(ignores))) | 
+            type == "stepwise") {
             gamhat <- Cmax/A
         }
         else {
@@ -184,24 +203,38 @@ mylars<-function (x, y, l1.weights=NULL, design=TRUE,
             names(action) <- vn[abs(action)]
         actions[[k]] <- action
         inactive <- im[-c(active, ignores)]
+        if (type == "stepwise") 
+            Sign = Sign * 0
     }
-    beta <- beta[seq(k + 1), ]
+    beta <- beta[seq(k + 1), , drop = FALSE]
+    lambda = lambda[seq(k)]
     dimnames(beta) <- list(paste(0:k), vn)
-    if (is.null(l1.weights)==FALSE) beta<-scale(beta,FALSE,l1.weights)
-if (design==TRUE) {
     if (trace) 
         cat("Computing residuals, RSS etc .....\n")
-    residuals <- y - x %*% t(beta)
- #  beta <- scale(beta, FALSE, normx)
-    RSS <- apply(residuals^2, 2, sum)
-    R2 <- 1 - RSS/RSS[1]
-    Cp <- ((n - k - 1) * RSS)/rev(RSS)[1] - n + 2 * seq(k + 1)
-    } else {RSS<-R2<-Cp<-NULL}
-    object <- list(call = call, type = TYPE, R2 = R2, RSS = RSS, 
-        Cp = Cp, actions = actions[seq(k)], entry = first.in, 
-        Gamrat = Gamrat, arc.length = arc.length, Gram = if (use.Gram) Gram else NULL, 
-        beta = beta, mu = mu, normx = normx, meanx =
-	meanx,l1.weights=l1.weights)
+    #residuals <- y - x %*% t(beta)
+    residuals <- 0 
+    beta <- scale(beta, FALSE, normx)
+    RSS <- 0 # apply(residuals^2, 2, sum)
+    R2 <- 0 #1 - RSS/RSS[1]
+    actions = actions[seq(k)]
+    netdf = sapply(actions, function(x) sum(sign(x)))
+    df = cumsum(netdf)
+    if (intercept) 
+        df = c(Intercept = 1, df + 1)
+    else df = c(Null = 0, df)
+    rss.big = rev(RSS)[1]
+    df.big = n - rev(df)[1]
+    if (rss.big < eps | df.big < eps) 
+        sigma2 = NaN
+    else sigma2 = rss.big/df.big
+    Cp <- RSS/sigma2 - n + 2 * df
+    attr(Cp, "sigma2") = sigma2
+    attr(Cp, "n") = n
+    object <- list(call = call, type = TYPE, df = df, lambda = lambda, 
+        R2 = R2, RSS = RSS, Cp = Cp, actions = actions[seq(k)], 
+        entry = first.in, Gamrat = Gamrat, arc.length = arc.length, 
+        Gram = if (use.Gram) Gram else NULL, beta = beta, mu = mu, 
+        intZHdN=xy, normx = normx, meanx = meanx)
     class(object) <- "lars"
     object
 }

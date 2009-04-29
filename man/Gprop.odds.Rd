@@ -116,7 +116,7 @@ data(sTRACE)
 # Fits Proportional odds model with stratified baseline
 age.c<-scale(sTRACE$age,scale=FALSE); 
 out<-Gprop.odds(Surv(time,status==9)~diabetes+prop(age.c)+prop(chf)+
-prop(sex)+prop(vf),sTRACE,max.time=7,n.sim=500)
+prop(sex)+prop(vf),sTRACE,max.time=7,n.sim=100)
 summary(out) 
 par(mfrow=c(2,3))
 plot(out,sim.ci=2); plot(out,score=1) 
@@ -124,7 +124,7 @@ plot(out,sim.ci=2); plot(out,score=1)
 # Fits Proportional odds model with baseline on additive form
 # thus giving odds-ratio of dyings for vf and diabetes
 out<-Gprop.odds(Surv(time,status==9)~vf+diabetes+prop(age.c)+prop(chf)+
-prop(sex),sTRACE,max.time=7,n.sim=500)
+prop(sex),sTRACE,max.time=7,n.sim=100)
 summary(out) 
 par(mfrow=c(2,3))
 plot(out,sim.ci=2); plot(out,score=1) 

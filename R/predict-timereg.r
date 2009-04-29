@@ -6,7 +6,7 @@ pred.cum<-function(x,time,cum) {ud<-sapply(x,slaaop,time,cum);
  return(ud)}
 
 "pred.des"<-function(formula,data=sys.parent())
-{
+{ ## {{{
   call <- match.call();
   m <- match.call(expand=FALSE);
   special <- c("const")
@@ -38,9 +38,7 @@ pred.cum<-function(x,time,cum) {ud<-sapply(x,slaaop,time,cum);
   }
   X <- data.matrix(X); 
   return(list(covarX=X,covarZ=Z))
-}
-
-#dyn.load('unifConfBand.so')
+} ## }}}
 
 predict.aalen <-  function(object,...){
 
@@ -54,10 +52,11 @@ predict.cox.aalen <-  function(object,...){
 
 }
 
+
 predict.comprisk<-function(object,newdata=NULL,X=NULL,
                            Z=NULL,n.sim=500, uniform=TRUE,
                            se=TRUE,alpha=0.05,...){
-  
+## {{{
   if (!(inherits(object,'comprisk') || inherits(object,'aalen')
         || inherits(object,'cox.aalen')))
     stop ("Must be output from comp.risk function")
@@ -98,13 +97,20 @@ predict.comprisk<-function(object,newdata=NULL,X=NULL,
     time.vars <- cbind(1,newdata[,names(time.coef)[-(1:2)],drop=FALSE])
     nobs <- nrow(newdata)
   } else if ((is.null(Z)==FALSE) || (is.null(X)==FALSE)){
+
     if(is.null(Z) || is.matrix(Z) || is.data.frame(Z)){
       constant.covs<-Z;
     } else {
       constant.covs<-matrix(Z,ncol = nrow(object$gamma));
     }
+
+  if ((is.null(Z)==FALSE) && is.null(X))
+  {
+   if (ncol(object$cum)==2) X<-time.vars<-matrix(1,nrow(Z),1) else
+   stop("When X is not specified we assume that it an intercept terms\n");
+  }
       
-    ## Allow for the possibility that X is a fector
+    ## Allow for the possibility that X is a vector 
     if(!is.matrix(X) && !is.data.frame(X)){
       time.vars<-matrix(X,ncol = ncol(object$cum)-1);
     } else {
@@ -275,7 +281,8 @@ predict.comprisk<-function(object,newdata=NULL,X=NULL,
   class(out) <- className
 
   return(out)
-}
+} ## }}}
+
 
 plot.predictAalen <-  function(x,...){
 
@@ -291,7 +298,7 @@ plot.predictCoxAalen <-  function(x,...){
 
 
 pava = function(x, w=rep(1,length(x)))  # R interface to the compiled code
-{
+{ ## {{{
   n = length(x)
   if (n != length(w)) return (0)    # error
   result  = .C("pava",
@@ -299,11 +306,12 @@ pava = function(x, w=rep(1,length(x)))  # R interface to the compiled code
         as.double(w),
         as.integer(n) )
   result[["y"]]
-}
+} ## }}}
 
 
 plot.predictComprisk<-function(x,uniform=1,new=1,se=1,col=1,lty=1,lwd=2,multiple=0,specific.comps=0,
 xlab="Time",ylab="Probability",transparency=FALSE,monotone=TRUE,...){
+## {{{
   object <- x; rm(x);
   modelType <- object$model;
   time<-object$time;
@@ -395,7 +403,8 @@ xlab="Time",ylab="Probability",transparency=FALSE,monotone=TRUE,...){
 
     }
   }
-}
+} ## }}}
+
 
 
 print.predictAalen <- function(x,...){
@@ -511,6 +520,7 @@ plot.comprisk <-  function (x, pointwise.ci=1, hw.ci=0,
                             sim.ci=0, specific.comps=FALSE,level=0.05, start.time = 0,
                             stop.time = 0, add.to.plot=FALSE, mains=TRUE, xlab="Time",
                             ylab ="Coefficients",score=FALSE,...){
+## {{{
   object <- x; rm(x);
 
   if (!inherits(object,'comprisk') ){
@@ -614,7 +624,8 @@ plot.comprisk <-  function (x, pointwise.ci=1, hw.ci=0,
         }
     }
   }
-}
+} ## }}}
+
 
 "summary.comprisk" <- function (object,digits = 3,...) {
   if (!inherits(object, 'comprisk')) stop ("Must be a comprisk object")
@@ -628,7 +639,8 @@ plot.comprisk <-  function (x, pointwise.ci=1, hw.ci=0,
   #if (modelType=="additive" || modelType=="1-additive") 
   if (modelType=="additive") 
     hyp.label<-"p-value H_0: B(t)=b t" else hyp.label<-"p-value H_0: B(t)=b"
-
+ 
+  if (object$obs.testBeq0==FALSE) cat("No test for non-parametric terms\n") else
   timetest(object,digits=digits,hyp.label=hyp.label); 
 
   if (semi) { cat("Parametric terms : \n"); coef(object); cat("   \n"); }
@@ -637,3 +649,4 @@ plot.comprisk <-  function (x, pointwise.ci=1, hw.ci=0,
   dput(attr(object, "Call"))
   cat("\n")
 }
+

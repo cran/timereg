@@ -2,10 +2,10 @@
 #include <math.h>
 #include "matrix.h"
 
-void robaalentest(times,Ntimes,designX,nx,p,antpers,start,stop,cu,vcu,robvcu,sim,antsim,retur,cumAit,test,rani,testOBS,status,Ut,simUt,id,weighted,robust,covariance,covs,resample,Biid,clusters,antclust,loglike,mof,offset,mw,weight)
+void robaalentest(times,Ntimes,designX,nx,p,antpers,start,stop,cu,vcu,robvcu,sim,antsim,retur,cumAit,test,rani,testOBS,status,Ut,simUt,id,weighted,robust,covariance,covs,resample,Biid,clusters,antclust,loglike,mof,offset,mw,weight,silent)
 double *designX,*times,*start,*stop,*cu,*vcu,*robvcu,*cumAit,*test,*testOBS,*Ut,*simUt,*covs,*Biid,*loglike,*offset,*weight; 
 int *nx,*p,*antpers,*Ntimes,*sim,*retur,*rani,*antsim,*status,*id,*covariance,
-    *weighted,*robust,*resample,*clusters,*antclust,*mw,*mof;
+    *weighted,*robust,*resample,*clusters,*antclust,*mw,*mof,*silent;
 {
   matrix *WX,*ldesignX,*A,*AI,*Vcov,*cumAt[*antclust];
   vector *diag,*dB,*dN,*VdB,*xi,*rowX,*rowcum,*difX,*vtmp,*cum,*offsets; 
@@ -50,8 +50,8 @@ int *nx,*p,*antpers,*Ntimes,*sim,*retur,*rani,*antsim,*status,*id,*covariance,
 	    count=count+1; } 
       }
 
-      if (*mof==1 || stat==1) {MtA(ldesignX,WX,A); invert(A,AI);
-      if (ME(AI,0,0)==0) printf("X'X not invertible at time %lf \n",time);
+      if (*mof==1 || stat==1) {MtA(ldesignX,WX,A); invertS(A,AI,silent[0]);
+      if (ME(AI,0,0)==0 && *silent==0) printf("X'X not invertible at time %lf \n",time);
       if (s<-1) {print_mat(AI); print_mat(A);} }
 
       if (stat==1) {extract_row(WX,pers,xi); Mv(AI,xi,dB);} 
@@ -144,10 +144,10 @@ int *nx,*p,*antpers,*Ntimes,*sim,*retur,*rani,*antsim,*status,*id,*covariance,
 
 
 void semiaalentest(alltimes,Nalltimes,Ntimes,designX,nx,px,designG,ng,pg,antpers,start,stop,nb,bhat,cu,vcu,Robvcu,gamma,Vgamma,RobVgamma,sim,antsim,test,rani,testOBS,robust,status,Ut,simUt,id,weighted,cumAit,retur,covariance,covs,resample,gammaiid,Biid,clusters,antclust,loglike,intZHZ,intZHdN,deltaweight,mof,offset,mw,weight,gamfix,
-pseudoscore,pscoret,pscoretiid,intZHZt,ptest,intHdN,intHZ,varintHdN)
+pseudoscore,pscoret,pscoretiid,intZHZt,ptest,intHdN,intHZ,varintHdN,silent)
 double *designX,*alltimes,*start,*stop,*cu,*vcu,*bhat,*designG,*gamma,*Vgamma,*RobVgamma,*Robvcu,*test,*testOBS,*Ut,*simUt,*cumAit,*covs,*Biid,*gammaiid,*loglike,*intZHZ,*intZHdN,*offset,*weight,*pscoret,*pscoretiid,*intZHZt,*ptest,
 *intHdN,*intHZ,*varintHdN;
-int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*status,*id,*weighted,*retur,*covariance,*resample,*clusters,*antclust,*deltaweight,*mof,*mw,*gamfix,*pseudoscore;
+int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*status,*id,*weighted,*retur,*covariance,*resample,*clusters,*antclust,*deltaweight,*mof,*mw,*gamfix,*pseudoscore,*silent;
 {
   matrix *Vcov,*X,*WX,*A,*AI,*AIXW,*Z,*WZ,*tmpM1,*Delta,*iZHZt[*Ntimes];
   matrix *dCGam,*CGam,*Ct,*ICGam,*VarKorG,*dC,*ZH,*XWZ,*ZWZ,*XWZAI,*HZ; 
@@ -227,7 +227,8 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*
 	    count=count+1;}
 	}
 
-      MtA(X,WX,A); invert(A,AI); MtA(Z,WZ,ZWZ);MtA(X,WZ,XWZ);MxA(AI,XWZ,XWZAI);
+      MtA(X,WX,A); invertS(A,AI,silent[0]); 
+      MtA(Z,WZ,ZWZ);MtA(X,WZ,XWZ);MxA(AI,XWZ,XWZAI);
       MtA(XWZAI,XWZ,tmpM2); mat_subtr(ZWZ,tmpM2,dCGam); 
       scl_mat_mult(dtime,dCGam,dCGam); 
       if (*deltaweight==0) scl_mat_mult(dtime,dCGam,dCGam); 
@@ -305,7 +306,7 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*
 	extract_row(WX,i,xi); Mv(AI,xi,rowX); replace_row(AIxit[i],s,rowX); }
     } /* s =1...Ntimes */ 
 
-  invert(CGam,ICGam); 
+  invertS(CGam,ICGam,silent[0]); 
   if (*gamfix==0) Mv(ICGam,IZHdN,gam); 
   if ((*mof==1) & (*gamfix==0)) {Mv(ICGam,gamoff,dgam); vec_subtr(gam,dgam,gam);}
   MxA(Vargam,ICGam,tmpM2); MxA(ICGam,tmpM2,Vargam); 

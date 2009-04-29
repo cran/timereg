@@ -3,9 +3,9 @@
 #include "matrix.h"
 
 void plssemiadd(alltimes,Nalltimes,Ntimes,designX,nx,px,designG,ng,pg,antpers,start,stop,id,cu,status,deltaweight,
-plscov,dimplscov,betapls,plscomp,semipls,weighted)
+plscov,dimplscov,betapls,plscomp,semipls,weighted,silent)
 double *designX,*alltimes,*start,*stop,*cu,*designG,*plscov,*betapls,*plscomp; 
-int *nx,*px,*antpers,*Nalltimes,*Ntimes,*ng,*pg,*status,*weighted,*deltaweight,*dimplscov,*semipls,*id;
+int *nx,*px,*antpers,*Nalltimes,*Ntimes,*ng,*pg,*status,*weighted,*deltaweight,*dimplscov,*semipls,*id,*silent;
 {
   matrix *X,*A,*AI,*AIXW,*Z,*dCGam,*CGam,*Ct,*ICGam,*XWZ,*ZWZ,*XWZAI,*C[*Nalltimes],*tmpM4,*tmpM2;
   vector *xi,*tmpv2,*tmpv1,*PLScomp,*Xi,*dA,*rowX,*AIXWdN,*korG,*rowZ,*gam,*ZHdN,
@@ -57,8 +57,8 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*ng,*pg,*status,*weighted,*deltaweight,*
 	  for (c=0;c<*pg;c++) printf(" %lf ",ME(Z,k,c));  printf("\n"); }
 	if (*pg==0) for (k=0;k<0;k++) printf(" %lf \n",ME(Z,k,0)); }
 
-      MtA(X,X,A); invert(A,AI); 
-      if (ME(AI,*px-1,*px-1)==0) printf(" time %lf A singular \n",time); 
+      MtA(X,X,A); invertS(A,AI,silent[0]); 
+      if (ME(AI,0,0)==0 && *silent==0) printf("time %lf X'X singular \n",time); 
       MtA(Z,Z,ZWZ);MtA(X,Z,XWZ);MxA(AI,XWZ,XWZAI);
 
       MtA(XWZAI,XWZ,tmpM2); mat_subtr(ZWZ,tmpM2,dCGam); 
@@ -77,8 +77,8 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*ng,*pg,*status,*weighted,*deltaweight,*
       mat_zeros(XWZ); mat_add(Ct,XWZ,C[s]); 
     } /* s =1...Ntimes */ 
 
-    invert(CGam,ICGam); Mv(ICGam,IZHdN,gam); 
-    if (ME(ICGam,*pg-1,*pg-1)==0) printf(" intZHZ  singular\n"); 
+    invertS(CGam,ICGam,silent[0]); Mv(ICGam,IZHdN,gam); 
+    if (ME(ICGam,0,0)==0 && *silent==0) printf(" intZHZ  singular\n"); 
 
     if (*semipls==1) {
       if (*weighted==0) betapls[pls]=VE(gam,*pg-1);

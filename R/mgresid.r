@@ -46,8 +46,8 @@ if (class(object)=="cox.aalen")
   }
 
   if (ldata$type == "right") {
-    cat("Cumulative martingale residuals for Right censored survival times\n");
-  } else {cat("Counting process style data\n"); }
+#    cat("Cumulative martingale residuals for Right censored survival times\n");
+  } # else {cat("Counting process style data\n"); }
   times<-c(start.time,time2[status==1]); times<-sort(times);
 
   antpers=length(time); ntot<-nrow(X); px<-ldata$px

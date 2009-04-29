@@ -210,6 +210,8 @@ cens.model="KM",time.pow=0){
   attr(ud, "Call") <- sys.call()
   attr(ud, "Formula") <- formula
   attr(ud, "time.pow") <- time.pow
+  attr(ud, "cause") <- cause
+  attr(ud, "times") <- times
   return(ud); 
 }
 

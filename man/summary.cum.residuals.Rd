@@ -21,7 +21,7 @@ sTRACE,max.time=7,n.sim=0,residuals=1)
 # constructs and simulates cumulative residuals versus age groups
 # and versus covariates of model
 out.mg<-cum.residuals(out,sTRACE,
-modelmatrix=model.matrix(~-1+factor(cut(age,4)),sTRACE),cum.resid=1)
+modelmatrix=model.matrix(~-1+factor(cut(age,4)),sTRACE),cum.resid=1,n.sim=100)
 
 summary(out.mg)
 }

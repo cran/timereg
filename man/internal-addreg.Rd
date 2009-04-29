@@ -50,7 +50,6 @@
 \alias{coef.two.stage}
 \alias{coefBase}
 \alias{des.aalen}
-\alias{surv.lars.gcv}
 \alias{timetest}
 \alias{plot.comprisk} 
 \alias{plot.predictAalen} 
@@ -66,6 +65,11 @@
 \alias{summary.predictAalen}
 \alias{summary.predictComprisk} 
 \alias{summary.predictCoxAalen}
+\alias{summary.pls}
+\alias{print.pls}
+\alias{predict.pls}
+\alias{my.lars}
+\alias{myplot.lars}
 \title{For internal use}
 \description{for internal use}
 \author{Thomas Scheike}

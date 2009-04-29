@@ -68,7 +68,7 @@ out<-aalen(Surv(time,status==9)~age+sex+diabetes+chf+vf,
 sTRACE,max.time=7,n.sim=0,residuals=1)
 
 # constructs and simulates cumulative residuals versus age groups
-out.mg<-cum.residuals(out,sTRACE,model.matrix(~-1+factor(cut(age,4)),sTRACE))
+out.mg<-cum.residuals(out,sTRACE,model.matrix(~-1+factor(cut(age,4)),sTRACE),n.sim=100)
 
 par(mfrow=c(1,4))
 # cumulative residuals with pointwise confidence intervals 
@@ -77,7 +77,7 @@ plot(out.mg);
 plot(out.mg,score=1);
 
 # cumulative residuals against covariates Lin, Wei, Ying style
-out.mg<-cum.residuals(out,sTRACE,cum.resid=1)
+out.mg<-cum.residuals(out,sTRACE,cum.resid=1,n.sim=100)
 par(mfrow=c(2,4))
 plot(out.mg,score=2)
 }

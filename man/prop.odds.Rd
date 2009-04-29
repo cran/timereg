@@ -108,7 +108,7 @@ library(survival)
 data(sTRACE)
 # Fits Proportional odds model 
 out<-prop.odds(Surv(time,status==9)~age+diabetes+chf+vf+sex,
-sTRACE,max.time=7,n.sim=500)
+sTRACE,max.time=7,n.sim=100)
 
 summary(out) 
 

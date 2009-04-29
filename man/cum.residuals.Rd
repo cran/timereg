@@ -57,7 +57,7 @@ fit<-aalen(Surv(time,status==9)~age+sex+diabetes+chf+vf,
 sTRACE,max.time=7,n.sim=0,residuals=1)
 
 # constructs and simulates cumulative residuals versus age groups
-fit.mg<-cum.residuals(fit,sTRACE,n.sim=200,
+fit.mg<-cum.residuals(fit,sTRACE,n.sim=100,
 modelmatrix=model.matrix(~-1+factor(cut(age,4)),sTRACE))
 
 par(mfrow=c(1,4))
@@ -68,7 +68,7 @@ plot(fit.mg,score=1);
 summary(fit.mg)
 
 # cumulative residuals vs. covariates Lin, Wei, Ying style 
-fit.mg<-cum.residuals(fit,sTRACE,cum.resid=1,n.sim=200)
+fit.mg<-cum.residuals(fit,sTRACE,cum.resid=1,n.sim=100)
 
 par(mfrow=c(2,4))
 plot(fit.mg,score=2)

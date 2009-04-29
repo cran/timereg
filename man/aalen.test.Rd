@@ -18,7 +18,7 @@ The modelling formula uses the standard survival modelling given in the
 aalen.test(formula,data=sys.parent(),start.time=0,max.time=NULL,robust=1,
 id=NULL,clusters=NULL,residuals=0,n.sim=1000,weighted.test=0,
 covariance=0,resample.iid=0,weights=0,offsets=0,fix.gam=0,pseudo.score=0,
-approx = "dt", gamma = 0)
+approx = "dt", gamma = 0,silent=0)
 }
 \arguments{
   \item{formula}{
@@ -76,6 +76,8 @@ in Martinussen and Scheike (2006), see references.
 }
 \item{approx}{describes how the integrals are approximated, "dt" is default and uses a piececonstant approximation for all time points both censoring and event tiems, "death-times" uses only the event times for the approximation.}
 \item{gamma}{values for potential fixed gamma coefficients.}
+\item{silent}{set to 1 to avoid printing of warnings for non-inverible
+  design-matrices for different timepoints, default is 0. }
 }
 \details{
 The data for a subject is presented as multiple rows or 'observations',
@@ -149,7 +151,7 @@ data(mela.pop)
 dummy<-rnorm(nrow(mela.pop)); 
 
 out<-aalen.test(Surv(start,stop,status==1)~age+sex+const(dummy),
-mela.pop,max.time=7,n.sim=500,offsets=mela.pop$rate,id=mela.pop$id,
+mela.pop,max.time=7,n.sim=100,offsets=mela.pop$rate,id=mela.pop$id,
 fix.gam=1)
 
 summary(out)
@@ -158,7 +160,7 @@ plot(out)
 
 # Fits semi-parametric additive hazards model  with offsets 
 out<-aalen.test(Surv(start,stop,status==1)~age+const(sex),
-mela.pop,max.time=7,n.sim=500,offsets=mela.pop$rate,id=mela.pop$id)
+mela.pop,max.time=7,n.sim=100,offsets=mela.pop$rate,id=mela.pop$id)
 
 summary(out)
 plot(out)
@@ -167,7 +169,7 @@ plot(out)
 # Computes pseudo.score tests for fixed effects 
 data(sTRACE)
 out<-aalen.test(Surv(time,status==9)~const(age)+const(sex)+const(diabetes)+
-chf+vf,sTRACE,max.time=7,n.sim=500,pseudo.score=500)
+chf+vf,sTRACE,max.time=7,n.sim=100,pseudo.score=100)
 
 summary(out)
 }

@@ -75,10 +75,10 @@ int *nx,*p,*antpers,*Ntimes,*status;
 void robaalen(times,Ntimes,designX,nx,p,antpers,start,stop,cu,vcu,
 	      robvcu,sim,antsim,retur,cumAit,test,rani,testOBS,status,
 	      Ut,simUt,id,weighted,robust,covariance,covs,resample,
-	      Biid,clusters,antclust,loglike) 
+	      Biid,clusters,antclust,loglike,silent) 
 double *designX,*times,*start,*stop,*cu,*vcu,*robvcu,*cumAit,*test,*testOBS,*Ut,*simUt,*covs,*Biid,*loglike; 
 int *nx,*p,*antpers,*Ntimes,*sim,*retur,*rani,*antsim,*status,*id,*covariance,
-    *weighted,*robust,*resample,*clusters,*antclust;
+    *weighted,*robust,*resample,*clusters,*antclust,*silent;
 {
 
   matrix *ldesignX, *QR, *R, *A, *AI, *Vcov;
@@ -133,10 +133,11 @@ int *nx,*p,*antpers,*Ntimes,*sim,*retur,*rani,*antsim,*status,*id,*covariance,
     /*if (count!=*antpers) printf("Design %ld %ld  \n",*antpers,count);*/
 
     MtM(ldesignX,A); 
-    invert(A,AI); 
+    invertS(A,AI,silent[0]); 
 
-    if (ME(AI,0,0)==0.0){ printf(" X'X not invertible at time %lf \n",time); }
-    if (s < -1) { print_mat(AI); print_mat(A);	}
+    if (ME(AI,0,0)==0.0 && *silent==0){ 
+       printf(" X'X not invertible at time %lf \n",time); }
+       if (s < -1) { print_mat(AI); print_mat(A);	}
 
     extract_row(ldesignX,pers,xi);
       
@@ -223,9 +224,9 @@ int *nx,*p,*antpers,*Ntimes,*sim,*retur,*rani,*antsim,*status,*id,*covariance,
   free(vcudif); 
 }
 
-void semiaalen(alltimes,Nalltimes,Ntimes,designX,nx,px,designG,ng,pg,antpers,start,stop,nb,bhat,cu,vcu,Robvcu,gamma,Vgamma,RobVgamma,sim,antsim,test,rani,testOBS,robust,status,Ut,simUt,id,weighted,cumAit,retur,covariance,covs,resample,gammaiid,Biid,clusters,antclust,loglike,intZHZ,intZHdN,deltaweight)
+void semiaalen(alltimes,Nalltimes,Ntimes,designX,nx,px,designG,ng,pg,antpers,start,stop,nb,bhat,cu,vcu,Robvcu,gamma,Vgamma,RobVgamma,sim,antsim,test,rani,testOBS,robust,status,Ut,simUt,id,weighted,cumAit,retur,covariance,covs,resample,gammaiid,Biid,clusters,antclust,loglike,intZHZ,intZHdN,deltaweight,silent)
 double *designX,*alltimes,*start,*stop,*cu,*vcu,*bhat,*designG,*gamma,*Vgamma,*RobVgamma,*Robvcu,*test,*testOBS,*Ut,*simUt,*cumAit,*covs,*Biid,*gammaiid,*loglike,*intZHZ,*intZHdN; 
-int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*status,*id,*weighted,*retur,*covariance,*resample,*clusters,*antclust,*deltaweight;
+int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*status,*id,*weighted,*retur,*covariance,*resample,*clusters,*antclust,*deltaweight,*silent;
 {
   matrix *Vcov,*X,*WX,*A,*AI,*AIXW,*Z,*WZ;
   matrix *dCGam,*CGam,*Ct,*ICGam,*VarKorG,*dC,*ZH,*XWZ,*ZWZ,*XWZAI;
@@ -310,8 +311,8 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*
 	}
       }
       
-      MtA(X, WX,A); invert(A,AI);
-      if (ME(AI,0,0)==0.0){ 
+      MtA(X, WX,A); invertS(A,AI,silent[0]);
+      if (ME(AI,0,0)==0.0 && *silent==0){ 
 	printf(" X'X not invertible at time %lf \n",time);
       }
       MtA(Z, WZ,ZWZ);
@@ -364,7 +365,8 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*
     } /* s =1...Ntimes */ 
 
 
-  invert(CGam,ICGam);
+  invertS(CGam,ICGam,silent[0]);
+  if (ME(ICGam,0,0)==0 && *silent==0) printf(" intZHZ  singular\n"); 
   Mv(ICGam,IZHdN,gam); 
   MxA(Vargam,ICGam,tmpM2); 
   MxA(ICGam,tmpM2,Vargam); 

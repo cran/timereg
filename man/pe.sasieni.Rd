@@ -58,7 +58,7 @@ for relative survival (2007), submitted.
 \examples{
 data(mela.pop)
 out<-pe.sasieni(Surv(start,stop,status==1)~age+sex,mela.pop,
-id=1:205,Nit=10,max.time=7,offsets=mela.pop$rate,detail=0)
+id=1:205,Nit=10,max.time=7,offsets=mela.pop$rate,detail=0,n.sim=100)
 summary(out)
 
 ul<-out$cum[,2]+1.96*out$var.cum[,2]^.5

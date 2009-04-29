@@ -4,7 +4,6 @@ R=d;  Sxxsxy=R;
 if (dim>=2)
 for (i in 2:dim)
 {
-print(i);
 Sxxsxy=D %*% Sxxsxy  ;
 R=cbind(R,Sxxsxy);
 }

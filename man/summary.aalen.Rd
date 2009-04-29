@@ -29,7 +29,7 @@ library(survival)
 data(sTRACE)
 # Fits Aalen model 
 out<-aalen(Surv(time,status==9)~age+sex+diabetes+chf+vf,
-sTRACE,max.time=7,n.sim=500)
+sTRACE,max.time=7,n.sim=100)
 
 summary(out)
 }

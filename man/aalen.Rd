@@ -17,7 +17,7 @@ The modelling formula uses the standard survival modelling given in the
 \usage{
 aalen(formula,data=sys.parent(),start.time=0,max.time=NULL,robust=1,
 id=NULL,clusters=NULL,residuals=0,n.sim=1000,weighted.test=0,
-covariance=0,resample.iid=0,deltaweight=1)
+covariance=0,resample.iid=0,deltaweight=1,silent=0)
 }
 \arguments{
   \item{formula}{ 
@@ -53,6 +53,8 @@ covariance=0,resample.iid=0,deltaweight=1)
     nonparametric and parametric terms.}
   \item{deltaweight}{uses weights to estimate semiparametric model, under
     construction, default=1 is standard least squares estimates}
+  \item{silent}{set to 1 to avoid printing of warnings for non-inverible
+ design-matrices for different timepoints, default is 0.}
 }
 \details{
 The data for a subject is presented as multiple rows or 'observations',
@@ -111,7 +113,7 @@ library(survival)
 data(sTRACE)
 # Fits Aalen model 
 out<-aalen(Surv(time,status==9)~age+sex+diabetes+chf+vf,
-sTRACE,max.time=7,n.sim=500)
+sTRACE,max.time=7,n.sim=100)
 
 summary(out)
 par(mfrow=c(2,3))
@@ -119,7 +121,7 @@ plot(out)
 
 # Fits semi-parametric additive hazards model 
 out<-aalen(Surv(time,status==9)~const(age)+const(sex)+const(diabetes)+chf+vf,
-sTRACE,max.time=7,n.sim=500)
+sTRACE,max.time=7,n.sim=100)
 
 summary(out)
 par(mfrow=c(2,3))

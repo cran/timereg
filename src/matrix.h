@@ -152,7 +152,9 @@ void MtA(matrix *M, matrix *A, matrix *Mout);
 void MAt(matrix *M, matrix *A, matrix *Mout);
 
 void invert(matrix *A, matrix *AI);
+void invertS(matrix *A, matrix *AI,int silent);
 void invertUnsafe(matrix *A, matrix *AI);
+void invertUnsafeS(matrix *A, matrix *AI,int silent);
 
 void MxA(matrix *M, matrix *A, matrix *Mout);
 

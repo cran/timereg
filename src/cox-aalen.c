@@ -386,7 +386,7 @@ int*covariance,*nx,*px,*ng,*pg,*antpers,*Ntimes,*mw,*Nit,*detail,*mof,*sim,*ants
       RVbeta[k*(*pg)+j]=-ME(RobVbeta,j,k); } } 
 
   if (*sim==1) {
-    printf("Simulations start N= %ld \n",(long int) *antsim);
+    // printf("Simulations start N= %ld \n",(long int) *antsim);
 
     tau=times[*Ntimes-1]-times[0];
     for (i=1;i<=*px;i++) VE(rowX,i-1)=cu[i*(*Ntimes)+(*Ntimes-1)];
