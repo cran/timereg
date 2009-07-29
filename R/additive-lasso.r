@@ -54,8 +54,8 @@ trace = FALSE, plot.it = FALSE , se = TRUE, silent=1,
         Xl<-X[-omit,]; Zl<-Z[-omit,]; 
         datal=data.frame(tt=time2[-omit],status=status[-omit])
         nn<-antpers-length(omit); 
-        out<-aalen.test(Surv(tt,status)~-1+Xl+const(Zl),data=datal,
-            max.time=max.time,start.time=start.time,n.sim=0,robust=0,silent=silent)
+        out<-additive.compSs(Surv(tt,status)~-1+Xl+const(Zl),data=datal,
+            max.time=max.time,start.time=start.time,silent=silent)
         ###S=out$intZHZ; s=out$intZHdN
         fitno<-my.lars(out$intZHZ,out$intZHdN,nn)
         betas<-mypredict.lars(fitno, fraction, type="coefficients",
@@ -64,8 +64,8 @@ trace = FALSE, plot.it = FALSE , se = TRUE, silent=1,
         Xo<-X[omit,]; Zo<-Z[omit,]; 
         datao=data.frame(tt=time2[omit],status=status[omit])
         nno<- length(omit); 
-        outo<-aalen.test(Surv(tt,status)~-1+Xo+const(Zo),data=datao,
-            max.time=max.time,start.time=start.time,n.sim=0,robust=0,silent=silent)
+        outo<-additive.compSs(Surv(tt,status)~-1+Xo+const(Zo),data=datao,
+            max.time=max.time,start.time=start.time,silent=silent)
 
         fit<- apply(betas,1,function(x)  x %*% outo$intZHZ %*% x) 
         fit<- drop(fit - 2 *betas %*% outo$intZHdN )

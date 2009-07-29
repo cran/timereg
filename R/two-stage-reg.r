@@ -1,6 +1,6 @@
 prop<-function(x) x
 
-two.stage.reg<-function(formula=formula(data),data=sys.parent(),
+two.stage<-function(formula=formula(data),data=sys.parent(),
 beta=0,Nit=10,detail=0,start.time=0,max.time=NULL,id=NULL, 
 clusters=NULL, robust=1,
 rate.sim=1,beta.fixed=0,theta=NULL,theta.des=NULL)
@@ -51,8 +51,8 @@ rate.sim=1,beta.fixed=0,theta=NULL,theta.des=NULL)
   if (px==0) stop("No nonparametric terms (needs one!)");
   ud<-two.stageBase.reg(times,ldata,X,Z,
                         status,id,clusters,Nit=Nit,detail=detail,beta=beta,
-                        robust=robust,ratesim=ratesim,namesX=covnamesX,namesZ=covnamesZ,
-                        beta.fixed=beta.fixed,theta=theta,theta.des=theta.des);
+                        robust=robust,ratesim=ratesim,namesX=covnamesX,
+   namesZ=covnamesZ,beta.fixed=beta.fixed,theta=theta,theta.des=theta.des);
 
   if (px>0) {
     colnames(ud$cum)<-colnames(ud$var.cum)<- c("time",covnamesX)
@@ -60,22 +60,12 @@ rate.sim=1,beta.fixed=0,theta=NULL,theta.des=NULL)
 
   rownames(ud$gamma)<-c(covnamesZ); colnames(ud$gamma)<-"estimate"; 
   rownames(ud$score)<-c(covnamesZ); colnames(ud$score)<-"score"; 
-                                        #namematrix(ud$var.gamma,covnamesZ); 
-                                        #namematrix(ud$robvar.gamma,covnamesZ); 
-                                        #namematrix(ud$D2linv,covnamesZ); 
-
-                                        #colnames(ud$var.gamma)<-c(covnamesZ); 
-                                        #rownames(ud$var.gamma)<-c(covnamesZ); 
-                                        #colnames(ud$robvar.gamma)<-c(covnamesZ); 
-                                        #rownames(ud$robvar.gamma)<-c(covnamesZ); 
-                                        #colnames(ud$D2linv)<-c(covnamesZ); 
-                                        #rownames(ud$D2linv)<-c(covnamesZ); 
 
   ptheta<-length(ud$theta); 
   if (ptheta>1) rownames(ud$theta)<-colnames(theta.des) else rownames(ud$theta)<-"intercept"
 
   attr(ud,"Call")<-sys.call(); 
-  class(ud)<-"two.stage.reg"
+  class(ud)<-"two.stage"
   attr(ud,"Formula")<-formula;
   attr(ud,"id")<-id.call;
   attr(ud,"cluster")<-cluster.call;
@@ -157,19 +147,104 @@ theta.des=NULL,inverse=0)
    return(ud)
 }
 
-summary.two.stage.reg <- function(object,...){
-  summary.two.stage(object,...)
+prop<-function(x) x
+
+
+"summary.two.stage" <- function (object,digits = 3,...) {
+  if (!(inherits(object, 'two.stage') || inherits(object, 'two.stage.reg'))) stop("Must be a Two-Stage object")
+  
+  prop<-TRUE; 
+  if (is.null(object$gamma)==TRUE) stop(" No regression terms"); 
+  if (is.null(object$prop.odds)==TRUE) p.o<-FALSE else p.o<-TRUE
+    
+  inverse<-attr(object,"inverse");
+  cat("Dependence parameter for Clayton-Oakes-Glidden  model\n"); 
+  ptheta<-nrow(object$theta)
+  sdtheta<-diag(object$var.theta)^.5
+  dep<-cbind(object$theta[,1],sdtheta)
+  walddep<-object$theta[,1]/sdtheta; 
+  waldpdep<-(1-pnorm(abs(walddep)))*2
+  if (inverse==0) {
+    kendall<-1/(1+2/object$theta) 
+    kendall.ll<-1/(1+2/(object$theta+1.96*sdtheta)) 
+    kendall.ul<-1/(1+2/(object$theta-1.96*sdtheta)) }
+  else { kendall<-1/(1+2*object$theta);
+         kendall.ll<-1/(1+2*(object$theta+1.96*sdtheta));
+	 kendall.ul<-1/(1+2*(object$theta-1.96*sdtheta)); }
+  resdep<-signif(as.matrix(cbind(dep,walddep,waldpdep,kendall)),digits);
+
+  if (inverse==0) colnames(resdep) <- 
+    c("Variance","SE","z","P-val","Kendall's tau") 
+  else colnames(resdep) <- c("1/Variance","SE","z","P-val","Kendall's tau")
+  prmatrix(resdep); cat("   \n");  
+
+  cat("Marginal Cox-Aalen model fit\n\n"); 
+  if (sum(abs(object$score)>0.000001) && sum(object$gamma)!=0) 
+    cat("Marginal model did not converge, allow more iterations\n\n"); 
+
+  if (prop) {
+    if (p.o==FALSE) cat("Proportional Cox terms :  \n") else  cat("Covariate effects \n")
+
+    coef.two.stage(object,digits=digits);
+    cat("   \n");  cat("  Call: \n"); dput(attr(object, "Call")); cat("\n");
+  }
 }
 
-print.two.stage.reg <- function(x,...){
-  print.two.stage(x,...)
+print.two.stage <- function (x,digits = 3,...) {
+  if (!(inherits(x, 'two.stage') || inherits(x, 'two.stage.reg'))) stop("Must be a Two-Stage object")
+  cat(" Two-stage estimation for Clayton-Oakes-Glidden  model\n"); 
+  cat(" Marginals of Cox-Aalen form, dependence by variance of Gamma distribution\n\n");  
+  object <- x; rm(x);
+  
+  cat(" Nonparametric components : "); cat(colnames(object$cum)[-1]); cat("   \n");  
+  if (!is.null(object$gamma)) {
+    cat(" Parametric components :  "); cat(rownames(object$gamma)); 
+    cat("   \n");
+  } 
+  cat("   \n");  
+
+  cat(" Call: \n");
+  print(attr(object,'Call'))
 }
 
-coef.two.stage.reg <- function(object,...){
-  coef.two.stage(object,...)
+
+coef.two.stage<-function(object,digits=3,d2logl=1,...) {
+   coefBase(object,digits=digits,d2logl=d2logl,...)
 }
 
-plot.two.stage.reg <- function(x,...){
-  plot.two.stage(x,...)
-}
+"plot.two.stage" <- function (x,  pointwise.ci=1, robust=0, specific.comps=FALSE,level=0.05, 
+                              start.time = 0, stop.time = 0, add.to.plot=FALSE,mains=TRUE,
+                              xlab="Time", ylab ="Cumulative regression function",...) {
+  if (!(inherits(x, 'two.stage') || inherits(x, 'two.stage.reg'))) stop("Must be a Two-Stage object")
+  object <- x; rm(x);  
+ 
+  B<-object$cum; V<-object$var.cum; p<-dim(B)[[2]]; 
+  if (robust>=1) V<-object$robvar.cum; 
 
+  if (sum(specific.comps)==FALSE) comp<-2:p else comp<-specific.comps+1
+  if (stop.time==0) stop.time<-max(B[,1]);
+
+  med<-B[,1]<=stop.time & B[,1]>=start.time
+  B<-B[med,]; Bs<-B[1,];  B<-t(t(B)-Bs); B[,1]<-B[,1]+Bs[1];
+  V<-V[med,]; Vs<-V[1,]; V<-t( t(V)-Vs); 
+  Vrob<-object$robvar.cum; 
+  Vrob<-Vrob[med,]; Vrobs<-Vrob[1,]; Vrob<-t( t(Vrob)-Vrobs); 
+
+  c.alpha<- qnorm(1-level/2)
+  for (v in comp) { 
+    c.alpha<- qnorm(1-level/2)
+    est<-B[,v];ul<-B[,v]+c.alpha*V[,v]^.5;nl<-B[,v]-c.alpha*V[,v]^.5;
+    if (add.to.plot==FALSE) 
+      {
+        plot(B[,1],est,ylim=1.05*range(ul,nl),type="s",xlab=xlab,ylab=ylab) 
+        if (mains==TRUE) title(main=colnames(B)[v]); }
+    else lines(B[,1],est,type="s"); 
+    if (pointwise.ci>=1) {
+      lines(B[,1],ul,lty=pointwise.ci,type="s");
+      lines(B[,1],nl,lty=pointwise.ci,type="s"); }
+    if (robust>=1) {
+      lines(B[,1],ul,lty=robust,type="s"); 
+      lines(B[,1],nl,lty=robust,type="s"); }
+    abline(h=0); 
+  }
+}

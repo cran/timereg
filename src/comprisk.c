@@ -20,7 +20,6 @@ int *n,*px,*Ntimes,*Nit,*cause,*delta,*sim,*antsim,*rani,*weighted,
 	 *vcudif=calloc((*Ntimes)*(*px+1),sizeof(double));
   long idum;
   float gasdev(),expdev(),ran1();
-  void comptestfunc(),itfitsemi(); 
   idum=*rani;
   ps=(*px); 
 
@@ -168,7 +167,7 @@ vec_zeros(VdB); mat_zeros(VAR);
 
 
     if (*sim==1)
-      comptestfunc(times,Ntimes,px,est,var,vcudif,antsim,test,idum,testOBS,Ut,
+      comptestfunc(times,Ntimes,px,est,var,vcudif,antsim,test,testOBS,Ut,
 		   simUt,cumAt,weighted,antclust,gamma2,line); 
   } else {
     itfitsemi(times,Ntimes,x,delta,cause,KMc,z,n,px,Nit,
@@ -219,7 +218,6 @@ int *antpers,*px,*Ntimes,*Nit,*cause,*delta,*sim,*antsim,*rani,*weighted,
 	 *inc=calloc((*Ntimes)*(*px+1),sizeof(double));
   double lrr,fabs(), pow(); 
   int idum,fixedcov; 
-  void comptestfunc();
   // float gasdev(),expdev(),ran1();
   idum=*rani; robust[0]=1; fixedcov=1; 
   n[0]=antpers[0]; nx[0]=antpers[0];
@@ -428,7 +426,7 @@ int *antpers,*px,*Ntimes,*Nit,*cause,*delta,*sim,*antsim,*rani,*weighted,
     for (k=0;k<*pg;k++) {vargamma[k*(*pg)+j]=ME(RobVargam,j,k);}}
 
   if (*sim==1) {
-    comptestfunc(times,Ntimes,px,est,var,vcudif,antsim,test,idum,testOBS,Ut,simUt,W4t,weighted,antclust,gamma2,line);
+    comptestfunc(times,Ntimes,px,est,var,vcudif,antsim,test,testOBS,Ut,simUt,W4t,weighted,antclust,gamma2,line);
   }
 
   free_mats(&ldesignX,&A,&AI,&cdesignX,&ldesignG,&cdesignG,

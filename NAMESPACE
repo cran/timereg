@@ -9,6 +9,7 @@ export("aalen",
        "aalenBaseTest",
        "aalen.test",
        "additive.pls",
+       "additive.compSs",
        "additive.plsR",
        "check.missing",
        "rm.missing",
@@ -60,8 +61,6 @@ export("aalen",
        "timecoxBase",
        "timetest",
        "two.stage",
-       "two.stage.reg",
-       "two.stageBase",
        "two.stageBase.reg")
 
 S3method(plot,aalen)
@@ -88,7 +87,6 @@ S3method(print,predictCoxAalen)
 S3method(print,prop.excess)
 S3method(print,timecox)
 S3method(print,two.stage)
-S3method(print,two.stage.reg)
 S3method(print,pls)
 
 S3method(summary,aalen)
@@ -103,7 +101,6 @@ S3method(summary,predictCoxAalen)
 S3method(summary,prop.excess)
 S3method(summary,timecox)
 S3method(summary,two.stage)
-S3method(summary,two.stage.reg)
 S3method(summary,pls)
 
 S3method(predict,aalen)
@@ -121,6 +118,7 @@ export("plot.aalen",
        "plot.comprisk",
        "plot.cum.residuals",
        "plot.cox.aalen",
+       "plot.cums",
        "plot.dynreg",
        "plot.predictAalen",
        "plot.predictComprisk",
@@ -141,7 +139,6 @@ export("plot.aalen",
        "print.timecox",
        "print.two.stage",
        "print.pls",
-       "print.two.stage.reg",
        "summary.aalen",
        "summary.cox.aalen",
        "summary.comprisk",
@@ -155,7 +152,6 @@ export("plot.aalen",
        "summary.prop.excess",
        "summary.timecox",
        "summary.two.stage",
-       "summary.two.stage.reg",
        "predict.aalen",
        "predict.pls",
        "predict.comprisk",

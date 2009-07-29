@@ -1,16 +1,15 @@
-\name{two.stage.reg}
-\alias{two.stage.reg}
+\name{two.stage}
+\alias{two.stage}
 \title{Fit Clayton-Oakes-Glidden Two-Stage model}
 \description{
 Fit Clayton-Oakes-Glidden Two-Stage model with 
 Cox-Aalen marginals and regression on the variance parameters.
 
-The key here is that the variance is allowed to depend on 
+The model specifikatin allows a regression structure on 
+the variance of the random effects, such it is allowed to depend on 
 covariates fixed within clusters 
-\deqn{ \theta_{k} =  Q_{k}^T \nu }
-
-The simple univariate model can also be fitted by 
-the two.stage function. 
+\deqn{ \theta_{k} =  Q_{k}^T \nu }. This is particularly useful to
+model jointly different groups and  to compare their variances. 
 
 Fits an Cox-Aalen survival model. 
 Time dependent variables and counting process data
@@ -29,7 +28,7 @@ The modelling formula uses the standard survival modelling given in the
 \bold{survival} package.
 }
 \usage{
-two.stage.reg(formula=formula(data),data=sys.parent(),beta=0,Nit=10,
+two.stage(formula=formula(data),data=sys.parent(),beta=0,Nit=10,
 detail=0,start.time=0,max.time=NULL,id=NULL,clusters=NULL,
 robust=1,rate.sim=1,beta.fixed=0,theta=NULL,theta.des=NULL)
 }
@@ -95,7 +94,7 @@ Springer (2006).}
 library(survival)
 data(diabetes)
 # Marginal Cox model  with treat as covariate
-fit<-two.stage.reg(Surv(time,status) ~ prop(treat) + cluster(id),
+fit<-two.stage(Surv(time,status) ~ prop(treat) + cluster(id),
 diabetes,Nit=40,theta=1)
 summary(fit)
 
@@ -104,7 +103,7 @@ theta.des<-model.matrix(~-1+factor(adult),diabetes);
 des.t<-model.matrix(~-1+factor(treat),diabetes);
 design.treat<-cbind(des.t[,-1]*(diabetes$adult==1),
                     des.t[,-1]*(diabetes$adult==2))
-fit.s<-two.stage.reg(Surv(time,status) ~
+fit.s<-two.stage(Surv(time,status) ~
 -1+factor(adult)+prop(design.treat)+cluster(id),
 diabetes,Nit=40,theta=1,theta.des=theta.des)
 summary(fit.s)
@@ -115,14 +114,19 @@ factor(adult)+prop(design.treat)+cluster(id),diabetes)
 summary(fit.s1)
 
 # with common baselines  and common treatment effect (although test reject this)
-fit.s2<-two.stage.reg(Surv(time,status) ~+1+prop(treat) + cluster(id),
+fit.s2<-two.stage(Surv(time,status) ~+1+prop(treat) + cluster(id),
 diabetes,Nit=40,theta=1,theta.des=theta.des)
 summary(fit.s2)
 
 # test for same variance among the two strata
 theta.des<-model.matrix(~factor(adult),diabetes);
-fit.s3<-two.stage.reg(Surv(time,status) ~+1+prop(treat)+cluster(id),
+fit.s3<-two.stage(Surv(time,status) ~+1+prop(treat)+cluster(id),
 diabetes,Nit=40,theta=1,theta.des=theta.des)
 summary(fit.s3)
+
+# to fit model without covariates, beta.fixed=0, but still need prop term !
+fit<-two.stage(Surv(time,status) ~ prop(treat) + cluster(id),
+diabetes,theta=0.95,detail=0,beta.fixed=1)
+summary(fit)
 }
 \keyword{survival}

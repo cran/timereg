@@ -16,7 +16,6 @@ int *nx,*p,*antpers,*Ntimes,*sim,*retur,*rani,*antsim,*status,*id,*covariance,
   double tau,*vcudif=calloc((*Ntimes)*(*p+1),sizeof(double)),
 	 *weights=calloc(*antpers,sizeof(double)); 
   double fabs(),sqrt();
-  void comptest(); 
   long idum; idum=*rani; 
 
   nap=floor(*antsim/50); 
@@ -131,7 +130,7 @@ int *nx,*p,*antpers,*Ntimes,*sim,*retur,*rani,*antsim,*status,*id,*covariance,
   tau=time; 
 
   if (*sim==1) {
-    comptest(times,Ntimes,p,cu,robvcu,vcudif,antsim,test,idum,testOBS,Ut,simUt,cumAt,weighted,antclust);
+    comptest(times,Ntimes,p,cu,robvcu,vcudif,antsim,test,testOBS,Ut,simUt,cumAt,weighted,antclust);
   }
 
   cu[0]=times[0]; vcu[0]=times[0]; robvcu[0]=times[0]; 
@@ -170,7 +169,6 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*
          *cumoff=calloc((*Nalltimes)*(*px+1),sizeof(double)),
          *cuL=calloc((*Nalltimes)*(*px+1),sizeof(double)),
          *weights=calloc((*antpers),sizeof(double));
-  void comptest(); 
   double norm_rand(); 
   long idum; idum=*rani; 
   dptime=alltimes[0]; 
@@ -457,7 +455,7 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*
   cu[0]=times[0]; vcu[0]=times[0];
 
   if (*sim==1) {
-    comptest(times,Ntimes,px,cu,Robvcu,vcudif,antsim,test,idum,testOBS,Ut,simUt,W4t,weighted,antclust); 
+    comptest(times,Ntimes,px,cu,Robvcu,vcudif,antsim,test,testOBS,Ut,simUt,W4t,weighted,antclust); 
   }
 
   if (*pseudoscore>=1) {

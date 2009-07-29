@@ -3,12 +3,11 @@
 #include <math.h>
 #include "matrix.h"
 
-void comptest(times,Ntimes,px,cu,vcu,vcudif,antsim,test,idum,testOBS,Ut,
+void comptest(times,Ntimes,px,cu,vcu,vcudif,antsim,test,testOBS,Ut,
 	      simUt,W4t,weighted,antpers)
      double *times,*cu,*vcu,*vcudif,*test,*testOBS,*Ut,*simUt;
      int    *px,*Ntimes,*antsim,*weighted,*antpers;
-     long   *idum; 
-     matrix  *W4t[*antpers];
+     matrix  **W4t;
 {
   matrix *Delta,*tmpM1;
   vector *tmpv1,*rowX,*xi,*difX,*ssrow,*VdB;
@@ -201,10 +200,9 @@ void comptest(times,Ntimes,px,cu,vcu,vcudif,antsim,test,idum,testOBS,Ut,
 }
 
 
-void comptestM(times,Ntimes,px,cu,vcu,vcudif,antsim,test,idum,testOBS,Ut,simUt,W4t,weighted,antpers,cu0,argmax)
+void comptestM(times,Ntimes,px,cu,vcu,vcudif,antsim,test,testOBS,Ut,simUt,W4t,weighted,antpers,cu0,argmax)
 double *times,*cu,*vcu,*vcudif,*test,*testOBS,*Ut,*simUt,*cu0,*argmax;
 int    *px,*Ntimes,*antsim,*weighted,*antpers;
-long   *idum; 
 matrix  *W4t[];
 {
   matrix *Delta,*tmpM1;

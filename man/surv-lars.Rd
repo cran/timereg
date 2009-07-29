@@ -59,7 +59,8 @@ covs<-scale(covs);
 
 ## computes the matrices needed for the least squares 
 ## criterion 
-out<-aalen.test(Surv(time,status>=1)~const(covs),pbc,n.sim=0,robust=0)
+
+out<-additive.compSs(Surv(time,status>=1)~const(covs),data=pbc)
 S<-out$intZHZ; s<-out$intZHdN
 n<-nrow(pbc)
 

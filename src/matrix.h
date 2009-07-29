@@ -187,3 +187,38 @@ vector *vec_ones(vector *v);
 void replace_col(matrix *M, int col_to_set, vector *v);
 
 vector *extract_col(matrix *M, int col_to_get, vector *v);
+
+/*
+ */
+void comptest(double *times,int *Ntimes,int *px,double *cu,double *vcu,
+	      double *vcudif,int *antsim,double *test,double *testOBS,
+	      double *Ut,double *simUt,matrix **W4t,int *weighted,int *antpers); 
+
+double tukey(double x,double b);
+
+void smoothB(double *designX,int *nx,int *p,double *bhat,int *nb,double *b,int *degree,int *coef);
+
+void comptestfunc(double *times,int *Ntimes,int *px,double *cu,double *vcu,
+		  double *vcudif,int *antsim,double *test,double *testOBS,
+		  double *Ut,double *simUt,matrix **W4t,int *weighted,int *antpers,
+		  double *gamma,int *line); 
+
+/*
+void comptestfunc(times,Ntimes,px,cu,vcu,vcudif,antsim,test,testOBS,Ut,simUt,W4t,weighted,antpers,gamma,line
+		)
+double *times,*cu,*vcu,*vcudif,*test,*testOBS,*Ut,*simUt,*gamma;
+int *px,*Ntimes,*antsim,*weighted,*antpers,*line;
+matrix **W4t;
+
+*/
+
+
+
+void itfitsemi(double *times,int *Ntimes,double *x,int *delta,int *cause,double *KMc,
+	       double *z,int *antpers,int *px,int *Nit,double *score,double *hess,
+	       double *est,double *var,int *sim,int *antsim,int *rani,double *test,
+	       double *testOBS,double *Ut,double *simUt,int *weighted, double *gamma,
+	       double *vargamma,int *semi,double *zsem,int *pg,int *trans,double *gamma2,
+	       int *CA,int *line,int *detail,double *biid,double *gamiid,int *resample,
+	       double *timepow,int *clusters,int *antclust);
+

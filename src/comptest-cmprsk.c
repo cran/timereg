@@ -3,10 +3,9 @@
 #include "matrix.h"
 
 
-void comptestfunc(times,Ntimes,px,cu,vcu,vcudif,antsim,test,idum,testOBS,Ut,simUt,W4t,weighted,antpers,gamma,line)
+void comptestfunc(times,Ntimes,px,cu,vcu,vcudif,antsim,test,testOBS,Ut,simUt,W4t,weighted,antpers,gamma,line)
 double *times,*cu,*vcu,*vcudif,*test,*testOBS,*Ut,*simUt,*gamma;
 int *px,*Ntimes,*antsim,*weighted,*antpers,*line;
-long *idum; 
 matrix **W4t;
 {
   matrix *Delta,*tmpM1;

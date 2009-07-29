@@ -10,13 +10,14 @@ int
   matrix *ldesignX,*A,*AI,*AIX,*cdesignX,*XmavX,*cXmavX,*Aav;
   vector *diag,*dB,*dN,*VdB,*AIXdN,*AIXlamt,*ta,*bhatt,*pbhat,*plamt,*avx,*lrisk;
   vector *ssrow2,*ssrow,*vtmp,*xi,*rowX,*cumi[*antpers],*difX,*cumBLi[*antpers],*Btau,*Base[*antpers],*score; 
-  matrix *cumBL[*antpers],*cumB[*antpers],*BLsubbetaLam[*antpers],*varBL, *Delta2,*Delta,*tmpM1,*tmpM2; 
+  matrix *cumBL[*antpers],*cumB[*antpers],*BLsubbetaLam[*antpers];
+  matrix *Delta2,*Delta,*tmpM1,*tmpM2; 
+  matrix *varBL;
   int supsup=0,itt,i,j,k,s,c,count,pers=0,
       *imin=calloc(1,sizeof(int)), *coef=calloc(1,sizeof(int)),*ps=calloc(1,sizeof(int));
   double time2,rr,time=0,time1,dummy,dtime,S0,lam0t,sdBt,tau,random;
   double *Basei=calloc(*antpers,sizeof(double)),rvarbase,
 	 *vcudif=calloc((*Ntimes)*(*p+2),sizeof(double));
-  void smoothB(),smooth2B(),comptest(); 
   long idum; idum=*rani;
   double norm_rand();
   void GetRNGstate(),PutRNGstate();
@@ -24,13 +25,14 @@ int
 
   if (*sim==1) {
     malloc_mat(*Ntimes,*p,Delta); 
+    malloc_mat(*Ntimes,*p,Delta2); 
     malloc_mat(*Ntimes,*p,tmpM1); 
     malloc_mat(*Ntimes,*p,tmpM2);
-    malloc_mat(*Ntimes,*p,Delta2); 
-    malloc_mat(*Ntimes,*p,varBL); 
   }
 
   if (*robust==1)
+  {
+    malloc_mat(*Ntimes,*p,varBL); 
     for (j=0;j<*antpers;j++) {
       malloc_mat(*Ntimes,(*p)+1,cumB[j]); 
       malloc_vec(*p,cumi[j]); 
@@ -40,6 +42,7 @@ int
       malloc_vec(*Ntimes,Base[j]); 
       Basei[j]=0.0; 
     }
+  }
 
   malloc_mat(*antpers,*p,ldesignX);
   malloc_mat(*antpers,*p,cdesignX);
@@ -134,14 +137,7 @@ int
 
       for (k=2;k<=(*p)+1;k++){
 	cu[k*(*Ntimes)+s]=cu[k*(*Ntimes)+s-1]+dtime*VE(bhatt,k-2)+VE(dB,k-2)/lam0t;   
-	/*
-      sbhat[s]=time; sbhat[1*(*Ntimes)+s]=0;
-	  sbhat[k*(*Ntimes)+s]=bhat[k*(*Ntimes)+s]+dB->ve[k-2];
-	  printf(" %lf %lf ",sbhat[k*(*Ntimes)+s-1],bhat[k*(*Ntimes)+s-1]);
-	*/
-
 	cumlam[k*(*Ntimes)+s]=cumlam[k*(*Ntimes)+s-1]+(dtime*VE(bhatt,k-2)*lam0t)+VE(dB,k-2);  
-
 	if (itt==(*it-1)) {
 	  schoen[(k-1)*(*Ntimes)+s]=VE(dB,k-2)*S0;
 	  vcu[k*(*Ntimes)+s]=vcu[k*(*Ntimes)+s-1]+(dtime/lam0t)*ME(AI,k-2,k-2); 
@@ -206,30 +202,8 @@ int
 	}
       } 
     } /* s */
-    /* v_output(score);  */ 
-
-    /*
-      for (k=0;k<*Ntimes;k++) {
-      for (i=0;i<*p+2;i++)
-      {printf(" %lf ",cu[i*(*Ntimes)+k]);} printf(" \n"); }
-      printf("======================================================= \n");
-    */
 
     smoothB(cu,Ntimes,ps,bhat,nb,b,degree,coef);
-    /* */
-
-    /*
-      coef[0]=0; ps[0]=(*p)+1; 
-      smoothB(sbhat,Ntimes,ps,bhat,nb,b,degree,coef);   
-    */
-    /*
-      printf(" %ld  \n",itt);
-      printf("======================================================= \n");
-      for (k=0;k<*nb;k++) {
-      for (i=0;i<=(*p)+1;i++) 
-      {printf(" %lf ",bhat[i*(*nb)+k]);} printf(" \n"); }
-    */
-
 
   } /* itterations løkke */ 
   for (i=2;i<(*p)+2;i++) {
@@ -276,7 +250,7 @@ int
   if (*sim==1) {
     if (*sim2!=1) {
       ps[0]=*p+1; 
-      comptest(times,Ntimes,ps,cu,rvcu,vcudif,antsim,test,idum,testOBS,Ut,simUt,
+      comptest(times,Ntimes,ps,cu,rvcu,vcudif,antsim,test,testOBS,Ut,simUt,
 	       cumB,weighted,antpers);
       /*
 	for (s=0;s<*Ntimes;s++) {
@@ -474,7 +448,6 @@ int *nx,*px,*antpers,*Ntimes,*nb,*ng,*pg,*it,*degree,*sim,*antsim,
   double time,dummy,dtime,lam0t,S0,
 	 *Basei=calloc((*antpers),sizeof(double)),
          *vcudif=calloc((*Ntimes)*(*px+2),sizeof(double)),dum2,rvarbase; 
-  void comptest(),smoothB();
   long idum; idum=*rani;
 
   if (*robust==1){
@@ -821,7 +794,7 @@ int *nx,*px,*antpers,*Ntimes,*nb,*ng,*pg,*it,*degree,*sim,*antsim,
 
   if (*sim==1) {
     ps[0]=(*px)+1; 
-    comptest(times,Ntimes,ps,cu,rvcu,vcudif,antsim,test,idum,testOBS,Ut,simUt,W4t,weighted,antpers);
+    comptest(times,Ntimes,ps,cu,rvcu,vcudif,antsim,test,testOBS,Ut,simUt,W4t,weighted,antpers);
   }
 
   cu[0]=times[0]; vcu[0]=times[0];

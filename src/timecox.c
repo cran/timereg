@@ -18,7 +18,6 @@ int *nx,*p,*antpers,*Ntimes,*nb,*it,*degree,*id,*status,*sim,*antsim,*rani,*retu
   double *vcudif=calloc((*Ntimes)*(*p+1),sizeof(double)),
 	 *sbhat=calloc((*Ntimes)*(*p+1),sizeof(double)),
          *sscore=calloc((*Ntimes)*(*p+1),sizeof(double)); 
-  void comptest(),smoothB(); 
   long idum; idum=*rani;
 
 
@@ -130,28 +129,11 @@ int *nx,*p,*antpers,*Ntimes,*nb,*it,*degree,*id,*status,*sim,*antsim,*rani,*retu
 
       smoothB(cu,Ntimes,ps,bhat,nb,b,degree,coef); 
 
-      /* 
-	 smoothB(sscore,Ntimes,ps,ssscore,nb,b,degrees,coefs); 
-	 coef[0]=0; degree[0]=0; 
-	 smoothB(sbhat,Ntimes,ps,bhat,nb,b,degree,coef); 
-      */
-
-      /*
-	printf(" %ld  \n",itt); 
-	printf(" %lf  \n",*b); 
-	printf("======================================================= \n"); 
-	for (k=1;k<*nb;k++) {
-	for (i=1;i<*p;i++) 
-	{printf(" %lf %lf ",bhat[i*(*nb)+k],b[(i-1)*(*nb)+k]);}
-	printf(" \n");
-	}
-      */
-
     } /* itterations løkke */ 
   cu[0]=times[0]; vcu[0]=times[0];
 
   if (*sim==1) {
-    comptest(times,Ntimes,p,cu,robvcu,vcudif,antsim,test,idum,testOBS,Ut,simUt,cumAt,weighted,antpers);
+    comptest(times,Ntimes,p,cu,robvcu,vcudif,antsim,test,testOBS,Ut,simUt,cumAt,weighted,antpers);
   }
 
   if (*robust==1)
@@ -187,7 +169,6 @@ int
       *imin=calloc(1,sizeof(int));;
   double time,dummy,dtime,hati,tau;
   double *vcudif=calloc((*Ntimes)*(*px+1),sizeof(double));
-  void comptest(),smoothB();
   int *ipers=calloc(*Ntimes,sizeof(int));
   long idum; idum=*rani;
 
@@ -198,8 +179,8 @@ int
 
   malloc_mats(*antpers,*px,&ldesignX,&cdesignX,NULL);
   malloc_mats(*antpers,*pg,&ldesignG,&cdesignG,NULL); 
-  malloc_mats(*px,*px,&Vcov,&A,&AI,NULL);
-  malloc_mats(*pg,*pg,&dVargam,&Vargam,&RobVargam,&tmpM2,&ZZ,&VarKorG,&ICGam,&CGam,&dCGam,&S,&ZZI,NULL); 
+  malloc_mats(*px,*px,&VarKorG,&Vcov,&A,&AI,NULL);
+  malloc_mats(*pg,*pg,&dVargam,&Vargam,&RobVargam,&tmpM2,&ZZ,&ICGam,&CGam,&dCGam,&S,&ZZI,NULL); 
   malloc_mats(*px,*pg,&XZAI,&tmpM3,&Ct,&dC,&XZ,&dM1M2,&M1M2t,NULL);
   malloc_mat(*px,*pg,tmpM4); 
   for (j=0;j<*Ntimes;j++) { malloc_mat(*pg,*px,Acorb[j]); 
@@ -402,7 +383,7 @@ int
   cu[0]=times[0]; vcu[0]=times[0];
 
   if (*sim==1) {
-    comptest(times,Ntimes,px,cu,robvcu,vcudif,antsim,test,idum,testOBS,Ut,simUt,W4t,weighted,antpers);
+    comptest(times,Ntimes,px,cu,robvcu,vcudif,antsim,test,testOBS,Ut,simUt,W4t,weighted,antpers);
   }
 
   free_mats(&ldesignX,&A,&AI,&cdesignX,&ldesignG,&cdesignG,

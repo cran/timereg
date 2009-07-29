@@ -9,7 +9,7 @@ int *coef,*nx,*p,*degree,*nb;
   matrix *mat1,*mat2,*I,*XWy,*Y,*sm1,*sm2,*sY,*RES;
   matrix *sm1sm2t; // not in original
   int med,j,k,s,count,starti=0,d;
-  double tukey(),x,w;
+  double x,w;
 
   malloc_mats(*nx,*degree+1,&mat1,&mat2,NULL);
   malloc_mats(*nx,*p-1,&Y,NULL);

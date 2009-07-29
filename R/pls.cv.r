@@ -47,11 +47,11 @@ trace = FALSE, plot.it = FALSE , se = TRUE, silent=1,
         datao=data.frame(tt=time2[omit],status=status[omit])
         nno<- length(omit); 
         if (npar==TRUE) 
-        outo<-aalen.test(Surv(tt,status)~const(Xo),data=datao,
-            max.time=max.time,start.time=start.time,n.sim=0,robust=0,silent=silent)
+        outo<-additive.compSs(Surv(tt,status)~const(Xo),data=datao,
+            max.time=max.time,start.time=start.time,silent=silent)
         else 
-        outo<-aalen.test(Surv(tt,status)~-1+Xo+const(Zo),data=datao,
-            max.time=max.time,start.time=start.time,n.sim=0,robust=0,silent=silent)
+        outo<-additive.compSs(Surv(tt,status)~-1+Xo+const(Zo),data=datao,
+            max.time=max.time,start.time=start.time,silent=silent)
         #print(outo$intZHZ); print(outo$intZHdN)
         pfit<-c()
         for (j in pls.dims)

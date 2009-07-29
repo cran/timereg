@@ -83,13 +83,12 @@ int *nx,*p,*antpers,*Ntimes,*sim,*retur,*rani,*antsim,*status,*id,*covariance,
 
   matrix *ldesignX, *QR, *R, *A, *AI, *Vcov;
   matrix *cumAt[*antclust];
-  vector  *vrisk,*diag,*dB,*dN,*VdB,*xi,*rowX,*rowcum,*difX,*ta,*vtmp;
+  vector  *vrisk,*diag,*dB,*dN,*VdB,*xi,*rowX,*rowcum,*difX,*vtmp;
   vector *cumhatA[*antclust],*cumA[*antclust],*cum;
   int ci,i,j,k,l,s,c,count,pers=0,*cluster=calloc(*antpers,sizeof(int));
   int var1,var2;
   double time,ahati,dt,tau,*vcudif=calloc((*Ntimes)*(*p+1),sizeof(double));
   double fabs(),sqrt();
-  void comptest();
   long idum; 
   
   *rani = -8021; idum=*rani; 
@@ -209,7 +208,7 @@ int *nx,*p,*antpers,*Ntimes,*sim,*retur,*rani,*antsim,*status,*id,*covariance,
   tau=time; 
 
   if (*sim==1) {
-    comptest(times,Ntimes,p,cu,robvcu,vcudif,antsim,test,idum,testOBS,Ut,simUt,cumAt,weighted,antclust);
+    comptest(times,Ntimes,p,cu,robvcu,vcudif,antsim,test,testOBS,Ut,simUt,cumAt,weighted,antclust);
   }
 
   cu[0]=times[0]; vcu[0]=times[0]; robvcu[0]=times[0]; 
@@ -237,7 +236,7 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*
   vector *W2[*antclust],*W3[*antclust];
   matrix *AIxit[*antpers]; 
   vector *VdB,*difX,*xi,*tmpv1,*tmpv2,*vrisk; 
-  vector *dA,*rowX,*dN,*AIXWdN,*ta,*bhatt,*pbhat,*plamt;
+  vector *dA,*rowX,*dN,*AIXWdN,*bhatt,*pbhat,*plamt;
   vector *korG,*pghat,*rowZ,*gam,*dgam,*ZHdN,*IZHdN,*zi;
   int ci,i,j,k,l,c,s,count,pers=0,pmax,stat,maxtime,
       *cluster=calloc(*antpers,sizeof(int)),
@@ -247,7 +246,6 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*
   double ahati,ghati,hati,tau,dMi;
   double *vcudif=calloc((*Ntimes)*(*px+1),sizeof(double)),
 	 *times=calloc(*Ntimes,sizeof(double));
-  void comptest(); 
   long idum; 
   idum=*rani; 
 
@@ -274,7 +272,7 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*
   malloc_vec(*pg,zi); malloc_vec(*pg,tmpv2); malloc_vec(*pg,rowZ);
   malloc_vec(*pg,gam); malloc_vec(*pg,dgam); malloc_vec(*pg,ZHdN);
   malloc_vec(*pg,IZHdN); malloc_vec(*antpers,dN); malloc_vec(*antpers,pbhat);
-  malloc_vec(*antpers,pghat); malloc_vec(*antpers,plamt); malloc_vec(*nb,ta);
+  malloc_vec(*antpers,pghat); malloc_vec(*antpers,plamt); 
   malloc_vec(*antpers,vrisk); 
 
   if (*robust==1) {
@@ -547,7 +545,7 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*
   cu[0]=times[0]; vcu[0]=times[0];
 
   if (*sim==1) {
-    comptest(times,Ntimes,px,cu,Robvcu,vcudif,antsim,test,idum,testOBS,Ut,simUt,W4t,weighted,antclust); 
+    comptest(times,Ntimes,px,cu,Robvcu,vcudif,antsim,test,testOBS,Ut,simUt,W4t,weighted,antclust); 
   }
 
   free_mat(Vcov); free_mat(X); free_mat(WX); free_mat(Z); free_mat(WZ); free_mat(A); 
@@ -563,7 +561,7 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*
   free_vec(dA); free_vec(tmpv1); free_vec(tmpv2); free_vec(difX); 
   free_vec(korG); free_vec(rowX); free_vec(AIXWdN); free_vec(bhatt); free_vec(zi); 
   free_vec(rowZ); free_vec(gam); free_vec(dgam); free_vec(ZHdN); free_vec(IZHdN); 
-  free_vec(dN); free_vec(pbhat); free_vec(pghat); free_vec(plamt); free_vec(ta); 
+  free_vec(dN); free_vec(pbhat); free_vec(pghat); free_vec(plamt); 
   free_vec(vrisk); 
   for (j=0;j<*Ntimes;j++) {
     free_mat(M1M2[j]);

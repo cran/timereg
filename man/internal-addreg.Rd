@@ -1,5 +1,6 @@
 \name{pval}
 \alias{pval}
+\alias{additive.compSs}
 \alias{CsmoothB}
 \alias{mypbc}
 \alias{Csmooth2B}

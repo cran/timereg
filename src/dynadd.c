@@ -22,9 +22,7 @@ int *sim,*antsim,*retur,*nxval,*nx,*px,*na,*pa,*antpers,*Ntimes,*mw,*rani,*statu
       *ps=calloc(1,sizeof(int)),*degree=calloc(1,sizeof(int));
   double time,dummy,zpers=0,dif,dtime,YoneN,kia;
   FILE *fp; int VERBOSE=0;
-  double tukey(); 
   double *vcudif=calloc((*Ntimes)*(*px+1),sizeof(double));
-  void comptest(),smoothB();
   long idum=*rani; 
   if (VERBOSE==1) fp=fopen("dump.dout","a");
 
@@ -159,7 +157,7 @@ int *sim,*antsim,*retur,*nxval,*nx,*px,*na,*pa,*antpers,*Ntimes,*mw,*rani,*statu
 
   /* ====================SIMULATIONS ============================= */
   if (*sim==1) {
-    comptest(times,Ntimes,px,cuf,robvcu,vcudif,antsim,test,idum,testOBS,Ut,simUt,cumBt,weighted,antpers); 
+    comptest(times,Ntimes,px,cuf,robvcu,vcudif,antsim,test,testOBS,Ut,simUt,cumBt,weighted,antpers); 
   } /* sim==1 */ 
 
   cu0[0]=times[0];vcu0[0]=times[0];robvcu[0]=times[0];cuf[0]=times[0];
@@ -477,7 +475,7 @@ int *naval,*nxval,*nx,*px,*na,*pa,*ng,*pg,*antpers,*Ntimes,*mw,
 
   /* =========================================================== */
   if (*sim==1) {
-    comptest(times,Ntimes,px,cu,robvcu,vcudif,antsim,test,idum,testOBS,Ut,simUt,W4t,weighted,antpers);
+    comptest(times,Ntimes,px,cu,robvcu,vcudif,antsim,test,testOBS,Ut,simUt,W4t,weighted,antpers);
   } /* sim==1 */ 
 
   /* Free memory ---------------------------------------------------- */
