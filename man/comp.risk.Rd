@@ -4,7 +4,7 @@
 \description{
 Fits a semiparametric model for the cause-specific quantities :
 \deqn{
-P(T < t, cause=1 | x,z) = P_1(t,x,z) = h( - g(t,x,z) )
+P(T < t, cause=1 | x,z) = P_1(t,x,z) = h(  g(t,x,z) )
 }
 for a known link-function \eqn{h()}
 and known prediction-function \eqn{g(t,x,z)}
@@ -13,7 +13,7 @@ competing causes of death.
 
 We consider the following models :  
 1) the additive model where
-\eqn{h(x)=1-\exp(x)} and 
+\eqn{h(x)=1-\exp(-x)} and 
 \deqn{
 g(t,x,z) = x^T A(t) + (diag(t^p) z)^T \beta
 }
@@ -33,7 +33,7 @@ g(t,x,z) = x^T A(t) + (diag(t^p) z)^T \beta
 }
 
 4) the "1-additive" model where
-\eqn{h(x)=\exp(x)} and 
+\eqn{h(x)=\exp(-x)} and 
 \deqn{
 g(t,x,z) = x^T A(t) + (diag(t^p) z)^T \beta
 }) 

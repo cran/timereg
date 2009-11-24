@@ -1,14 +1,14 @@
 prop<-function(x) x
 
 two.stage<-function(formula=formula(data),data=sys.parent(),
-beta=0,Nit=10,detail=0,start.time=0,max.time=NULL,id=NULL, 
+beta=0,Nit=60,detail=0,start.time=0,max.time=NULL,id=NULL, 
 clusters=NULL, robust=1,
-rate.sim=1,beta.fixed=0,theta=NULL,theta.des=NULL,var.link=0)
+rate.sim=1,beta.fixed=0,theta=NULL,theta.des=NULL,var.link=0,step=1)
 {
   ratesim<-rate.sim; inverse<-var.link
   call <- match.call()
   m <- match.call(expand=FALSE)
-  m$robust<-m$start.time<-m$beta<-m$Nit<-m$detail<-m$max.time<-m$clusters<-m$rate.sim<-m$beta.fixed<-m$theta<-m$theta.des<-m$var.link<-NULL
+  m$robust<-m$start.time<-m$beta<-m$Nit<-m$detail<-m$max.time<-m$clusters<-m$rate.sim<-m$beta.fixed<-m$theta<-m$theta.des<-m$var.link<-m$step<-NULL
 
   if (robust==0) cat("When robust=0 no variance estimate\n"); 
 
@@ -52,7 +52,8 @@ rate.sim=1,beta.fixed=0,theta=NULL,theta.des=NULL,var.link=0)
   ud<-two.stageBase.reg(times,ldata,X,Z,
                         status,id,clusters,Nit=Nit,detail=detail,beta=beta,
                         robust=robust,ratesim=ratesim,namesX=covnamesX,
-   namesZ=covnamesZ,beta.fixed=beta.fixed,theta=theta,theta.des=theta.des,inverse=var.link);
+   namesZ=covnamesZ,beta.fixed=beta.fixed,theta=theta,theta.des=theta.des,
+   inverse=var.link,step=step);
 
   if (px>0) {
     colnames(ud$cum)<-colnames(ud$var.cum)<- c("time",covnamesX)
@@ -62,7 +63,10 @@ rate.sim=1,beta.fixed=0,theta=NULL,theta.des=NULL,var.link=0)
   rownames(ud$score)<-c(covnamesZ); colnames(ud$score)<-"score"; 
 
   ptheta<-length(ud$theta); 
-  if (ptheta>1) rownames(ud$theta)<-colnames(theta.des) else rownames(ud$theta)<-"intercept"
+  if (ptheta>1) {
+                rownames(ud$theta)<-colnames(theta.des);
+                names(ud$theta.score)<-colnames(theta.des); } 
+ else { names(ud$theta.score)<- rownames(ud$theta)<-"intercept" } 
 
   attr(ud,"Call")<-sys.call(); 
   class(ud)<-"two.stage"
@@ -79,7 +83,7 @@ rate.sim=1,beta.fixed=0,theta=NULL,theta.des=NULL,var.link=0)
 two.stageBase.reg<-function (times, fdata, designX, designG, status,
 id, clusters, Nit = 5, beta = 0, detail = 0, robust = 1, 
 ratesim = 1, namesZ=NULL,namesX=NULL,beta.fixed=0,theta=NULL,
-theta.des=NULL,inverse=0) 
+theta.des=NULL,inverse=0,step=1) 
 {
     additive.resamp <-0; ridge <- 0; XligZ <- 0;
     Ntimes <- length(times)
@@ -107,6 +111,9 @@ theta.des=NULL,inverse=0)
     theta.score<-rep(0,ptheta);Stheta<-var.theta<-matrix(0,ptheta,ptheta); 
 
     cluster.size<-as.vector(table(clusters));
+    maxclust<-max(cluster.size)
+    idiclust<-matrix(0,fdata$antclust,maxclust); 
+    for (i in 1:fdata$antclust) { idiclust[i,]<- which( clusters %in% (i-1))-1 }
 
     #dyn.load("two-stage-reg.so"); 
 
@@ -123,7 +130,8 @@ theta.des=NULL,inverse=0)
         as.integer(fdata$antclust), as.integer(beta.fixed),
         as.double(theta),as.double(var.theta),as.double(theta.score),
         as.integer(inverse), as.integer(cluster.size), as.double(theta.des),
-        as.integer(ptheta), as.double(Stheta),PACKAGE = "timereg")
+        as.integer(ptheta), as.double(Stheta),as.double(step),
+        as.integer(idiclust),PACKAGE = "timereg")
 
     gamma <- matrix(nparout[[12]], pg, 1)
     cumint <- matrix(nparout[[14]], Ntimes, px + 1)
@@ -143,7 +151,7 @@ theta.des=NULL,inverse=0)
    ud <- list(cum = cumint, var.cum = vcum, robvar.cum = Rvcu, 
        gamma = gamma, var.gamma = Varbeta, robvar.gamma = RVarbeta, 
        D2linv = Iinv, score = score,  theta=theta,var.theta=var.theta,
-       S.theta=Stheta)
+       S.theta=Stheta,theta.score=theta.score)
    return(ud)
 }
 
@@ -159,6 +167,10 @@ prop<-function(x) x
     
   var.link<-attr(object,"var.link");
   cat("Dependence parameter for Clayton-Oakes-Glidden  model\n"); 
+
+  if (sum(abs(object$theta.score)>0.000001) ) 
+    cat("Variance parameters did not converge, allow more iterations\n\n"); 
+
   ptheta<-nrow(object$theta)
   sdtheta<-diag(object$var.theta)^.5
   if (var.link==0) {

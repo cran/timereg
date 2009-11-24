@@ -28,9 +28,9 @@ The modelling formula uses the standard survival modelling given in the
 \bold{survival} package.
 }
 \usage{
-two.stage(formula=formula(data),data=sys.parent(),beta=0,Nit=10,
+two.stage(formula=formula(data),data=sys.parent(),beta=0,Nit=60,
 detail=0,start.time=0,max.time=NULL,id=NULL,clusters=NULL,
-robust=1,rate.sim=1,beta.fixed=0,theta=NULL,theta.des=NULL,var.link=0)
+robust=1,rate.sim=1,beta.fixed=0,theta=NULL,theta.des=NULL,var.link=0,step=1)
 }
 \arguments{
 \item{formula}{
@@ -59,6 +59,7 @@ associate each record with the id of a subject.}
 is equivalent to just one theta and the design with only a baseline.}
 \item{var.link}{default "0" is that the regression design on the variances 
 is without a link, and "1" uses the link function exp. }
+\item{step}{step size for Newton-Raphson.}
 }
 \details{
 The data for a subject is presented as multiple rows or 'observations',
@@ -84,6 +85,7 @@ computed within the estimation interval.}
 \item{theta}{estimate of Gamma variance for frailty.}
 \item{var.theta}{estimate of variance of theta.}
 \item{S.theta}{estimate of derivative of score of theta.}
+\item{theta.score}{score for theta parameters.}
 }
 \references{
 Glidden (2000), A Two-Stage estimator of the dependence parameter

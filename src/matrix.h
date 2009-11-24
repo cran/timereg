@@ -209,3 +209,20 @@ void itfitsemi(double *times,int *Ntimes,double *x,int *delta,int *cause,double 
 	       int *CA,int *line,int *detail,double *biid,double *gamiid,int *resample,
 	       double *timepow,int *clusters,int *antclust);
 
+
+void LevenbergMarquardt(matrix *S,matrix *SI,vector *U,vector *delta,double *lm,double *step); 
+ 
+void readXt2(int *antpers,int *nx,int *p,double *designX,
+             double *start,double *stop,int *status,int pers,matrix *X,double time);
+
+void readXt(int *antpers,int *nx,int *p,double *designX,double *start,double *stop,
+	int *status,int pers,matrix *X,double time,int *clusters,int *cluster,int *id) ;
+
+void readXZt(int *antpers,int *nx,int *px,double *designX,int *pg,double *designG,
+		double *start,double *stop,int *status,int pers,matrix *X,
+		matrix *WX,matrix *Z,matrix *WZ,double time,int *clusters,
+		int *cluster,int *ls,int stat,int l,int *id,int s,int medw);
+
+void readXZtsimple(int *antpers,int *nx,int *px,double *designX,int *pg,double *designG,
+		double *start,double *stop,int *status,int pers,matrix *X,
+	       	matrix *Z,double time, int s, int *id); 

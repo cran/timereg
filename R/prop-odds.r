@@ -80,8 +80,8 @@ Ut<-matrix(0,Ntimes,pg+1); simUt<-matrix(0,antsim,pg);
 loglike<-0; 
 ########################################################################
 
-cat("Proportional odds model \n"); 
-#dyn.load("Gprop-odds.so")
+###cat("Proportional odds model \n"); 
+###dyn.load("Gprop-odds.so")
 
 nparout<- .C("transsurv",
 as.double(times),as.integer(Ntimes),as.double(desX),

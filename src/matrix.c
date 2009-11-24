@@ -1424,3 +1424,111 @@ void replace_col(matrix *M, int col_to_set, vector *v){
   }
   
 }
+
+
+void LevenbergMarquardt(matrix *S,matrix *SI,vector *U,vector *delta,double *lm,double *step)
+{ // {{{
+  int i,nrow;
+  double x=0,ss=0;
+  matrix *S2; 
+
+  if(!(length_vector(U) == nrow_matrix(S))){ oops("Error: LM : S and U not consistent\n"); }
+  if(!(length_vector(U) == length_vector(delta))){ 
+       oops("Error: LM : delta and U not consistent\n"); }
+
+  nrow=length_vector(delta); 
+  malloc_mat(nrow,nrow,S2); 
+  for (i=0;i<nrow;i++) ss=ss+VE(U,i)*VE(U,i);
+
+  mat_copy(S,S2); 
+
+  if  (ss> 5/(*step)) {
+     MxA(S,S,S2);
+     x=1;
+     for (i=0;i<nrow;i++) ME(S2,i,i)=ME(S2,i,i)+x*VE(U,i)*VE(U,i);
+     invert(S2,SI); MxA(SI,S,S2); Mv(S2,U,delta);
+  } else {
+    invert(S2,SI); Mv(SI,U,delta);
+  }
+  if  (*step>0.0001) scl_vec_mult(*step,delta,delta); 
+  free(S2); 
+} // }}}
+
+void readXt2(int *antpers,int *nx,int *p,double *designX,
+             double *start,double *stop,int *status,int pers,matrix *X,double time)  
+{ // {{{
+  int j,c,count;
+
+   for (c=0,count=0;((c<*nx) && (count!=*antpers));c++)
+   {
+	if ((start[c]<time) && (stop[c]>=time)) {
+	  for(j=0;j<*p;j++){ ME(X,count,j) = designX[j*(*nx)+c]; }
+	  if (time==stop[c] && status[c]==1) { pers=count; }
+	  count=count+1; 
+        } 
+   }
+} // }}}
+
+void readXt(int *antpers,int *nx,int *p,double *designX,double *start,double *stop,int *status,int pers,matrix *X,double time,int *clusters,int *cluster,int *id) 
+{ // {{{
+  int j,c,count;
+
+for (c=0,count=0;((c<*nx) && (count!=*antpers));c++){
+      if ((start[c]<time) && (stop[c]>=time)) {
+	for(j=0;j<*p;j++) {
+	  ME(X,id[c],j) = designX[j*(*nx)+c]; }
+	  cluster[id[c]]=clusters[c]; 
+	if (time==stop[c] && status[c]==1) { pers=id[c]; }
+	count=count+1; } 
+    }
+} // }}}
+
+void readXZt(int *antpers,int *nx,int *px,double *designX,int *pg,double *designG,
+		double *start,double *stop,int *status,int pers,matrix *X,
+		matrix *WX,matrix *Z,matrix *WZ,double time,int *clusters,
+		int *cluster,int *ls,int stat,int l,int *id,int s,int medw)  
+{ // {{{ 
+int j,c,count,pmax;
+
+pmax=max(*pg,*px); 
+
+for (c=0,count=0;((c<*nx) && (count!=*antpers));c++) {
+	if ((start[c]<time) && (stop[c]>=time)) {
+	  cluster[id[c]]=clusters[c]; 
+	  for(j=0;j<pmax;j++) {
+	    if (j<*px) { ME(X,id[c],j)=designX[j*(*nx)+c]; }
+	    if (medw==1) { if (j<*px) { ME(WX,id[c],j) =designX[j*(*nx)+c]; }}
+	    if (j<*pg) { ME(Z,id[c],j)=designG[j*(*nx)+c]; }
+	    if (medw==1) {if (j<*pg) { ME(WZ,id[c],j)=designG[j*(*nx)+c]; } }
+	  }
+	  if (time==stop[c] && status[c]==1) {
+	    pers=id[c];stat=1;l=l+1; ls[l]=s;
+	  }
+	  count=count+1; 
+	}
+      }
+
+} // }}}
+
+void readXZtsimple(int *antpers,int *nx,int *px,double *designX,int *pg,double *designG,
+		double *start,double *stop,int *status,int pers,matrix *X,
+	       	matrix *Z,double time, int s,int *id)  
+{ // {{{ 
+int j,c,count,pmax;
+
+pmax=max(*pg,*px); 
+
+for (c=0,count=0;((c<*nx) && (count!=*antpers));c++) {
+	if ((start[c]<time) && (stop[c]>=time)) {
+	 // cluster[id[c]]=clusters[c]; 
+	  for(j=0;j<pmax;j++) {
+	    if (j<*px) { ME(X,id[c],j)=designX[j*(*nx)+c]; }
+	    if (j<*pg) { ME(Z,id[c],j)=designG[j*(*nx)+c]; }
+	  }
+	  if (time==stop[c] && status[c]==1) { pers=id[c]; }
+	  count=count+1; 
+	}
+      }
+
+} // }}}
+

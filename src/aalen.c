@@ -9,7 +9,7 @@ int *nx,*p,*antpers,*Ntimes,*status;
 {
   matrix *ldesignX, *A, *AI;
   vector *dB, *VdB, *tmpv, *xi;
-  int j,k,s,c,count,pers;
+  int j,k,s,c,count,pers=0;
   double time; 
 
   malloc_mat(*antpers,*p,ldesignX);
@@ -22,30 +22,24 @@ int *nx,*p,*antpers,*Ntimes,*status;
   malloc_vec(*p,tmpv);
 
   for (s=1;s<*Ntimes;s++){
-    time=times[s]; 
-    mat_zeros(ldesignX);
+    time=times[s]; mat_zeros(ldesignX);
 
     for (c=0,count=0;((c<*nx) && (count!=*antpers));c++)
-      {
+    {
 	if ((start[c]<time) && (stop[c]>=time)) {
-	  for(j=0;j<*p;j++){
-	    ME(ldesignX,count,j) = designX[j*(*nx)+c];
-	  }
+	  for(j=0;j<*p;j++){ ME(ldesignX,count,j) = designX[j*(*nx)+c]; }
 	  if (time==stop[c] && status[c]==1) {
-	    pers=count;
-	    for(j=0;j<*p;j++) {
-	      VE(xi,j)=designX[j*(*nx)+c];
-	    }
+	    pers=count; for(j=0;j<*p;j++) { VE(xi,j)=designX[j*(*nx)+c]; }
 	  }
 	  count=count+1; 
 	} 
-      }
+    }
+    //readXt2(antpers,nx,p,designX,start,stop,status,pers,ldesignX,time); 
 
-    MtM(ldesignX,A); // this replaces this function
-    invert(A,AI); // this replaces this function
+    extract_row(ldesignX,pers,xi); 
+    MtM(ldesignX,A); invert(A,AI); 
       
-    Mv(AI,xi,dB); // This replaces this function
-    vec_star(dB,dB,VdB); // This replaces this function
+    Mv(AI,xi,dB); vec_star(dB,dB,VdB); 
       
     if (vec_sum(dB)==0.0){
       printf("Aalen:Singular matrix for time=%lf \n",time); 
@@ -58,18 +52,10 @@ int *nx,*p,*antpers,*Ntimes,*status;
       vcu[k*(*Ntimes)+s]=vcu[k*(*Ntimes)+s-1]+VE(VdB,k-1);
     }
   }
-  cu[0]=times[0]; 
-  vcu[0]=times[0]; 
+  cu[0]=times[0]; vcu[0]=times[0]; 
 
-  free_vec(dB);
-  free_vec(VdB);
-  free_mat(ldesignX);
-
-  free_mat(A);
-  free_mat(AI);
-  free_vec(xi);
-  free_vec(tmpv);
-  
+  free_vec(dB); free_vec(VdB); free_mat(ldesignX);
+  free_mat(A); free_mat(AI); free_vec(xi); free_vec(tmpv);
 }
 
 void robaalen(times,Ntimes,designX,nx,p,antpers,start,stop,cu,vcu,
@@ -83,7 +69,7 @@ int *nx,*p,*antpers,*Ntimes,*sim,*retur,*rani,*antsim,*status,*id,*covariance,
 
   matrix *ldesignX, *QR, *R, *A, *AI, *Vcov;
   matrix *cumAt[*antclust];
-  vector  *vrisk,*diag,*dB,*dN,*VdB,*xi,*rowX,*rowcum,*difX,*vtmp;
+  vector  *diag,*dB,*dN,*VdB,*xi,*rowX,*rowcum,*difX,*vtmp;
   vector *cumhatA[*antclust],*cumA[*antclust],*cum;
   int ci,i,j,k,l,s,c,count,pers=0,*cluster=calloc(*antpers,sizeof(int));
   int var1,var2;
@@ -107,7 +93,6 @@ int *nx,*p,*antpers,*Ntimes,*sim,*retur,*rani,*antsim,*status,*id,*covariance,
 
   malloc_vec(*p,diag); malloc_vec(*p,dB); malloc_vec(*p,VdB); malloc_vec(*p,xi);
   malloc_vec(*p,rowX); malloc_vec(*p,rowcum); malloc_vec(*p,difX); malloc_vec(*p,vtmp);
-  malloc_vec(*antpers,vrisk); 
 
   for (j=0;j<*antpers;j++) cluster[j]=0;
 
@@ -117,19 +102,17 @@ int *nx,*p,*antpers,*Ntimes,*sim,*retur,*rani,*antsim,*status,*id,*covariance,
 
   for (s=1;s<*Ntimes;s++){
     time=times[s]; mat_zeros(ldesignX); 
-    vec_zeros(vrisk); 
 
     for (c=0,count=0;((c<*nx) && (count!=*antpers));c++){
       if ((start[c]<time) && (stop[c]>=time)) {
 	for(j=0;j<*p;j++) {
 	  ME(ldesignX,id[c],j) = designX[j*(*nx)+c]; }
 	  cluster[id[c]]=clusters[c]; 
-	  VE(vrisk,id[c])=1.0; 
 	if (time==stop[c] && status[c]==1) { pers=id[c]; }
 	count=count+1; } 
     }
     
-    /*if (count!=*antpers) printf("Design %ld %ld  \n",*antpers,count);*/
+// readXt(antpers,nx,p,designX,start,stop,status,pers,ldesignX,time,clusters,cluster,id);
 
     MtM(ldesignX,A); 
     invertS(A,AI,silent[0]); 
@@ -214,7 +197,7 @@ int *nx,*p,*antpers,*Ntimes,*sim,*retur,*rani,*antsim,*status,*id,*covariance,
   cu[0]=times[0]; vcu[0]=times[0]; robvcu[0]=times[0]; 
   free_vec(xi); free_vec(rowX); free_vec(diag); free_vec(dB); free_vec(VdB);
   free_vec(rowcum); free_vec(cum); free_vec(vtmp); free_mat(Vcov);
-  free_mat(ldesignX); free_mat(QR);free_vec(vrisk); 
+  free_mat(ldesignX); free_mat(QR);
 
   if (*robust==1){
     for (i=0;i<*antclust;i++) {
@@ -235,13 +218,12 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*
   matrix *W3t[*antclust],*W4t[*antclust];
   vector *W2[*antclust],*W3[*antclust];
   matrix *AIxit[*antpers]; 
-  vector *VdB,*difX,*xi,*tmpv1,*tmpv2,*vrisk; 
+  vector *VdB,*difX,*xi,*tmpv1,*tmpv2; 
   vector *dA,*rowX,*dN,*AIXWdN,*bhatt,*pbhat,*plamt;
   vector *korG,*pghat,*rowZ,*gam,*dgam,*ZHdN,*IZHdN,*zi;
   int ci,i,j,k,l,c,s,count,pers=0,pmax,stat,maxtime,
       *cluster=calloc(*antpers,sizeof(int)),
-      *ls=calloc(*Ntimes,sizeof(int)),
-      *ipers=calloc(*Ntimes,sizeof(int));
+      *ls=calloc(*Ntimes,sizeof(int)); 
   double time,dtime,dtime1,fabs(),sqrt();
   double ahati,ghati,hati,tau,dMi;
   double *vcudif=calloc((*Ntimes)*(*px+1),sizeof(double)),
@@ -273,7 +255,6 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*
   malloc_vec(*pg,gam); malloc_vec(*pg,dgam); malloc_vec(*pg,ZHdN);
   malloc_vec(*pg,IZHdN); malloc_vec(*antpers,dN); malloc_vec(*antpers,pbhat);
   malloc_vec(*antpers,pghat); malloc_vec(*antpers,plamt); 
-  malloc_vec(*antpers,vrisk); 
 
   if (*robust==1) {
 	  for (j=0;j<*antclust;j++) { malloc_mat(*Ntimes,*px,W3t[j]);
@@ -294,6 +275,7 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*
       time=alltimes[s]; dtime=time-alltimes[s-1]; 
       mat_zeros(X); mat_zeros(Z); mat_zeros(WX); mat_zeros(WZ);
       stat=0;  
+
       for (c=0,count=0;((c<*nx) && (count!=*antpers));c++) {
 	if ((start[c]<time) && (stop[c]>=time)) {
 	  for(j=0;j<pmax;j++) {
@@ -303,19 +285,21 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*
 	    if (j<*pg) { ME(WZ,id[c],j)=designG[j*(*ng)+c]; } 
 	  }
 	  if (time==stop[c] && status[c]==1) {
-	    pers=id[c];stat=1;l=l+1;ipers[l]=pers; ls[l]=s;
+	    pers=id[c];stat=1;l=l+1; ls[l]=s;
 	  }
 	  count=count+1; 
 	}
       }
       
+
+//readXZt(antpers,nx,px,designX,pg,designG,start,stop,status,pers,X,WX,Z,WZ,time,
+//	clusters,cluster,ls,stat,l,id,s,1);
+
       MtA(X, WX,A); invertS(A,AI,silent[0]);
       if (ME(AI,0,0)==0.0 && *silent==0){ 
 	printf(" X'X not invertible at time %lf \n",time);
       }
-      MtA(Z, WZ,ZWZ);
-      MtA(X,WZ,XWZ);
-      MxA(AI,XWZ,XWZAI);
+      MtA(Z, WZ,ZWZ); MtA(X,WZ,XWZ); MxA(AI,XWZ,XWZAI);
       MtA(XWZAI,XWZ,tmpM2);
       mat_subtr(ZWZ,tmpM2,dCGam);
       scl_mat_mult(dtime,dCGam,dCGam);
@@ -373,17 +357,19 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*
   for (s=1;s<*Nalltimes;s++) {
     time=alltimes[s]; vec_zeros(dN); dtime=time-alltimes[s-1]; 
     mat_zeros(X); mat_zeros(Z); mat_zeros(WX); mat_zeros(WZ);
-    vec_zeros(vrisk); 
     stat=0; dMi=0; 
+
+//    readXZt(antpers,nx,px,designX,pg,designG,start,stop,status,pers,X,WX,Z,WZ,time,
+//	clusters,cluster,ls,stat,l,id,s,0);
+
     for (c=0,count=0;((c<*nx) && (count!=*antpers));c++) {
 	if ((start[c]<time) && (stop[c]>=time)) {
 	  cluster[id[c]]=clusters[c]; 
-	  VE(vrisk,id[c])=1.0; 
 	  for(j=0;j<pmax;j++) {
 	    if (j<*px){ ME(X,id[c],j)=designX[j*(*nx)+c]; }
 	    if (j<*pg){ ME(Z,id[c],j)=designG[j*(*ng)+c]; }  
 	  }
-	  if (time==stop[c] && status[c]==1) {pers=id[c];stat=1;l=l+1;dMi=0;ghati=0;} 
+	  if (time==stop[c] && status[c]==1) {pers=id[c];stat=1;l=l+1;} 
 	  count=count+1; }
       }
 
@@ -549,37 +535,21 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*
   }
 
   free_mat(Vcov); free_mat(X); free_mat(WX); free_mat(Z); free_mat(WZ); free_mat(A); 
-  free_mat(AI); free_mat(ZWZ); free_mat(VarKorG); free_mat(Vargam); free_mat(dVargam); 
-  free_mat(ICGam); free_mat(CGam); free_mat(dCGam);
-  free_mat(M1M2t); 
-  free_mat(dM1M2); 
-  free_mat(Ct); 
-  free_mat(AIXW); 
-  free_mat(ZH); 
+  free_mat(AI); free_mat(ZWZ); free_mat(VarKorG);free_mat(Vargam);free_mat(dVargam); 
+  free_mat(ICGam); free_mat(CGam); free_mat(dCGam); free_mat(M1M2t); 
+  free_mat(dM1M2); free_mat(Ct); free_mat(AIXW); free_mat(ZH); 
   free_mat(dC); free_mat(XWZ); free_mat(XWZAI); free_mat(GCdM1M2); 
   free_mat(tmpM2); free_mat(tmpM3); free_mat(tmpM4);
   free_vec(dA); free_vec(tmpv1); free_vec(tmpv2); free_vec(difX); 
   free_vec(korG); free_vec(rowX); free_vec(AIXWdN); free_vec(bhatt); free_vec(zi); 
   free_vec(rowZ); free_vec(gam); free_vec(dgam); free_vec(ZHdN); free_vec(IZHdN); 
   free_vec(dN); free_vec(pbhat); free_vec(pghat); free_vec(plamt); 
-  free_vec(vrisk); 
-  for (j=0;j<*Ntimes;j++) {
-    free_mat(M1M2[j]);
-  }
-  for (j=0;j<*Nalltimes;j++) {
-    free_mat(Acorb[j]);
-    free_mat(C[j]);
-  }
+  for (j=0;j<*Ntimes;j++) { free_mat(M1M2[j]); }
+  for (j=0;j<*Nalltimes;j++) { free_mat(Acorb[j]); free_mat(C[j]); }
   if (*robust==1) { 
-    for (j=0;j<*antpers;j++) {
-      free_mat(AIxit[j]);
-    }
+    for (j=0;j<*antpers;j++) { free_mat(AIxit[j]); }
     for (j=0;j<*antclust;j++) { 
-      free_mat(W3t[j]);
-      free_mat(W4t[j]);
-      free_vec(W2[j]);
-      free_vec(W3[j]);
-    } 
+      free_mat(W3t[j]); free_mat(W4t[j]); free_vec(W2[j]); free_vec(W3[j]); } 
   }
-  free(vcudif); free(times); free(cluster); free(ls); free(ipers); 
+  free(vcudif); free(times); free(cluster); free(ls); 
 }

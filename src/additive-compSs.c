@@ -96,13 +96,13 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*ng,*pg,*status,*deltaweight,*id,*silent
        for(j=0;j<*pg;j++) intZHZ[k*(*pg)+j]=ME(CGam,k,j); 
     }
 
-    /*
-  free_mats(&tmpM2,&X,&A,&AI,&ZWZ,&ICGam,&CGam,&dCGam,&Ct,
-		&AIXW,&XWZ,&XWZAI,&tmpM4,NULL); // removed &C from the list
-  free_vecs(&PLScomp,&Xi,&dA,&tmpv1,&tmpv2,&korG,&rowX,&AIXWdN,&zi,&rowZ,&gam,&ZHdN,&IZHdN,NULL);
 
+
+  free_mats(&X,&A,&AI,&AIXW,&tmpM2,&ZWZ,&ICGam,&CGam,&dCGam, 
+		  &Ct,&XWZ,&XWZAI, &tmpM4,NULL); 
+  free_vecs(&dA,&xi,&tmpv1,&korG,&rowX,&AIXWdN,&zi,&tmpv2,&rowZ,&gam,
+		  &ZHdN,&IZHdN,&PLScomp,&Xi,NULL);
   free(ipers); free(ls); 
-  */
 } // }}}
 
 void compSsrev(alltimes,Nalltimes,Ntimes,designX,nx,px,designG,ng,pg,antpers,start,stop,id,status,deltaweight,intZHZ,intZHdN,silent)
@@ -232,13 +232,12 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*ng,*pg,*status,*deltaweight,*id,*silent
        for(j=0;j<*pg;j++) intZHZ[k*(*pg)+j]=ME(CGam,k,j); 
     }
 
-    /*
-  free_mats(&tmpM2,&X,&A,&AI,&ZWZ,&ICGam,&CGam,&dCGam,&Ct,
-		&AIXW,&XWZ,&XWZAI,&tmpM4,NULL); // removed &C from the list
-  free_vecs(&PLScomp,&Xi,&dA,&tmpv1,&tmpv2,&korG,&rowX,&AIXWdN,&zi,&rowZ,&gam,&ZHdN,&IZHdN,NULL);
 
+  free_mats(&X,&A,&AI,&AIXW,&tmpM2,&ZWZ,&ICGam,&CGam,&dCGam, 
+		  &Ct,&XWZ,&XWZAI, &tmpM4,NULL); 
+  free_vecs(&dA,&xi,&tmpv1,&korG,&rowX,&AIXWdN,&zi,&tmpv2,&rowZ,&gam,
+		  &ZHdN,&IZHdN,&PLScomp,&Xi,NULL);
   free(ipers); free(ls); 
-  */
 } // }}}
 
 void compSsfix(alltimes,Nalltimes,Ntimes,designX,nx,px,designG,ng,pg,antpers,start,stop,id,status,deltaweight,intZHZ,intZHdN,silent)
@@ -367,13 +366,12 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*ng,*pg,*status,*deltaweight,*id,*silent
        for(j=0;j<*pg;j++) intZHZ[k*(*pg)+j]=ME(CGam,k,j); 
     }
 
-    /*
-  free_mats(&tmpM2,&X,&A,&AI,&ZWZ,&ICGam,&CGam,&dCGam,&Ct,
-		&AIXW,&XWZ,&XWZAI,&tmpM4,NULL); // removed &C from the list
-  free_vecs(&PLScomp,&Xi,&dA,&tmpv1,&tmpv2,&korG,&rowX,&AIXWdN,&zi,&rowZ,&gam,&ZHdN,&IZHdN,NULL);
 
+ free_mats(&X,&A,&AI,&AIXW,&tmpM2,&ZWZ,&ICGam,&CGam,&dCGam, 
+		  &Ct,&XWZ,&XWZAI, &tmpM4,NULL); 
+  free_vecs(&dA,&xi,&tmpv1,&korG,&rowX,&AIXWdN,&zi,&tmpv2,&rowZ,&gam,
+		  &ZHdN,&IZHdN,&PLScomp,&Xi,NULL);
   free(ipers); free(ls); 
-  */
 } // }}}
 
 
@@ -499,13 +497,11 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*ng,*pg,*status,*deltaweight,*id,*silent
        for(j=0;j<*pg;j++) intZHZ[k*(*pg)+j]=ME(CGam,k,j); 
     }
 
-    /*
-  free_mats(&tmpM2,&X,&A,&AI,&ZWZ,&ICGam,&CGam,&dCGam,&Ct,
-		&AIXW,&XWZ,&XWZAI,&tmpM4,NULL); // removed &C from the list
-  free_vecs(&PLScomp,&Xi,&dA,&tmpv1,&tmpv2,&korG,&rowX,&AIXWdN,&zi,&rowZ,&gam,&ZHdN,&IZHdN,NULL);
-
+  free_mats(&X,&A,&AI,&AIXW,&tmpM2,&ZWZ,&ICGam,&CGam,&dCGam, 
+		  &Ct,&XWZ,&XWZAI, &tmpM4,NULL); 
+  free_vecs(&dA,&xi,&tmpv1,&korG,&rowX,&AIXWdN,&zi,&tmpv2,&rowZ,&gam,
+		  &ZHdN,&IZHdN,&PLScomp,&Xi,NULL);
   free(ipers); free(ls); 
-  */
 } // }}}
 
 

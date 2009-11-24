@@ -8,10 +8,10 @@ antpers,start,stop, betaS,Nit,cu,
 vcu,Iinv,Vbeta, detail,Rvcu,RVbeta,
 id,status, ratesim, score, robust, clusters,
 antclust,betafixed, theta, vartheta,thetascore, inverse,
-clustsize,desthetaI, ptheta,SthetaI)
-double *designX,*designG,*times,*betaS,*start,*stop,*cu,*Vbeta,*RVbeta,*vcu,*Rvcu,*Iinv,*score,*theta,*vartheta,*thetascore,*desthetaI,*SthetaI;
+clustsize,desthetaI, ptheta,SthetaI,step,idiclust)
+double *designX,*designG,*times,*betaS,*start,*stop,*cu,*Vbeta,*RVbeta,*vcu,*Rvcu,*Iinv,*score,*theta,*vartheta,*thetascore,*desthetaI,*SthetaI,*step;
 int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,*ratesim,*robust,
-*clusters,*antclust,*betafixed,*inverse,*clustsize,*ptheta;
+*clusters,*antclust,*betafixed,*inverse,*clustsize,*ptheta,*idiclust;
 {
   matrix *ldesignX,*ldesG0,*ldesignG,*cdesX,*cdesX2,*cdesX3,*CtVUCt,*A,*AI;
   matrix *Vcov,*dYI,*Ct,*dM1M2,*M1M2t,*COV,*ZX,*ZP,*ZPX; 
@@ -27,7 +27,7 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,*ratesim,*robust,
   vector *W2[*antclust],*W3[*antclust],*reszpbeta,*res1dim,*dAt[*Ntimes]; 
   vector *vthetascore,*vtheta1,*vtheta2,*dtheta,*thetaiid[*antclust]; 
   vector *dAiid[*antclust]; 
-  int c,pers=0,i,j,k,l,s,it,count,sing,pmax,
+  int c,pers=0,i,j,k,l,s,it,count,sing,pmax,v,
       *cluster=calloc(*antpers,sizeof(int));
   double *Nt=calloc(*antclust,sizeof(double)),dtime,time,dummy,ll,lle,llo;
   double tau,hati,scale,sumscore=999,*Nti=calloc(*antpers,sizeof(double)), theta0=0;
@@ -37,7 +37,7 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,*ratesim,*robust,
 	 *H2eH=calloc(*antclust,sizeof(double)),
 	 *Rtheta=calloc(*antclust,sizeof(double)),
          *Hik=calloc(*antpers,sizeof(double)),
-	 Dthetanu=1,DDthetanu=1,nu=1; 
+	 Dthetanu=1,DDthetanu=1; 
   int *ipers=calloc(*Ntimes,sizeof(int));
 
 
@@ -82,7 +82,7 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,*ratesim,*robust,
   for(j=0;j<*pg;j++) VE(beta,j)=betaS[j]; 
   for(j=0;j<*antpers;j++) {Hik[j]=0; VE(one,j)=1; VE(weight,j)=1; VE(offset,j)=1;} 
 
-  for (it=0;it<*Nit;it++)
+  for (it=0;it<*Nit;it++) // {{{ cox aalen it
     {
       vec_zeros(U); mat_zeros(S1);  sumscore=0;   
       for (s=1;s<*Ntimes;s++)
@@ -117,8 +117,7 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,*ratesim,*robust,
 	  scale=VE(weight,pers); 
 
 	  MtA(cdesX,ldesignX,A); invert(A,AI); 
-	  if (ME(AI,0,0)==0)
-	    printf(" X'X not invertible at time %lf \n",time);
+	  if (ME(AI,0,0)==0) printf(" X'X not invertible at time %lf \n",time);
 
 	  extract_row(ldesignX,pers,xi); scl_vec_mult(scale,xi,xi); 
 	  Mv(AI,xi,dA); MtA(ldesignG,cdesX,ZX); 
@@ -170,8 +169,8 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,*ratesim,*robust,
 	    }
 	    Nti[pers]=Nti[pers]+1; 
 
-	    for (j=0;j<*antclust;j++) {
-	      for (i=0;i<*antpers;i++)  if (cluster[i]==j) Nt[j]=Nt[j]+(i==pers); }
+	    for (i=0;i<*antpers;i++) {
+	      j=cluster[i]; Nt[j]=Nt[j]+(i==pers); }
 
 	  } /* it==*Nit-1 */ 
 	} /* Ntimes */ 
@@ -186,24 +185,26 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,*ratesim,*robust,
 
       for (k=0;k<*pg;k++) sumscore= sumscore+VE(U,k); 
 
-      if ((fabs(sumscore)<0.0000000001) & (it<*Nit-2)) it=*Nit-2; 
+      if ((fabs(sumscore)<0.0000000001) & (it<*Nit-1)) it=*Nit-2; 
       }
-    } /* it */
+    } /* it */ // }}}
+
   for (k=0;k<*pg;k++) score[k]=VE(U,k); 
 
-  for (j=0;j<*antclust;j++) 
-    {
-      for (i=0;i<*antpers;i++) if (cluster[i]==j)  {
-	NH[j]=NH[j]+Nti[i]*Hik[i]; 
-	extract_row(ldesG0,i,zi); extract_row(cdesX2,i,xi);
-	vec_add_mult(dbetaNH[j],zi,Nti[i]*Hik[i],dbetaNH[j]);  
-	vec_add_mult(dANH[j],xi,Nti[i]*Hik[i],dANH[j]);  }
+
+  for (i=0;i<*antpers;i++) 
+  {
+      j=cluster[i]; 
+      // for (i=0;i<*antpers;i++) if (cluster[i]==j)  { }
+      NH[j]=NH[j]+Nti[i]*Hik[i]; 
+      extract_row(ldesG0,i,zi); extract_row(cdesX2,i,xi);
+      vec_add_mult(dbetaNH[j],zi,Nti[i]*Hik[i],dbetaNH[j]);  
+      vec_add_mult(dANH[j],xi,Nti[i]*Hik[i],dANH[j]);  
       if (*betafixed==1) vec_zeros(dbetaNH[j]);  
-    }
+  }
 
   lle=0; llo=0;
-  /*=======================================================================*/
-  for (s=1;s<*Ntimes;s++) 
+  for (s=1;s<*Ntimes;s++)  // /* terms for robust variance   */  // {{{ 
     {
       time=times[s]; vec_zeros(dN);dtime=time-times[s-1]; 
       cu[s]=times[s]; vcu[s]=times[s]; Rvcu[s]=times[s]; 
@@ -226,11 +227,10 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,*ratesim,*robust,
 	  dummy=exp(VE(Gbeta,j))*VE(weight,j); 
 	  scl_vec_mult(dummy,xi,xtilde); replace_row(cdesX,j,xtilde); }
 
-      /* terms for robust variance   */ 
       if (*robust==1) {
-	for (j=0;j<*antclust;j++) 
-	  {
-	    for (i=0;i<*antpers;i++) if (cluster[i]==j)  {
+	for (i=0;i<*antpers;i++) 
+	{
+	  j=cluster[i]; 
 
 	      extract_row(cdesX,i,rowX); scl_vec_mult(1/VE(weight,i),rowX,rowX); 
 	      extract_row(ldesignG,i,zi); extract_row(ldesignX,i,xi); 
@@ -250,13 +250,11 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,*ratesim,*robust,
 
 	      if (*ratesim==1) {scl_vec_mult(hati,rowX,rowX); vec_subtr(W3[j],rowX,W3[j]);}
 
-	    } /* i if cluste==j */
 	    replace_row(W2t[j],s,W2[j]); 
 	    replace_row(W3t[j],s,W3[j]);  
 
 	  } /* j and i=1..antclust */ 
       }
-
 
       /* MG baseret varians beregning */
       MxA(C[s],VU,tmp3); MAt(tmp3,C[s],CtVUCt);
@@ -267,12 +265,11 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,*ratesim,*robust,
 	  +2*ME(COV,k-1,k-1); }
 
       /* */
-    } /* s=1 ..Ntimes */ 
+    } /* s=1 ..Ntimes */  // }}}
+
   ll=lle-llo; /* likelihood beregnes */
 
-  /* ROBUST VARIANCES   */
-  if (*robust==1)
-    {
+  if (*robust==1) { // {{{ /* ROBUST VARIANCES   */
       for (s=1;s<*Ntimes;s++) {
 	vec_zeros(VdB); mat_zeros(Vcov);vec_zeros(zi); 
 	for (j=0;j<*antclust;j++) {
@@ -296,28 +293,32 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,*ratesim,*robust,
 
       }  /*  s=1 ..Ntimes */ 
       /* MxA(RobVbeta,SI,tmp1); MxA(SI,tmp1,RobVbeta); */ 
-    } /* if robust==1 */ 
+    } /* if robust==1 */  // }}}
 
   for(j=0;j<*pg;j++) { betaS[j]= VE(beta,j); 
     for (k=0;k<*pg;k++){ Iinv[k*(*pg)+j]=ME(SI,j,k);
       Vbeta[k*(*pg)+j]=-ME(VU,j,k); 
       RVbeta[k*(*pg)+j]=-ME(RobVbeta,j,k); } } 
 
+if (*detail==1) {
+printf(" Cox-Aalen fit \n"); 
+printf(" beta : \n"); print_vec(beta); 
+printf(" var(beta) : \n"); print_mat(RobVbeta); 
+}
 
   /*===================Estimates theta, two stage approach of glidden ==== */
   for (i=0;i<*ptheta;i++) VE(vtheta1,i)=theta[i]; 
 
-  for (it=0;it<*Nit;it++)
-    {
+  for (it=0;it<*Nit;it++) // {{{ frailty parameter Newton-Raphson
+  {
       for (j=0;j<*antclust;j++) {Rtheta[j]=1; HeH[j]=0;H2eH[j]=0;}
 
       vec_zeros(vthetascore); mat_zeros(d2Utheta); 
       Mv(destheta,vtheta1,lamtt); 
 
-
-      for (j=0;j<*antclust;j++) 
-	if (clustsize[j]>=2) {
-	  for (i=0;i<*antpers;i++) if (cluster[i]==j)  {
+      for (j=0;j<*antclust;j++) if (clustsize[j]>=2) {
+      for (k=0;k<clustsize[j];k++) {
+	   i= idiclust[k*(*antclust)+j]; 
 	    theta0=VE(lamtt,i); 
             if (*inverse==1) theta0=exp(theta0); 
 	    Rtheta[j]=Rtheta[j]+exp(theta0*Hik[i])-1; 
@@ -325,23 +326,22 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,*ratesim,*robust,
 	    H2eH[j]=H2eH[j]+pow(Hik[i],2)*exp(theta0*Hik[i]); } }
 	
 
-      for (j=0;j<*antclust;j++)  
-	if (clustsize[j]>=2) {
+      for (j=0;j<*antclust;j++)  if (clustsize[j]>=2) {
+         for (k=0;k<clustsize[j];k++) {
+	      i= idiclust[k*(*antclust)+j]; 
+              extract_row(destheta,i,vtheta2); theta0=VE(lamtt,i); 
+              if (*inverse==1){theta0=exp(VE(lamtt,i));Dthetanu=theta0;
+		               DDthetanu=pow(theta0,1);}
+         }
 
-	  for (i=0;i<*antpers;i++) if (cluster[i]==j) {
-	    extract_row(destheta,i,vtheta2); theta0=VE(lamtt,i); 
-            if (*inverse==1) { theta0=exp(VE(lamtt,i)); Dthetanu=theta0;  
-		    DDthetanu=pow(theta0,1);}
-	    i=*antpers-1;}
+	 sumscore=0;  ll=0; 
+	 if (Nt[j]>=2) 
+	 for (k=2;k<=Nt[j];k++) {
+	     tau=(Nt[j]-1)/(1+theta0*(Nt[j]-1));
+	     lle=-pow((Nt[j]-1),2)/pow((1+theta0*(Nt[j]-1)),2);
+	     sumscore=sumscore+tau; ll=ll+lle;}
 
-	  sumscore=0;  ll=0; 
-	  if (Nt[j]>=2) 
-	    for (k=2;k<=Nt[j];k++) {
-	      tau=(Nt[j]-1)/(1+theta0*(Nt[j]-1));
-	      lle=-pow((Nt[j]-1),2)/pow((1+theta0*(Nt[j]-1)),2);
-	      sumscore=sumscore+tau; ll=ll+lle; }
-
-	  thetaiidscale[j]=sumscore+log(Rtheta[j])/(theta0*theta0)
+	 thetaiidscale[j]=sumscore+log(Rtheta[j])/(theta0*theta0)
 	    -(1/theta0+Nt[j])*HeH[j]/Rtheta[j]+NH[j]; 
 
 	  scl_vec_mult(thetaiidscale[j]*Dthetanu,vtheta2,thetaiid[j]); 
@@ -361,8 +361,9 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,*ratesim,*robust,
 	for (i=0;i<*ptheta;i++) for (k=0;k<*ptheta;k++)
 	    ME(Stheta,i,k)=VE(vthetascore,i)*DDthetanu/Dthetanu; 
 	mat_add(d2Utheta,Stheta,d2Utheta); }
-
-      invert(d2Utheta,d2UItheta); 
+     
+      LevenbergMarquardt(d2Utheta,d2UItheta,vthetascore,dtheta,step,step);
+// invert(d2Utheta,d2UItheta); 
 
       if (*detail==1) { 
 	printf("====================Iteration %d ==================== \n",it);
@@ -371,13 +372,15 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,*ratesim,*robust,
 	printf("Information D^2 l\n"); print_mat(d2UItheta); 
       }
 
-      Mv(d2UItheta,vthetascore,dtheta); 
+//    Mv(d2UItheta,vthetascore,dtheta); scl_vec_mult(*step,delta,delta); 
       vec_subtr(vtheta1,dtheta,vtheta1); 
 
+      sumscore=0; 
       for (k=0;k<*pg;k++) sumscore= sumscore+fabs(VE(vthetascore,k));
 
-      if ((sumscore<0.0000000001) & (it<*Nit-2)) it=*Nit-2; 
-    } /* it theta Newton-Raphson */ 
+      if ((sumscore<0.0000000001) & (it<*Nit-1)) it=*Nit-1; 
+    } /* it theta Newton-Raphson */  // }}}
+
 
   for (i=0;i<*ptheta;i++) { theta[i]=VE(vtheta1,i);
     thetascore[i]=VE(vthetascore,i); }
@@ -386,8 +389,8 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,*ratesim,*robust,
   if (*robust==1) {
     mat_zeros(Gtilde);   
     for (k=0;k<*antclust;k++) if (clustsize[k]>=2) {
-
-      for (i=0;i<*antpers;i++) if (cluster[i]==k)  {
+      for (j=0;j<clustsize[k];j++) {
+	   i= idiclust[j*(*antclust)+k]; 
 	theta0=VE(lamtt,i); 
 	dummy=(1/(theta0*Rtheta[k]))*exp(theta0*Hik[i])-
 	  (1/theta0+Nt[k])*(1+theta0*Hik[i])*exp(theta0*Hik[i])
@@ -402,7 +405,11 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,*ratesim,*robust,
 	if (k==0) {
 	  mat_zeros(Ftilde); 
 	  for (j=0;j<*antclust;j++) if (clustsize[j]>=2) {
-	    for (i=0;i<*antpers;i++) if (cluster[i]==j && VE(atrisk[i],s)!=0) {
+
+      for (v=0;v<clustsize[j];v++) {
+	   i= idiclust[v*(*antclust)+j]; 
+           if (VE(atrisk[i],s)!=0) {
+//	    for (i=0;i<*antpers;i++) if (cluster[i]==j && VE(atrisk[i],s)!=0) {
 	      theta0=VE(lamtt,i); 
 	      dummy=(1/(theta0*Rtheta[j]))*exp(theta0*Hik[i])-
 		(1/theta0+Nt[j])*(1+theta0*Hik[i])*exp(theta0*Hik[i])
@@ -416,11 +423,10 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,*ratesim,*robust,
 		  VE(xi,l)*VE(vtheta1,c)*dummy;  
 	    }
 	  }
+	}  
 	}
 	extract_row(W4t[k],s,tmpv1); extract_row(W4t[k],s-1,xi); 
 	vec_subtr(tmpv1,xi,xi); Mv(Ftilde,xi,vtheta2); 
-	if (k==-1) printf(" s er %d \n",s); 
-	if (k==-1) print_mat(Ftilde); 
 	vec_add(dAiid[k],vtheta2,dAiid[k]); 
       } /* s=1..Ntimes */ 
     } /* k=1..antclust */ 
