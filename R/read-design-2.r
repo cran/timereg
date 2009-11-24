@@ -19,7 +19,7 @@ read.design<-function(m,Terms,model="aalen"){
     stop("More than one cluster(-) term was included in the formula")
   }
 
-  if (model=="aalen" || model=="comprisk") semicov <- grep("^const[(][A-z0-9._:]*",colnames(XZ),perl=TRUE)
+  if (model=="aalen") semicov <- grep("^const[(][A-z0-9._:]*",colnames(XZ),perl=TRUE)
   if (model=="prop.excess") semicov <- grep("^cox[(][A-z0-9._:]*",colnames(XZ),perl=TRUE)
   if (model=="cox.aalen") semicov <- grep("^prop[(][A-z0-9._:]*",colnames(XZ),perl=TRUE)
   

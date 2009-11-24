@@ -52,6 +52,24 @@ predict.cox.aalen <-  function(object,...){
 
 }
 
+aalen.des2 <-  function(formula,data=sys.parent(),model=NULL,...){
+  call <- match.call()
+  m <- match.call(expand=FALSE)
+  m$model <- NULL
+###  special <- c("const","prop")
+  Terms <- if(missing(data)) terms(formula )
+  else              terms(formula, data=data)
+  m$formula <- Terms
+  m[[1]] <- as.name("model.frame")
+  m <- eval(m, sys.parent())
+  mt <- attr(m, "terms")
+ intercept<-attr(mt, "intercept")
+  Y <- model.extract(m, "response")
+
+  if (model=="cox.aalen") modela <- "cox.aalen" else modela <- "aalen"
+  des<-read.design(m,Terms,model=modela)
+  return(des) 
+}
 
 predict.comprisk<-function(object,newdata=NULL,X=NULL,
                            Z=NULL,n.sim=500, uniform=TRUE,
@@ -60,6 +78,16 @@ predict.comprisk<-function(object,newdata=NULL,X=NULL,
   if (!(inherits(object,'comprisk') || inherits(object,'aalen')
         || inherits(object,'cox.aalen')))
     stop ("Must be output from comp.risk function")
+
+  if(inherits(object,'aalen')) {
+    modelType <- 'aalen';
+  } else if(inherits(object,'comprisk')) {
+    modelType <- object$model;
+  } else if(inherits(object,'cox.aalen')) {
+    modelType <- 'cox.aalen';
+  }
+  n <- length(object$B.iid) ## Number of clusters (or number of individuals
+                            ## if no cluster structure is specified)
 
   if (is.null(object$B.iid)==TRUE & se==TRUE) {
     stop("resample processes necessary for these computations, set resample.iid=1");
@@ -81,12 +109,18 @@ predict.comprisk<-function(object,newdata=NULL,X=NULL,
   constant.covs <- NULL
   if (!is.null(newdata)) {
     ##  The time-constant effects first
+    formulao <- attr(object,"Formula")
+    des <- aalen.des2(formula(delete.response(terms(formulao))),
+		    data=newdata,model=modelType)
+    time.vars <- des$X 
+
     if (semi==TRUE) {
+      constant.covs <- des$Z 
       const <- c(object$gamma)
       names(const) <-substr(dimnames(object$gamma)[[1]],indexOfFirstChar,
                             nchar(dimnames(object$gamma)[[1]])-1)
-      constant.covs <- newdata[,names(const)]
-      constant.covs<-as.matrix(constant.covs); 
+###      constant.covs <- newdata[,names(const)]
+###      constant.covs<-as.matrix(constant.covs); 
     }
 
     ## Then extract the time-varying effects
@@ -94,7 +128,7 @@ predict.comprisk<-function(object,newdata=NULL,X=NULL,
     ntime <- nrow(time.coef)
     fittime <- time.coef[,1,drop=TRUE]
     ntimevars <- ncol(time.coef)-2
-    time.vars <- cbind(1,newdata[,names(time.coef)[-(1:2)],drop=FALSE])
+### time.vars <- cbind(1,newdata[,names(time.coef)[-(1:2)],drop=FALSE])
     nobs <- nrow(newdata)
   } else if ((is.null(Z)==FALSE) || (is.null(X)==FALSE)){
 
@@ -128,16 +162,6 @@ predict.comprisk<-function(object,newdata=NULL,X=NULL,
     constant.part <- constant.covs %*% object$gamma
   }
   
-  if(inherits(object,'aalen')) {
-    modelType <- 'aalen';
-  } else if(inherits(object,'comprisk')) {
-    modelType <- object$model;
-  } else if(inherits(object,'cox.aalen')) {
-    modelType <- 'cox.aalen';
-  }
-  n <- length(object$B.iid) ## Number of clusters (or number of individuals
-                            ## if no cluster structure is specified)
-
   cumhaz<-as.matrix(time.vars) %*% t(time.coef[,-1])
   
   time<-time.coef[,1];
@@ -342,16 +366,9 @@ xlab="Time",ylab="Probability",transparency=FALSE,monotone=TRUE,...){
     mainLine.se <- object$se.P1;    
   }
   
-  if (length(col)!=nobs){
-    col<-rep(col[1],nobs);
-  }
-  if (length(lty)!=nobs){
-    lty<-rep(lty[1],nobs); 
-
-  }
-  if (length(lwd)!=nobs){
-    lwd<-rep(lwd[1],nobs); 
-  }
+  if (length(col)!=nobs){ col<-rep(col[1],nobs); }
+  if (length(lty)!=nobs){ lty<-rep(lty[1],nobs); }
+  if (length(lwd)!=nobs){ lwd<-rep(lwd[1],nobs); }
   if (sum(specific.comps)==0){
     comps<-1:nobs
   } else {

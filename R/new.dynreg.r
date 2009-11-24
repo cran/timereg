@@ -1,15 +1,15 @@
 dynreg<-function(formula,data=sys.parent(),aalenmod,
 bandwidth=0.5,id=NULL,bhat=NULL,start.time=0,
-max.time=NULL,n.sim=500,meansub=1,weighted.test=0)
+max.time=NULL,n.sim=500,meansub=1,weighted.test=0,resample=0)
 {
   if (n.sim==0) sim<-0 else sim<-1; smoothXX<-0
   if (n.sim>0 & n.sim<50) {n.sim<-50 ; cat("Minimum 50 simulations\n");} 
-  residuals<-0; 
 
   b<-bandwidth
   call <- match.call()
   m <- match.call(expand=FALSE)
-  m$weighted.test<-m$meansub<-m$bandwidth<-m$aalenmod<-m$start.time<-m$max.time<-m$return.mg<-m$n.sim<-m$bhat<-m$id<-NULL
+  m$weighted.test<-m$meansub<-m$bandwidth<-m$aalenmod<-m$start.time<-m$max.time<-
+  m$return.mg<-m$n.sim<-m$bhat<-m$id<-m$clusters<-m$resample<-NULL
   special <- c("const")
   Terms <- if(missing(data)) terms(formula, special)
   else              terms(formula, special, data=data)
@@ -26,9 +26,10 @@ max.time=NULL,n.sim=500,meansub=1,weighted.test=0)
   pxz <- px + pz;
   XZ<-cbind(X,Z); 
 
+  clusters <- des$clusters ##########
 ####################################################################
 ### Aalen design is interpreted  
-  udaal<-aalen.des(aalenmod,data); 
+  udaal<-aalen.des(aalenmod,data=data); 
   time<-udaal$time; time2<-udaal$time2; 
   covarA<-data.matrix(udaal$X); status<-udaal$status; 
   pa<-ncol(covarA); 
@@ -59,13 +60,15 @@ max.time=NULL,n.sim=500,meansub=1,weighted.test=0)
   if (is.null(max.time)==TRUE) max.time<-max(times)+0.1 else max.time<-min(max(times),max.time);   
   times<-times[times<max.time & times>start.time]; 
   times<-sort(times); Ntimes<-length(times); 
+  clusters<-cluster.call<-des$clusters; 
 
   if (is.null(id)==TRUE) {antpers<-length(time); id<-0:(antpers-1); }
   else { pers<-unique(id); antpers<-length(pers); 
          id<-as.integer(factor(id,labels=1:(antpers)))-1; }
-  ldata<-list(start=time,stop=time2,antpers=length(time))
-  ldata$antpers<-antpers; 
-  #X<-as.matrix(covar); 
+
+  ldata<-list(start=time,stop=time2,
+              antpers=antpers,antclust=des$antclust);
+###  X<-as.matrix(covar); 
 
   if (npar==TRUE) {
   #cat("Nonparametric Additive Model "); cat("\n")
@@ -78,8 +81,8 @@ max.time=NULL,n.sim=500,meansub=1,weighted.test=0)
       bhat<-localTimeReg(time2,Y[status==1],X[status==1,],xval,b,lin=1)[,1:(px+1)]
     }
 
-    ud<-dynregBase(times,status,Y,ldata,X,covarA,id,
-                   sim=sim,retur=residuals,antsim=n.sim,b=b,bhat=bhat,
+    ud<-dynregBase(times,status,Y,ldata,X,covarA,id,clusters,
+                   sim=sim,resample=resample,antsim=n.sim,b=b,bhat=bhat,
                    smoothXX=smoothXX,weighted.test=weighted.test);
 
     colnames(ud$cum.ly)<- colnames(ud$var.cum.ly)<-  
@@ -95,7 +98,7 @@ max.time=NULL,n.sim=500,meansub=1,weighted.test=0)
               colnames(ud$sim.testBeqC.is) <- covnamesX; }
   }
   else {
-                                        #cat(" Semiparametric Additive Model"); cat("\n")
+   #cat(" Semiparametric Additive Model"); cat("\n")
 
     if (is.null(bhat)==TRUE) {
       cat(" Computes initial estimates based on local regression\n")
@@ -121,8 +124,9 @@ max.time=NULL,n.sim=500,meansub=1,weighted.test=0)
 #print(apply(cbind(X[,1:(pxz+1)],X[,(pxz+2):(pxz+pa+1)]),2,mean))
 #print(ud$cum[200,]); 
 
-ud<-semiregBase(times,status,Y,ldata,X,Z,covarA,id,
- bhat=bhat,sim=sim,antsim=n.sim,b=b,gamma=gamma,weighted.test=weighted.test);
+ud<-semiregBase(times,status,Y,ldata,X,Z,covarA,id,clusters,
+ bhat=bhat,sim=sim,antsim=n.sim,b=b,gamma=gamma,weighted.test=weighted.test,
+ resample=resample);
 
     if (px>0) {
       colnames(ud$cum)<- colnames(ud$var.cum)<- colnames(ud$cum0)<- 
@@ -165,7 +169,7 @@ namematrix<-function(mat,names)
 nameestimate<-function(mat,names)
 { colnames(mat)<-"estimate"; rownames(mat)<-names; return(mat); }
 
-"plot.dynreg"<-function(x,type="eff.smooth",pointwise.ci=1,hw.ci=0,
+plot.dynreg<-function(x,type="eff.smooth",pointwise.ci=1,hw.ci=0,
 sim.ci=0,robust=0,specific.comps=FALSE,level=0.05,start.time=0,stop.time=0,
 add.to.plot=FALSE,mains=TRUE,xlab="Time",ylab ="Cumulative coefficients",score=FALSE,...)
 {
@@ -280,7 +284,7 @@ if (is.null(dynreg.object$gamma0)==TRUE) semi<-FALSE else semi<-TRUE
   if (!inherits(dynreg.object, 'dynreg')) stop ("Must be an dynreg object")
   if (is.null(dynreg.object$gamma.ms)==TRUE) semi<-FALSE else semi<-TRUE
     
-                                        # We print information about object:  
+  # We print information about object:  
   cat("Dynamic Additive Regression Model \n\n")
   cat(" Nonparametric terms : "); cat(colnames(dynreg.object$cum)[-1]);
   cat("   \n");  
@@ -335,10 +339,4 @@ return(list(type=type,time=time,time2=time2,status=status,
  X=X,Z=Z,px=px,pz=pz,npar=npar,
  covnamesX=covnamesX,covnamesZ=covnamesZ,clusters=clusters))
 }
-#ud<-aalen.des(Surv(days/365,status==1)~factor(ulc)+thick+
-#factor(sex),melanom)
-#print(ud)
-#ud<-aalen.des(Surv(days/365,status==1)~prop(factor(ulc))+
-#prop(thick)+factor(sex),melanom)
-#print(ud)
 

@@ -19,7 +19,7 @@ timevarying effects.
 \usage{
 dynreg(formula,data=sys.parent(),aalenmod,bandwidth=0.5,id=NULL,
 bhat=NULL,start.time=0,max.time=NULL,n.sim=500,
-meansub=1,weighted.test=0)
+meansub=1,weighted.test=0,resample=0)
 }
 \arguments{
 \item{formula}{
@@ -42,6 +42,7 @@ of the range of the considered observation period.}
 estimate is computed.}
 \item{meansub}{if '1' then the mean of the responses is subtracted before the
 estimation is carried out.}
+\item{resample}{returns resample processes.}
 }
 \details{
 The data for a subject is presented as multiple rows or 'observations',

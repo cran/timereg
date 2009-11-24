@@ -10,7 +10,7 @@ coefBase<- function(object, digits=3, d2logl=0) {
   prmatrix(signif(res, digits))
 }
 
-timetest<-function(object,digits=3,hyp.label="p-value H_0: B(t)=b t")
+timetest<-function(object,digits=3,hyp.label="p-value H_0:constant effect")
 { 
   cat("Test for nonparametric terms \n")
   if (is.null(object$conf.band)==TRUE)  mtest<-FALSE else mtest<-TRUE;

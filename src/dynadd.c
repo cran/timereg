@@ -4,10 +4,10 @@
                  
 void dynadd(times,y,Ntimes,designX,nx,px,designA,na,pa,ahat,bhat,bhatny,nxval,antpers,
 start,stop,cu0,cuf,cuMS,vcu0,vcuf,robvcu,w,mw,rani,sim,antsim,cumBit,test,
-testOBS,status,Ut,simUt,b,cumly,retur,id,smoothXX,weighted,vculy)
+testOBS,status,Ut,simUt,b,cumly,retur,id,smoothXX,weighted,vculy,clusters,antclust)
 double *bhatny,*bhat,*ahat,*designX,*designA,*times,*y,*start,*stop,*cu0,*cuf,*cuMS,
 *vcu0,*vcuf,*w,*robvcu,*cumBit,*test,*testOBS,*Ut,*simUt,*b,*cumly,*vculy;
-int *sim,*antsim,*retur,*nxval,*nx,*px,*na,*pa,*antpers,*Ntimes,*mw,*rani,*status,*id,*smoothXX,*weighted;
+int *sim,*antsim,*retur,*nxval,*nx,*px,*na,*pa,*antpers,*Ntimes,*mw,*rani,*status,*id,*smoothXX,*weighted,*clusters,*antclust;
 {
   matrix *ldesignX,*ldesignA,*cdesignX,*cdesignA,*Aa,*AaI,*A,*AI; 
   matrix *XbXa,*XWX;   
@@ -156,7 +156,7 @@ int *sim,*antsim,*retur,*nxval,*nx,*px,*na,*pa,*antpers,*Ntimes,*mw,*rani,*statu
 
   /* ====================SIMULATIONS ============================= */
   if (*sim==1) {
-    comptest(times,Ntimes,px,cuf,robvcu,vcudif,antsim,test,testOBS,Ut,simUt,cumBt,weighted,antpers); 
+   comptest(times,Ntimes,px,cuf,robvcu,vcudif,antsim,test,testOBS,Ut,simUt,cumBt,weighted,antpers); 
   } /* sim==1 */ 
 
   cu0[0]=times[0];vcu0[0]=times[0];robvcu[0]=times[0];cuf[0]=times[0];
@@ -178,13 +178,14 @@ void semidynadd(times,y,Ntimes,designX,nx,px,designG,ng,pg,designA,na,pa,
 ahat,naval,bhat,nxval,antpers,start,stop,cu0,cu,cums,robvcu,robvcue,
 gamma,gamma2,gamLY,gamKOR,gameffi,gameffims,
 Vgamma,Vkorgam,Vgamef,robvargam,robvargame,w,mw,rani,sim,antsim,
-mgresid,test,testOBS,Ut,simUt,b,id,status,weighted,vargamLY)
+mgresid,test,testOBS,Ut,simUt,b,id,status,weighted,vargamLY,clusters,antclust,resample,
+gammaiid,Biid)
 double *b,*bhat,*ahat,*designX,*designA,*designG,*times,*y,*start,*stop,*cu,*w,
 *gamLY,*gamKOR,*gamma,*gamma2,*gameffi,*gameffims,
 *Vgamma,*Vkorgam,*Vgamef,*robvargam,*robvargame,*vargamLY,
-*cums,*cu0,*robvcu,*robvcue,*Ut,*simUt,*test,*testOBS,*mgresid; 
+*cums,*cu0,*robvcu,*robvcue,*Ut,*simUt,*test,*testOBS,*mgresid,*gammaiid,*Biid; 
 int *naval,*nxval,*nx,*px,*na,*pa,*ng,*pg,*antpers,*Ntimes,*mw,
-*sim,*antsim,*rani,*id,*status,*weighted;
+*sim,*antsim,*rani,*id,*status,*weighted,*clusters,*antclust,*resample;
 {
   matrix *ldesignX,*ldesignA,*cdesignX,*ldesignG,*cdesignG,*A,*AI;
   matrix *dC,*Cg,*VarG,*dVarG,*VarGly,*dVarGly,*CI,*Vargam,*dCdt,*CGam,*dCGam,*Cgdt;
@@ -201,7 +202,7 @@ int *naval,*nxval,*nx,*px,*na,*pa,*ng,*pg,*antpers,*Ntimes,*mw,
   vector *tmpv,*tmpv1,*tmpv2,*tmpv3,*tmpv4,*zi,*xi,*ZHdp,*IZHdp,*IZHdN,*ZHdN;
   vector *korgamly,*korgam,*gamstart;
   vector *rowX,*rowZ,*difX,*dgamef,*gammsd,*ai; 
-  int i,j,k,s,c,count,sing,pmax,nmax,pers=0;
+  int l,i,j,k,s,c,count,sing,pmax,nmax,pers=0;
   int robust=1,*ipers=calloc(*Ntimes,sizeof(int)), 
       *imin=calloc(1,sizeof(int)); 
   double time,dummy,dtime,zpers,risk,YoneN,dif,dif2,ctime;
@@ -432,11 +433,21 @@ int *naval,*nxval,*nx,*px,*na,*pa,*ng,*pg,*antpers,*Ntimes,*mw,
       for (i=0;i<*antpers;i++) {
         Mv(CI,W2[i],tmpv3); // Note that tmpv2 was changed to tmpv3
 	Mv(C2[s],tmpv3,rowX); // Note that tmpv2 was changed to tmpv3 
-	/* print_mat(C2dA[s]); print_mat(C2[s]); */
 
 	extract_row(W3t[i],s,tmpv1); vec_subtr(tmpv1,rowX,difX); 
 	replace_row(W4t[i],s,difX); 
 	vec_star(difX,difX,tmpv1); vec_add(tmpv1,VdB,VdB);
+
+	if (*resample==1) {
+	  if (s==1){ 
+	    for (k=0;k<*pg;k++) gammaiid[k*(*antpers)+i]=VE(tmpv3,k); 
+	  }
+	  for (k=0;k<*px;k++) {
+	    l=i*(*px)+k; 
+	    Biid[l*(*Ntimes)+s]=VE(difX,k);
+	  } 
+	}
+
 
 	/*
 	  Mv(C2dA[s],W2e[i],rowX); extract_row(W3t[i],s,tmpv1); 

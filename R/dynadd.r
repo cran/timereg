@@ -1,12 +1,10 @@
-dynregBase<-function(times,status,response,fdata,designX,designA,id, 
-bhat=NULL,b=1,sim=1,antsim=1000,retur=0,smoothXX=0,
+dynregBase<-function(times,status,response,fdata,designX,designA,id, clusters,
+bhat=NULL,b=1,sim=1,antsim=1000,resample=0,smoothXX=0,
 weighted.test=0)
 {
 Ntimes <- length(times)
-
 designA<-as.matrix(designA); 
 pa <- as.integer(dim(designA)[2]); na <- as.integer(dim(designA)[1])
-
 designX<-as.matrix(designX); 
 px <- as.integer(dim(designX)[2]); nx <- as.integer(dim(designX)[1])
 
@@ -14,7 +12,8 @@ px <- as.integer(dim(designX)[2]); nx <- as.integer(dim(designX)[1])
 w<-rep(1,nx); mw<-0;  
 vcum.ly<-cum.ly<-cum0<-cumf<-cum.ms<-vcum0<-vcumf<-robvcumf<-matrix(0,Ntimes,px+1); 
 ly<-NULL;
-if (retur==1) cumBi<-matrix(0,Ntimes,fdata$antpers*px) else cumBi<-0;
+
+if (resample==1) cumBi<-matrix(0,Ntimes,fdata$antpers*px) else cumBi<-0;
 test<-matrix(0,antsim,3*px); testOBS<-rep(0,3*px); testval<-c();
 unifCI<-c();
 rani<--round(runif(1)*10000)
@@ -57,8 +56,9 @@ as.integer(sim),as.integer(antsim),
 as.double(cumBi),
 as.double(test),as.double(testOBS),
 as.integer(status),as.double(Ut),as.double(simUt),
-as.double(b),as.double(cum.ly),as.integer(retur),as.integer(id),
+as.double(b),as.double(cum.ly),as.integer(resample),as.integer(id),
 as.integer(smoothXX),as.integer(weighted.test),as.double(vcum.ly),
+as.integer(clusters),as.integer(fdata$antclust),
 PACKAGE="timereg")
 
 cum0 <-matrix(nparout[[17]],Ntimes,px+1);
@@ -70,11 +70,11 @@ robvcumf <-matrix(nparout[[22]],Ntimes,px+1);
 cum.ly <-matrix(nparout[[35]],Ntimes,px+1) 
 vcum.ly <-matrix(nparout[[40]],Ntimes,px+1) 
 
-if (retur==1) {
+if (resample==1) {
 cumBi<-matrix(nparout[[28]],Ntimes,fdata$antpers*px);
 cumBI<-list();
 for (i in (0:(fdata$antpers-1))*px)
-cumBI[[i/px+1]]<-cumBi[,i+(1:px)] } else cumBI<-NULL;
+cumBI[[i/px+1]]<-as.matrix(cumBi[,i+(1:px)]);  } else cumBI<-NULL;
 
 if (sim==1) {
 Uit<-matrix(nparout[[33]],Ntimes,50*px);
@@ -99,11 +99,11 @@ pval.testBeq0<-NULL;pval.testBeqC<-NULL;
 obs.testBeq0<-NULL;obs.testBeqC<-NULL;
 sim.testBeq0<-NULL;sim.testBeqC<-NULL; }
 
-list(cum=cumf,var.cum=vcumf,robvar.cum=robvcumf,
+out <- list(cum=cumf,var.cum=vcumf,robvar.cum=robvcumf,
 cum0=cum0,var.cum0=vcum0,
 cum.ms=cum.ms,var.cum.ms=vcumf,
 cum.ly=cum.ly,var.cum.ly=vcum.ly,
-residuals=cumBI,
+B.iid=cumBI,
 pval.testBeq0=pval.testBeq0,pval.testBeqC=pval.testBeqC,
 pval.testBeqC.is=pval.testBeqC.is,
 obs.testBeqC.is=obs.testBeqC.is,
@@ -111,12 +111,12 @@ sim.testBeqC.is=sim.testBeqC.is,
 obs.testBeq0=obs.testBeq0,obs.testBeqC=obs.testBeqC,
 sim.testBeq0= sim.testBeq0,sim.testBeqC=sim.testBeqC,
 conf.band=unifCI,test.procBeqC=Ut,sim.test.procBeqC=UIt)
+return(out)
 }
 
-
 semiregBase<-function(times,status,response,fdata,designX,
-designG,designA,id,gamma=0,bhat=NULL,b=1,sim=1,antsim=1000,
-retur=0,weighted.test=0)
+designG,designA,id,clusters,gamma=0,bhat=NULL,b=1,sim=1,antsim=1000,
+resample=0,weighted.test=0)
 {
 Ntimes <- length(times); maxtime<-times[Ntimes]; 
 designX<-as.matrix(designX); designG<-as.matrix(designG); 
@@ -127,6 +127,11 @@ pa <- as.integer(dim(designA)[2]); nar <- as.integer(dim(designA)[1])
 
 if (nx!=nar) print("Aalen-design and X designs are not consistent\n");
 if (nx!=ng) print("Semi-design and and X designs are not consistent\n");
+
+if (resample==1) {
+gamma.iid<-matrix(0,fdata$antpers,pg); 
+B.iid<-matrix(0,Ntimes,fdata$antpers*px) }
+else { B.iid<-gamma.iid<-NULL; }
 
 w<-rep(1,nx); mw<-0;  
 cumly<-cum0<-cumf<-cumMS<-vcum0<-vcumf<-robvcumf<-matrix(0,Ntimes,px+1); 
@@ -171,20 +176,31 @@ as.double(designG),as.integer(ng),as.integer(pg),
 as.double(designA),as.integer(nar),as.integer(pa),
 as.double(smooth.aalen),as.integer(naval),as.double(bhat),
 as.integer(nxval),as.integer(fdata$antpers),as.double(fdata$start),
-as.double(fdata$stop),
-as.double(cum0),as.double(cumf),as.double(cumMS),
-as.double(rvcum), as.double(rvcumef),
+as.double(fdata$stop),as.double(cum0),as.double(cumf),
+as.double(cumMS), as.double(rvcum), as.double(rvcumef),
 as.double(gamma),as.double(gamma2),as.double(gamly),
 as.double(gamkor),as.double(gameffi),as.double(gameffims),
-as.double(Vgamma),as.double(Vkorgam),
-as.double(Vgamef),as.double(robvargam),as.double(robvargame),
-as.double(w),as.integer(mw),
-as.integer(rani), as.integer(sim),as.integer(antsim),
-as.double(resid),as.double(test),as.double(testOBS),
-as.double(Ut),as.double(simUt),as.double(b),as.integer(id),
-as.integer(status),as.integer(weighted.test),as.double(VgammaLY),
+as.double(Vgamma),as.double(Vkorgam),as.double(Vgamef),
+as.double(robvargam),as.double(robvargame), as.double(w),
+as.integer(mw), as.integer(rani), as.integer(sim),
+as.integer(antsim), as.double(resid),as.double(test),
+as.double(testOBS), as.double(Ut),as.double(simUt),
+as.double(b),as.integer(id), as.integer(status),
+as.integer(weighted.test),as.double(VgammaLY),as.integer(clusters),
+as.integer(fdata$antclust), as.integer(resample),as.double(gamma.iid),
+as.double(B.iid),
 PACKAGE="timereg") 
 
+if (resample==1)  {
+gamma.iid<-matrix(semiout[[54]],fdata$antclust,pg);
+covit<-matrix(semiout[[55]],Ntimes,fdata$antclust*px); 
+B.iid<-list(); 
+for (i in (0:(fdata$antclust-1))*px) {
+B.iid[[(i/px)+1]]<-as.matrix(covit[,i+(1:px)]);
+###colnames(B.iid[[i/px+1]])<-namesX; }
+###colnames(gamma.iid)<-namesZ
+}
+}
 
 cum0 <-matrix(semiout[[20]],Ntimes,px+1); 
 cumf <-matrix(semiout[[21]],Ntimes,px+1);
@@ -209,7 +225,7 @@ robvargam<-matrix(semiout[[34]],pg,pg);
 robvargame<-matrix(semiout[[35]],pg,pg);
 VgammaLY<-matrix(semiout[[50]],pg,pg); 
 
-if (retur==1) {
+if (resample==1) {
 cumBi<-matrix(semiout[[41]],Ntimes,fdata$antpers*px); 
 cumBI<-list();
 for (i in (0:(fdata$antpers-1))*px)
@@ -240,7 +256,7 @@ pval.testBeqC.is<-NULL; obs.testBeqC.is<-NULL; sim.testBeqC.is<-NULL;
 #gamma.ef=gameffi,gamma.efms=gameffims,
 #var.gamma.ef=Vgamef,robvar.gamma.ef=robvargame, 
 
-list(cum=cumf,var.cum=vcumf,robvar.cum=robvcumf,cum.ms=cum.ms,
+out <- list(cum=cumf,var.cum=vcumf,robvar.cum=robvcumf,cum.ms=cum.ms,
 cum0=cum0,var.cum0=vcum0,cum.ly=cum.ly,var.cum.ly=NULL,
 gamma0=gamma,var.gamma0=Vgamma,gamma.ly=gamly,var.gamma.ly=VgammaLY,
 gamma=gamkor,gamma.ms=gamma2,var.gamma=Vkorgam,var.gamma.ms=Vkorgam,
@@ -251,5 +267,7 @@ pval.testBeqC.is=pval.testBeqC.is, obs.testBeqC.is=obs.testBeqC.is,
 sim.testBeqC.is=sim.testBeqC.is,
 obs.testBeq0=obs.testBeq0,obs.testBeqC=obs.testBeqC,
 sim.testBeq0= sim.testBeq0,sim.testBeqC=sim.testBeqC,
-conf.band=unifCI,test.procBeqC=Ut,sim.test.procBeqC=UIt)
+conf.band=unifCI,test.procBeqC=Ut,sim.test.procBeqC=UIt,
+gamma.iid=gamma.iid, B.iid=B.iid)
+return(out)
 }

@@ -99,12 +99,12 @@ observed cumulative and estimate under null of constant effect.}
 \item{sim.test.procBeqC}{50 resample processes for for testing of time-varying effects}
 }
 \references{
-Scheike, Zhang and Gerds (2008), Predicting cumulative
-incidence probability by direct binomial regression,
-Biometrika. 
+Scheike, Zhang and Gerds (2008), Predicting cumulativeincidence probability by direct binomial regression,Biometrika, 95, 205-220.           
 
-Scheike and Zhang (2008), Flexible competing risks regression
-modelling and goodness of fit, LIDA.
+Scheike and Zhang (2007), Flexible competing risks regression modelling and goodness of fit, LIDA, 14, 464-483 .     
+
+Martinussen and Scheike (2006), Dynamic regression
+models for survival data, Springer.
 }
 \author{Thomas Scheike}
 \examples{

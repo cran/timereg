@@ -14,7 +14,6 @@ improved test for constant effects and offsets \n")
   cat("dynreg        : longitudinal data model\n")
   cat("cum.residuals : cumulative residuals for goodness-of-fit\n")
   cat("two.stage     : Clayton-Oakes-Glidden Two-Stage estimation\n")
-  cat("two.stage.reg : Clayton-Oakes-Glidden Two-Stage with Frailty regression\n")
   cat("comp.risk     : For flexible regression modellling for competing risks data\n"); 
   cat(" plus more \n"); 
 }

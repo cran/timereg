@@ -109,28 +109,28 @@ design.treat<-cbind(des.t[,-1]*(diabetes$adult==1),
                     des.t[,-1]*(diabetes$adult==2))
 fit.s<-two.stage(Surv(time,status) ~
 -1+factor(adult)+prop(design.treat)+cluster(id),
-diabetes,Nit=40,theta=1,theta.des=theta.des)
+data=diabetes,Nit=40,theta=1,theta.des=theta.des)
 summary(fit.s)
 
 # test for common baselines 
 fit.s1<-cox.aalen(Surv(time,status) ~ 
-factor(adult)+prop(design.treat)+cluster(id),diabetes)
+factor(adult)+prop(design.treat)+cluster(id),data=diabetes)
 summary(fit.s1)
 
 # with common baselines  and common treatment effect (although test reject this)
 fit.s2<-two.stage(Surv(time,status) ~+1+prop(treat) + cluster(id),
-diabetes,Nit=40,theta=1,theta.des=theta.des)
+data=diabetes,Nit=40,theta=1,theta.des=theta.des)
 summary(fit.s2)
 
 # test for same variance among the two strata
 theta.des<-model.matrix(~factor(adult),diabetes);
 fit.s3<-two.stage(Surv(time,status) ~+1+prop(treat)+cluster(id),
-diabetes,Nit=40,theta=1,theta.des=theta.des)
+data=diabetes,Nit=40,theta=1,theta.des=theta.des)
 summary(fit.s3)
 
 # to fit model without covariates, beta.fixed=1, but still need prop term !
 fit<-two.stage(Surv(time,status) ~ prop(treat) + cluster(id),
-diabetes,theta=0.95,detail=0,beta.fixed=1)
+data=diabetes,theta=0.95,detail=0,beta.fixed=1)
 summary(fit)
 }
 \keyword{survival}

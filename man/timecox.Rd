@@ -117,7 +117,7 @@ library(survival)
 data(sTRACE)
 # Fits time-varying Cox model 
 out<-timecox(Surv(time/365,status==9)~age+sex+diabetes+chf+vf,
-sTRACE,max.time=7,n.sim=100)
+data=sTRACE,max.time=7,n.sim=100)
 
 summary(out)
 par(mfrow=c(2,3))
@@ -126,8 +126,8 @@ par(mfrow=c(2,3))
 plot(out,score=TRUE)
 
 # Fits semi-parametric time-varying Cox model
-out<-timecox(Surv(time/365,status==9)~const(age)+const(sex)+
-const(diabetes)+chf+vf,sTRACE,max.time=7,n.sim=100)
+out<-timecox(Surv(time/365,status==9)~const(age)+const(sex)+const(diabetes)+chf+vf,
+data=sTRACE,max.time=7,n.sim=100)
 
 summary(out)
 par(mfrow=c(2,3))
