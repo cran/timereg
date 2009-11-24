@@ -7,9 +7,9 @@ score,hess,est,var,sim,antsim,rani,test,testOBS,Ut,simUt,weighted,
 gamma,vargamma,semi,zsem,pg,trans,gamma2,CA,line,detail,biid,gamiid,resample,
 timepow,clusters,antclust)
 double *times,*betaS,*x,*KMc,*z,*score,*hess,*est,*var,*test,*testOBS,
-*Ut,*simUt,*gamma,*zsem,*gamma2,*biid,*gamiid,*vargamma;
+*Ut,*simUt,*gamma,*zsem,*gamma2,*biid,*gamiid,*vargamma,*timepow;
 int *n,*px,*Ntimes,*Nit,*cause,*delta,*sim,*antsim,*rani,*weighted,
-*semi,*pg,*trans,*CA,*line,*detail,*resample,*timepow,*clusters,*antclust;
+*semi,*pg,*trans,*CA,*line,*detail,*resample,*clusters,*antclust;
 {
   matrix *X,*cX,*A,*AI,*cumAt[*antclust],*VAR,*Z;
   vector *VdB,*risk,*SCORE,*W,*Y,*Gc,*DELTA,*CAUSE,*bhat,*pbhat,*beta,*xi,
@@ -191,10 +191,14 @@ vec_zeros(VdB); mat_zeros(VAR);
 free(vcudif); 
 }
 
-void itfitsemi(times,Ntimes,x,delta,cause,KMc,z,antpers,px,Nit,
-score,hess,est,var,sim,antsim,rani,test,testOBS,Ut,simUt,weighted,
-gamma,vargamma,semi,zsem,pg,trans,gamma2,CA,line,
-detail,biid,gamiid,resample,timepow,clusters,antclust)
+void itfitsemi(times,Ntimes,x,delta,cause,
+	       KMc,z,antpers,px,Nit,
+	       score,hess,est,var,sim,
+	       antsim,rani,test,testOBS,Ut,
+	       simUt,weighted,gamma,vargamma,semi,
+	       zsem,pg,trans,gamma2,CA,
+	       line,detail,biid,gamiid,resample,
+	       timepow,clusters,antclust)
 double *times,*x,*KMc,*z,*score,*hess,*est,*var,*test,*testOBS,
 *Ut,*simUt,*gamma,*zsem,*vargamma,*gamma2,*biid,*gamiid,*timepow;
 int *antpers,*px,*Ntimes,*Nit,*cause,*delta,*sim,*antsim,*rani,*weighted,
@@ -222,8 +226,8 @@ int *antpers,*px,*Ntimes,*Nit,*cause,*delta,*sim,*antsim,*rani,*weighted,
   idum=*rani; robust[0]=1; fixedcov=1; 
   n[0]=antpers[0]; nx[0]=antpers[0];
   timem=0; 
-  if (*trans==1) for (j=0;j<*pg;j++) if (timepow[j]!= 1) {timem=1;break;}
-  if (*trans==2) for (j=0;j<*pg;j++) if (timepow[j]!= 0) {timem=1;break;}
+  if (*trans==1) for (j=0;j<*pg;j++) if (fabs(timepow[j]-1)>0.0001) {timem=1;break;}
+  if (*trans==2) for (j=0;j<*pg;j++) if (fabs(timepow[j])>0.0001) {timem=1;break;}
 
   for (j=0;j<*antclust;j++) { malloc_mat(*Ntimes,*px,W3t[j]);
     malloc_mat(*Ntimes,*px,W4t[j]); malloc_vec(*pg,W2[j]); malloc_vec(*px,W3[j]);
@@ -271,6 +275,7 @@ int *antpers,*px,*Ntimes,*Nit,*cause,*delta,*sim,*antsim,*rani,*weighted,
 	    extract_row(ldesignX,j,xi); extract_row(ldesignG,j,zi); 
 
 	    lrr=0; 
+	    // {{{ compute P_1 and DP_1 
 	    if (*trans==1) {
 	      if (timem>0)
 		for (l=0;l<*pg;l++)
@@ -320,6 +325,7 @@ int *antpers,*px,*Ntimes,*Nit,*cause,*delta,*sim,*antsim,*rani,*weighted,
 	      if (timem>0) for (l=0;l<*pg;l++) VE(zi,l)=
 		pow(time,timepow[l])*VE(zi,l); 
            }
+	   // }}}
 
 	    replace_row(cdesignX,j,xi); replace_row(cdesignG,j,zi); 
 	    /*

@@ -30,7 +30,7 @@ The modelling formula uses the standard survival modelling given in the
 \usage{
 two.stage(formula=formula(data),data=sys.parent(),beta=0,Nit=10,
 detail=0,start.time=0,max.time=NULL,id=NULL,clusters=NULL,
-robust=1,rate.sim=1,beta.fixed=0,theta=NULL,theta.des=NULL)
+robust=1,rate.sim=1,beta.fixed=0,theta=NULL,theta.des=NULL,var.link=0)
 }
 \arguments{
 \item{formula}{
@@ -57,6 +57,8 @@ associate each record with the id of a subject.}
 \item{theta}{starting values for the frailty variance (default=0.1).}
 \item{theta.des}{design for regression for variances. The defauls is NULL that 
 is equivalent to just one theta and the design with only a baseline.}
+\item{var.link}{default "0" is that the regression design on the variances 
+is without a link, and "1" uses the link function exp. }
 }
 \details{
 The data for a subject is presented as multiple rows or 'observations',
@@ -124,7 +126,7 @@ fit.s3<-two.stage(Surv(time,status) ~+1+prop(treat)+cluster(id),
 diabetes,Nit=40,theta=1,theta.des=theta.des)
 summary(fit.s3)
 
-# to fit model without covariates, beta.fixed=0, but still need prop term !
+# to fit model without covariates, beta.fixed=1, but still need prop term !
 fit<-two.stage(Surv(time,status) ~ prop(treat) + cluster(id),
 diabetes,theta=0.95,detail=0,beta.fixed=1)
 summary(fit)

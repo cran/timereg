@@ -308,7 +308,7 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*
   if (*gamfix==0) Mv(ICGam,IZHdN,gam); 
   if ((*mof==1) & (*gamfix==0)) {Mv(ICGam,gamoff,dgam); vec_subtr(gam,dgam,gam);}
   MxA(Vargam,ICGam,tmpM2); MxA(ICGam,tmpM2,Vargam); 
-  if (*gamfix==1) mat_zeros(Vargam); 
+  // if (*gamfix==1) mat_zeros(Vargam); 
 
   l=0; vec_zeros(dAoff); 
   for (s=1;s<*Nalltimes;s++) {
@@ -372,7 +372,7 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*
                else cumAit[i*(*Ntimes)+l]=
 		           cumAit[i*(*Ntimes)+l]+1*(i==pers)*stat-hati;
 	      }
-	    if (*gamfix==1) vec_zeros(W2[j]); 
+	    // if (*gamfix==1) vec_zeros(W2[j]); 
 	  if (stat==1) replace_row(W3t[j],l,W3[j]);  
 	} /* j=1..antclust */ 
       } /* robust ==1 */
@@ -416,10 +416,10 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*rani,*robust,*
       vec_zeros(VdB); mat_zeros(Vcov); 
 
       for (j=0;j<*antclust;j++) {
-	Mv(ICGam,W2[j],tmpv2); 
-	Mv(C[ls[s]],tmpv2,rowX); extract_row(W3t[j],s,tmpv1); 
+        Mv(ICGam,W2[j],tmpv2);  
+        if (*gamfix==0) vec_zeros(rowX);  else Mv(C[ls[s]],tmpv2,rowX); 
+	extract_row(W3t[j],s,tmpv1); 
 	vec_subtr(tmpv1,rowX,difX); 
-
 	replace_row(W4t[j],s,difX); 
 	vec_star(difX,difX,tmpv1); vec_add(tmpv1,VdB,VdB);
 

@@ -4,7 +4,7 @@
 \description{
 Fits a semiparametric model for the cause-specific quantities :
 \deqn{
-P(T \leq t, cause=1 | x,z) = P_1(t,x,z) = h( - g(t,x,z) )
+P(T < t, cause=1 | x,z) = P_1(t,x,z) = h( - g(t,x,z) )
 }
 for a known link-function \eqn{h()}
 and known prediction-function \eqn{g(t,x,z)}

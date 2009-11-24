@@ -65,6 +65,7 @@ S<-out$intZHZ; s<-out$intZHdN
 n<-nrow(pbc)
 
 ## lasso for survival data 
+if (require(lars)) {
 fit<-surv.lars(S,s,n)
 plot(fit)
 
@@ -80,5 +81,6 @@ plot(pout,multiple=1,se=0,uniform=0);
 
 full<-fit$beta[nrow(fit$beta),] # least squares solution
 c(full)
+}
 }
 \keyword{survival}

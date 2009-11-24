@@ -2,16 +2,15 @@ my.lars<-function (Gram, xy, n, y, type = c("lasso", "lar", "forward.stagewise",
     "stepwise"), trace = FALSE, normalize = FALSE, intercept = FALSE , 
      eps = .Machine$double.eps, max.steps, use.Gram = TRUE) 
 {
-y<-rep(1,n); x<-rep(1,n)
+    if (!require("lars")) stop("package Lars not available")
+    y<-rep(1,n); x<-rep(1,n)
     call <- match.call()
     type <- match.arg(type)
     TYPE <- switch(type, lasso = "LASSO", lar = "LAR", forward.stagewise = "Forward Stagewise", 
         stepwise = "Forward Stepwise")
     if (trace) 
         cat(paste(TYPE, "sequence\n"))
-    #nm <- dim(x)
-    #n <- nm[1]
-    #m <- nm[2]
+    #nm <- dim(x) #n <- nm[1] #m <- nm[2]
     m <- ncol(Gram)
     im <- inactive <- seq(m)
     one <- rep(1, n)
@@ -88,11 +87,11 @@ y<-rep(1,n); x<-rep(1,n)
             new <- inactive[new]
             for (inew in new) {
                 if (use.Gram) {
-                  R <- updateR(Gram[inew, inew], R, drop(Gram[inew, 
+                  R <- lars::updateR(Gram[inew, inew], R, drop(Gram[inew, 
                     active]), Gram = TRUE, eps = eps)
                 }
                 else {
-                  R <- updateR(x[, inew], R, x[, active], Gram = FALSE, 
+                  R <- lars::updateR(x[, inew], R, x[, active], Gram = FALSE, 
                     eps = eps)
                 }
                 if (attr(R, "rank") == length(active)) {
@@ -118,18 +117,18 @@ y<-rep(1,n); x<-rep(1,n)
             }
         }
         else action <- -dropid
-        Gi1 <- backsolve(R, backsolvet(R, Sign))
+        Gi1 <- backsolve(R, lars::backsolvet(R, Sign))
         dropouts <- NULL
         if (type == "forward.stagewise") {
             directions <- Gi1 * Sign
             if (!all(directions > 0)) {
                 if (use.Gram) {
-                  nnls.object <- nnls.lars(active, Sign, R, directions, 
+                  nnls.object <- lars::nnls.lars(active, Sign, R, directions, 
                     Gram[active, active], trace = trace, use.Gram = TRUE, 
                     eps = eps)
                 }
                 else {
-                  nnls.object <- nnls.lars(active, Sign, R, directions, 
+                  nnls.object <- lars::nnls.lars(active, Sign, R, directions, 
                     x[, active], trace = trace, use.Gram = FALSE, 
                     eps = eps)
                 }
@@ -192,7 +191,7 @@ y<-rep(1,n); x<-rep(1,n)
                 if (trace) 
                   cat("Lasso Step", k + 1, ":\t Variable", active[id], 
                     "\tdropped\n")
-                R <- downdateR(R, id)
+                R <- lars::downdateR(R, id)
             }
             dropid <- active[drops]
             beta[k + 1, dropid] <- 0

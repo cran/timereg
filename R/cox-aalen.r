@@ -118,8 +118,7 @@ cox.aalenBase<-function (times, fdata, designX, designG, status,
   if (sim == 1) {
     Uit <- matrix(nparout[[33]], Ntimes, 50 * pg)
     UIt <- list()
-    for (i in (0:49) * pg) UIt[[i/pg + 1]] <- as.matrix(Uit[, 
-                                                            i + (1:pg)])
+    for (i in (0:49) * pg) UIt[[i/pg + 1]] <- as.matrix(Uit[, i + (1:pg)])
     simUt <- matrix(nparout[[32]], antsim, pg)
     test <- matrix(nparout[[29]], antsim, 2 * px)
     testOBS <- nparout[[30]]

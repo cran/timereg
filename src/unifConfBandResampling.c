@@ -49,7 +49,7 @@ void confBandBasePredict (double *delta, int *nObs, int *nt, int *n,
                     delta, &nRowDelta, g, &incx, &beta, pt, &incy);
     
     for(k = 0; k < *nObs; k++){
-      pt1 = -1.0e999; // initially set to -INF
+      pt1 = -1.0e99; // initially set to -INF
       for(j = 0; j < *nt; j++){
 	pt2 = fabs(pt[k * *nt + j])/se[k * *nt + j];
 	if(pt1 < pt2){

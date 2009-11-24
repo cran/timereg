@@ -1,5 +1,6 @@
 surv.lars<-function(S,s,n, l1.weights=NULL, ...) 
 {
+    if (!require("lars")) stop("package Lars not available")
     if (is.null(l1.weights)==FALSE) adap<-1 else adap<-0; 
     adap<-0; 
     if (adap==1) S<-t(t(S)/l1.weights)
@@ -8,13 +9,12 @@ surv.lars<-function(S,s,n, l1.weights=NULL, ...)
 return(fit)
 }
 
-
 surv.lars.cv<-function(formula=formula(data),data=sys.parent(),
 l1.weights = NULL, K = 10,start.time=0,max.time=NULL,id=NULL,
 fraction = seq(from = 0, to = 1, length = 100), 
-trace = FALSE, plot.it = FALSE , se = TRUE, silent=1,
-    ...) 
+trace = FALSE, plot.it = FALSE , se = TRUE, silent=1, ...) 
 {
+   if (!require("lars")) stop("package Lars not available")
 ## {{{ reads design and survival times
     call <- match.call()
     m <- match.call(expand = FALSE)
@@ -81,6 +81,6 @@ trace = FALSE, plot.it = FALSE , se = TRUE, silent=1,
     object <- list(fraction = fraction, cv = cv, cv.error = cv.error, 
         cv.frac = fraction[order(cv)][1])
     if (plot.it) 
-        plotCVLars(object, se = se)
+        lars::plotCVLars(object, se = se)
     invisible(object)
 }

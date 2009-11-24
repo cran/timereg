@@ -23,7 +23,6 @@ int *sim,*antsim,*retur,*nxval,*nx,*px,*na,*pa,*antpers,*Ntimes,*mw,*rani,*statu
   double time,dummy,zpers=0,dif,dtime,YoneN,kia;
   FILE *fp; int VERBOSE=0;
   double *vcudif=calloc((*Ntimes)*(*px+1),sizeof(double));
-  long idum=*rani; 
   if (VERBOSE==1) fp=fopen("dump.dout","a");
 
   for (i=0;i<*antpers;i++) { malloc_vec(*px,cumhatB[i]); malloc_vec(*px,cumB[i]);
@@ -209,8 +208,7 @@ int *naval,*nxval,*nx,*px,*na,*pa,*ng,*pg,*antpers,*Ntimes,*mw,
   double tau,*C=calloc((*pg)*(*pg),sizeof(double));
   double *vcudif=calloc((*Ntimes)*(*px+1),sizeof(double));
   void comptest(); 
-  long idum; 
-  idum=*rani;ctime=0;  
+  ctime=0;  
  
   malloc_mats(*antpers,*px,&ldesignX,&cdesignX,NULL);
   malloc_mats(*antpers,*pg,&Zhat,&ldesignG,&cdesignG,NULL);

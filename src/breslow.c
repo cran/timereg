@@ -11,14 +11,12 @@ int
   vector *diag,*dB,*dN,*VdB,*AIXdN,*AIXlamt,*ta,*bhatt,*pbhat,*plamt,*avx,*lrisk;
   vector *ssrow2,*ssrow,*vtmp,*xi,*rowX,*cumi[*antpers],*difX,*cumBLi[*antpers],*Btau,*Base[*antpers],*score; 
   matrix *cumBL[*antpers],*cumB[*antpers],*BLsubbetaLam[*antpers];
-  matrix *Delta2,*Delta,*tmpM1,*tmpM2; 
-  matrix *varBL;
+  matrix *Delta2,*Delta,*tmpM1,*tmpM2,*varBL;
   int supsup=0,itt,i,j,k,s,c,count,pers=0,
       *imin=calloc(1,sizeof(int)), *coef=calloc(1,sizeof(int)),*ps=calloc(1,sizeof(int));
   double time2,rr,time=0,time1,dummy,dtime,S0,lam0t,sdBt,tau,random;
   double *Basei=calloc(*antpers,sizeof(double)),rvarbase,
 	 *vcudif=calloc((*Ntimes)*(*p+2),sizeof(double));
-  long idum; idum=*rani;
   double norm_rand();
   void GetRNGstate(),PutRNGstate();
 
@@ -28,7 +26,7 @@ int
     malloc_mat(*Ntimes,*p,Delta2); 
     malloc_mat(*Ntimes,*p,tmpM1); 
     malloc_mat(*Ntimes,*p,tmpM2);
-  }
+  }; 
 
   if (*robust==1)
   {
@@ -448,7 +446,6 @@ int *nx,*px,*antpers,*Ntimes,*nb,*ng,*pg,*it,*degree,*sim,*antsim,
   double time,dummy,dtime,lam0t,S0,
 	 *Basei=calloc((*antpers),sizeof(double)),
          *vcudif=calloc((*Ntimes)*(*px+2),sizeof(double)),dum2,rvarbase; 
-  long idum; idum=*rani;
 
   if (*robust==1){
     for (j=0;j<*antpers;j++) {

@@ -3,12 +3,12 @@ prop<-function(x) x
 two.stage<-function(formula=formula(data),data=sys.parent(),
 beta=0,Nit=10,detail=0,start.time=0,max.time=NULL,id=NULL, 
 clusters=NULL, robust=1,
-rate.sim=1,beta.fixed=0,theta=NULL,theta.des=NULL)
+rate.sim=1,beta.fixed=0,theta=NULL,theta.des=NULL,var.link=0)
 {
-  ratesim<-rate.sim; inverse<-0; 
+  ratesim<-rate.sim; inverse<-var.link
   call <- match.call()
   m <- match.call(expand=FALSE)
-  m$robust<-m$start.time<-m$beta<-m$Nit<-m$detail<-m$max.time<-m$clusters<-m$rate.sim<-m$beta.fixed<-m$theta<-m$theta.des<-NULL
+  m$robust<-m$start.time<-m$beta<-m$Nit<-m$detail<-m$max.time<-m$clusters<-m$rate.sim<-m$beta.fixed<-m$theta<-m$theta.des<-m$var.link<-NULL
 
   if (robust==0) cat("When robust=0 no variance estimate\n"); 
 
@@ -52,7 +52,7 @@ rate.sim=1,beta.fixed=0,theta=NULL,theta.des=NULL)
   ud<-two.stageBase.reg(times,ldata,X,Z,
                         status,id,clusters,Nit=Nit,detail=detail,beta=beta,
                         robust=robust,ratesim=ratesim,namesX=covnamesX,
-   namesZ=covnamesZ,beta.fixed=beta.fixed,theta=theta,theta.des=theta.des);
+   namesZ=covnamesZ,beta.fixed=beta.fixed,theta=theta,theta.des=theta.des,inverse=var.link);
 
   if (px>0) {
     colnames(ud$cum)<-colnames(ud$var.cum)<- c("time",covnamesX)
@@ -71,7 +71,7 @@ rate.sim=1,beta.fixed=0,theta=NULL,theta.des=NULL)
   attr(ud,"cluster")<-cluster.call;
   attr(ud,"start")<-start.time; 
   attr(ud,"time2")<-time2; 
-  attr(ud,"inverse")<-inverse
+  attr(ud,"var.link")<-var.link
 
   return(ud); 
 }
@@ -157,25 +157,31 @@ prop<-function(x) x
   if (is.null(object$gamma)==TRUE) stop(" No regression terms"); 
   if (is.null(object$prop.odds)==TRUE) p.o<-FALSE else p.o<-TRUE
     
-  inverse<-attr(object,"inverse");
+  var.link<-attr(object,"var.link");
   cat("Dependence parameter for Clayton-Oakes-Glidden  model\n"); 
   ptheta<-nrow(object$theta)
   sdtheta<-diag(object$var.theta)^.5
+  if (var.link==0) {
+      vari<-object$theta
+      sdvar<-diag(object$var.theta)^.5
+  }
+  else {
+      vari<-exp(object$theta)
+      sdvar<-vari*diag(object$var.theta)^.5
+  }
   dep<-cbind(object$theta[,1],sdtheta)
   walddep<-object$theta[,1]/sdtheta; 
   waldpdep<-(1-pnorm(abs(walddep)))*2
-  if (inverse==0) {
-    kendall<-1/(1+2/object$theta) 
-    kendall.ll<-1/(1+2/(object$theta+1.96*sdtheta)) 
-    kendall.ul<-1/(1+2/(object$theta-1.96*sdtheta)) }
-  else { kendall<-1/(1+2*object$theta);
-         kendall.ll<-1/(1+2*(object$theta+1.96*sdtheta));
-	 kendall.ul<-1/(1+2*(object$theta-1.96*sdtheta)); }
-  resdep<-signif(as.matrix(cbind(dep,walddep,waldpdep,kendall)),digits);
 
-  if (inverse==0) colnames(resdep) <- 
-    c("Variance","SE","z","P-val","Kendall's tau") 
-  else colnames(resdep) <- c("1/Variance","SE","z","P-val","Kendall's tau")
+  kendall<-1/(1+2/vari) 
+  kendall.ll<-1/(1+2/(object$theta+1.96*sdvar)) 
+  kendall.ul<-1/(1+2/(object$theta-1.96*sdvar)) 
+  if (var.link==0) resdep<-signif(as.matrix(cbind(dep,walddep,waldpdep,kendall)),digits)
+  else resdep<-signif(as.matrix(cbind(dep,walddep,waldpdep,vari,sdvar,kendall)),digits);
+
+  if (var.link==0) colnames(resdep) <- c("Variance","SE","z","P-val","Kendall's tau") 
+  else colnames(resdep)<-c("log(Variance)","SE","z","P-val","Variance","SE Var.",
+                           "Kendall's tau")
   prmatrix(resdep); cat("   \n");  
 
   cat("Marginal Cox-Aalen model fit\n\n"); 

@@ -1184,7 +1184,7 @@ void invertUnsafeS(matrix *A, matrix *Ainv,int silent){
 
   if(info != 0){
     //Avoid printing this error message
-    if (invert==0) printf("Error in invert: DGETRF returned info = %d \n",info);
+    if (silent==0) printf("Error in invert: DGETRF returned info = %d \n",info);
     mat_zeros(Ainv);
   } else {
   

@@ -325,6 +325,7 @@ xlab="Time",ylab="Probability",transparency=FALSE,monotone=TRUE,...){
   ### and the case when we want to plot a predicted risk funcion
   
   if (modelType == 'aalen' || modelType == 'cox.aalen'){
+    type<-"surv"
     mainLine <- object$S0;
     if (monotone==TRUE) { mainLine<--t(apply(as.matrix(-mainLine),1,pava)); 
     mainLine[mainLine<0]<-0; 
@@ -332,6 +333,7 @@ xlab="Time",ylab="Probability",transparency=FALSE,monotone=TRUE,...){
     }
     mainLine.se <- object$se.S0;    
   } else if(modelType == 'additive' || modelType == 'prop' || modelType=="logistic" || modelType=="1-additive"){
+    type<-"cif"
     mainLine <- object$P1;
     if (monotone==TRUE) { mainLine<-t(apply(as.matrix(mainLine),1,pava)); 
                            mainLine[mainLine<0]<-0; 
@@ -364,22 +366,37 @@ xlab="Time",ylab="Probability",transparency=FALSE,monotone=TRUE,...){
     }
 
     if (se==1 & is.null(mainLine.se)==FALSE ) {
-      lines(time,mainLine[i,]-qnorm(1-alpha/2)*mainLine.se[i,],type="s",col=col[i],lty=3,lwd=lwd[i]/2);
-      lines(time,mainLine[i,]+qnorm(1-alpha/2)*mainLine.se[i,],type="s",col=col[i],lty=3,lwd=lwd[i]/2);
+      lower<-mainLine[i,]-qnorm(1-alpha/2)*mainLine.se[i,]
+      upper<-mainLine[i,]+qnorm(1-alpha/2)*mainLine.se[i,]
+       if (monotone==TRUE) { 
+       if (type=="cif") { lower<- pava(lower); upper<- pava(upper); }
+       if (type=="surv") { lower<- -pava(-lower); upper<- -pava(-upper); }
+        lower[lower<0]<-0; lower[lower>1]<-1; 
+        upper[upper<0]<-0; upper[upper>1]<-1; 
+       }
+
+      lines(time,lower,type="s",col=col[i],lty=3,lwd=lwd[i]/2);
+      lines(time,upper,type="s",col=col[i],lty=3,lwd=lwd[i]/2);
     }
 
     if (uniform==1 & is.null(uband)==FALSE ) {
       #if (level!=0.05) c.alpha<-percen(object$sim.test[,i],1-level)
       #else c.alpha<-object$conf.band.cumz[i];
       c.alpha=uband[i]; 
-      ul<-mainLine[i,]-uband[i]*mainLine.se[i,];
-      ll<-mainLine[i,]+uband[i]*mainLine.se[i,];
+      upper<-mainLine[i,]-uband[i]*mainLine.se[i,];
+      lower<-mainLine[i,]+uband[i]*mainLine.se[i,];
+       if (monotone==TRUE) { 
+          if (type=="cif") { lower<- pava(lower); upper<- pava(upper); }
+          if (type=="surv") { lower<- -pava(-lower); upper<- -pava(-upper); }
+          lower[lower<0]<-0; lower[lower>1]<-1; 
+          upper[upper<0]<-0; upper[upper>1]<-1; 
+       }
       if (transparency==0 || transparency==2) {
-      lines(time,ul,type="s",col=col[i],lty=2,lwd=lwd[i]/2);
-      lines(time,ll,type="s",col=col[i],lty=2,lwd=lwd[i]/2);
+      lines(time,upper,type="s",col=col[i],lty=2,lwd=lwd[i]/2);
+      lines(time,lower,type="s",col=col[i],lty=2,lwd=lwd[i]/2);
       }
 
-    ## Prediction bandds ## {{{
+    ## Prediction polygons bandds ## {{{
     if (transparency>=1) {
      col.alpha<-0.2
      col.ci<-"darkblue"
@@ -392,11 +409,11 @@ xlab="Time",ylab="Probability",transparency=FALSE,monotone=TRUE,...){
       #print(t); print(ci)
       n<-length(time)
       tt<-seq(time[1],time[n],length=n*10); 
-      ud<-Cpred(cbind(time,ul,ll),tt)[,2:3]
+      ud<-Cpred(cbind(time,upper,lower),tt)[,2:3]
       tt <- c(tt, rev(tt))
-      yy <- c(ul, rev(ll))
+      yy <- c(upper, rev(lower))
 #      tt <- c(time, rev(time))
-#      yy <- c(ul, rev(ll))
+#      yy <- c(upper, rev(lower))
      yy <- c(ud[,1], rev(ud[,2]))
       polygon(tt,yy, col=col.trans, lty=0)      
   } ## }}}

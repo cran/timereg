@@ -178,6 +178,7 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,*ratesim,*robust,
 
 
       /* for (k=0;k<*pg;k++) ME(S1,k,k)=ME(S1,k,k)+*ridge;  */
+      if (*betafixed==0) {
       invert(S1,SI); 
 
       Mv(SI,U,delta); if (*betafixed==0) vec_add(beta,delta,beta); 
@@ -186,6 +187,7 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,*ratesim,*robust,
       for (k=0;k<*pg;k++) sumscore= sumscore+VE(U,k); 
 
       if ((fabs(sumscore)<0.0000000001) & (it<*Nit-2)) it=*Nit-2; 
+      }
     } /* it */
   for (k=0;k<*pg;k++) score[k]=VE(U,k); 
 
@@ -312,14 +314,12 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,*ratesim,*robust,
       vec_zeros(vthetascore); mat_zeros(d2Utheta); 
       Mv(destheta,vtheta1,lamtt); 
 
-      if (*inverse==2) {
-	theta[0]=1/nu; Dthetanu=-1/pow(nu,2);  DDthetanu=2/pow(nu,3); 
-      } else {DDthetanu=0; Dthetanu=1; }
 
       for (j=0;j<*antclust;j++) 
 	if (clustsize[j]>=2) {
 	  for (i=0;i<*antpers;i++) if (cluster[i]==j)  {
 	    theta0=VE(lamtt,i); 
+            if (*inverse==1) theta0=exp(theta0); 
 	    Rtheta[j]=Rtheta[j]+exp(theta0*Hik[i])-1; 
 	    HeH[j]=HeH[j]+Hik[i]*exp(theta0*Hik[i]); 
 	    H2eH[j]=H2eH[j]+pow(Hik[i],2)*exp(theta0*Hik[i]); } }
@@ -329,7 +329,10 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,*ratesim,*robust,
 	if (clustsize[j]>=2) {
 
 	  for (i=0;i<*antpers;i++) if (cluster[i]==j) {
-	    extract_row(destheta,i,vtheta2); theta0=VE(lamtt,i); i=*antpers-1;}
+	    extract_row(destheta,i,vtheta2); theta0=VE(lamtt,i); 
+            if (*inverse==1) { theta0=exp(VE(lamtt,i)); Dthetanu=theta0;  
+		    DDthetanu=pow(theta0,1);}
+	    i=*antpers-1;}
 
 	  sumscore=0;  ll=0; 
 	  if (Nt[j]>=2) 
@@ -341,9 +344,9 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,*ratesim,*robust,
 	  thetaiidscale[j]=sumscore+log(Rtheta[j])/(theta0*theta0)
 	    -(1/theta0+Nt[j])*HeH[j]/Rtheta[j]+NH[j]; 
 
-	  scl_vec_mult(thetaiidscale[j],vtheta2,thetaiid[j]); 
+	  scl_vec_mult(thetaiidscale[j]*Dthetanu,vtheta2,thetaiid[j]); 
 
-	  vec_add_mult(vthetascore,thetaiid[j],Dthetanu,vthetascore); 
+	  vec_add(vthetascore,thetaiid[j],vthetascore); 
 
 	  for (i=0;i<*ptheta;i++)
 	    for (k=0;k<*ptheta;k++)
@@ -354,9 +357,8 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,*ratesim,*robust,
 
 	  mat_add(d2Utheta,Sthetaiid[j],d2Utheta); 
 	}
-      if (*inverse==2) { 
-	for (i=0;i<*ptheta;i++)
-	  for (k=0;k<*ptheta;k++)
+      if (*inverse==-10) { 
+	for (i=0;i<*ptheta;i++) for (k=0;k<*ptheta;k++)
 	    ME(Stheta,i,k)=VE(vthetascore,i)*DDthetanu/Dthetanu; 
 	mat_add(d2Utheta,Stheta,d2Utheta); }
 
@@ -428,16 +430,10 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,*ratesim,*robust,
     for (j=0;j<*antclust;j++) if (clustsize[j]>=2) {
       if (*betafixed==1) vec_zeros(W2[j]); 
 
-      /* */
       Mv(Gtilde,W2[j],vtheta2); 
-      /* printf(" %ld \n",j); print_vec(W2[j]);
-	 print_vec(vtheta2); print_vec(dAiid[j]); 
-      */
+/* printf(" %ld \n",j);print_vec(W2[j]);print_vec(vtheta2); print_vec(dAiid[j]);*/
 
-      /* print_vec(vtheta2); */
       vec_add_mult(thetaiid[j],vtheta2,Dthetanu,thetaiid[j]);
-
-      /* print_vec(dAiid[j]); */
       vec_add_mult(thetaiid[j],dAiid[j],Dthetanu,thetaiid[j]);
 
       for (i=0;i<*ptheta;i++) for (k=0;k<*ptheta;k++)
