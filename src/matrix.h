@@ -199,7 +199,7 @@ void smoothB(double *designX,int *nx,int *p,double *bhat,int *nb,double *b,int *
 void comptestfunc(double *times,int *Ntimes,int *px,double *cu,double *vcu,
 		  double *vcudif,int *antsim,double *test,double *testOBS,
 		  double *Ut,double *simUt,matrix **W4t,int *weighted,int *antpers,
-		  double *gamma,int *line); 
+		  double *gamma,int *line,double *timepowtest); 
 
 void itfitsemi(double *times,int *Ntimes,double *x,int *delta,int *cause,double *KMc,
 	       double *z,int *antpers,int *px,int *Nit,double *score,double *hess,
@@ -207,7 +207,8 @@ void itfitsemi(double *times,int *Ntimes,double *x,int *delta,int *cause,double 
 	       double *testOBS,double *Ut,double *simUt,int *weighted, double *gamma,
 	       double *vargamma,int *semi,double *zsem,int *pg,int *trans,double *gamma2,
 	       int *CA,int *line,int *detail,double *biid,double *gamiid,int *resample,
-	       double *timepow,int *clusters,int *antclust);
+	       double *timepow,int *clusters,int *antclust,double *timepowtest,
+	       int *silent,double *convc);
 
 
 void LevenbergMarquardt(matrix *S,matrix *SI,vector *U,vector *delta,double *lm,double *step); 

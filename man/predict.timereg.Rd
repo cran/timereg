@@ -63,30 +63,40 @@ models for survival data, Springer.
 \author{Thomas Scheike, Jeremy Silver}
 \examples{
 data(bmt); 
-times<-bmt$time[bmt$cause==1]; 
 
-add<-comp.risk(Surv(time,cause>0)~platelet+age+tcell,bmt,
-bmt$cause,times[-1],causeS=1,resample.iid=1)
-summary(add)
-
-par(mfrow=c(2,4))
-plot(add); plot(add,score=1)
+add<-comp.risk(Surv(time,cause>0)~platelet+age+tcell,data=bmt,
+bmt$cause,causeS=1,resample.iid=1)
 
 ndata<-data.frame(platelet=c(1,0,0),age=c(0,1,0),tcell=c(0,0,1))
-par(mfrow=c(2,3))
 out<-predict(add,newdata=ndata,uniform=1,n.sim=1000)
 par(mfrow=c(2,2))
 plot(out,multiple=0,uniform=1,col=1:3,lty=1,se=1)
 # see comp.risk for further examples. 
 
+add<-comp.risk(Surv(time,cause>0)~factor(tcell),data=bmt,
+bmt$cause,causeS=1,resample.iid=1)
+summary(add)
+out<-predict(add,newdata=ndata,uniform=1,n.sim=1000)
+plot(out,multiple=1,uniform=1,col=1:3,lty=1,se=1)
+
 ## SURVIVAL predictions aalen function
 data(sTRACE)
+out<-aalen(Surv(time,status==9)~sex+ diabetes+chf+vf,
+data=sTRACE,max.time=7,n.sim=0,resample.iid=1)
+
+pout<-predict(out,X=rbind(c(1,0,0,0,0),rep(1,5)))
+head(pout$S0[,1:5]); head(pout$se.S0[,1:5])
+par(mfrow=c(2,2))
+plot(pout,multiple=1,se=0,uniform=0,col=1:2,lty=1:2)
+plot(pout,multiple=0,se=1,uniform=1,col=1:2)
+
 out<-aalen(Surv(time,status==9)~const(age)+const(sex)+
 const(diabetes)+chf+vf,
 data=sTRACE,max.time=7,n.sim=0,resample.iid=1)
 
 pout<-predict(out,X=rbind(c(1,0,0),c(1,1,0)),
 Z=rbind(c(55,0,1),c(60,1,1)))
+head(pout$S0[,1:5]); head(pout$se.S0[,1:5])
 par(mfrow=c(2,2))
 plot(pout,multiple=1,se=0,uniform=0,col=1:2,lty=1:2)
 plot(pout,multiple=0,se=1,uniform=1,col=1:2)
@@ -94,13 +104,12 @@ plot(pout,multiple=0,se=1,uniform=1,col=1:2)
 pout<-predict(out,uniform=0,se=0,newdata=sTRACE[1:10,]) 
 plot(pout,multiple=1,se=0,uniform=0)
 
-data(sTRACE)
 out<-cox.aalen(Surv(time,status==9)~prop(age)+prop(sex)+
 prop(diabetes)+chf+vf,
 data=sTRACE,max.time=7,n.sim=0,resample.iid=1)
 
-pout<-predict(out,X=rbind(c(1,0,0),c(1,1,0)),
-Z=rbind(c(55,0,1),c(60,1,1)))
+pout<-predict(out,X=rbind(c(1,0,0),c(1,1,0)),Z=rbind(c(55,0,1),c(60,1,1)))
+head(pout$S0[,1:5]); head(pout$se.S0[,1:5])
 par(mfrow=c(2,2))
 plot(pout,multiple=1,se=0,uniform=0,col=1:2,lty=1:2)
 plot(pout,multiple=0,se=1,uniform=1,col=1:2)

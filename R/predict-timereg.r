@@ -71,6 +71,7 @@ aalen.des2 <-  function(formula,data=sys.parent(),model=NULL,...){
   return(des) 
 }
 
+###pred2<-function(object,newdata=NULL,X=NULL,
 predict.comprisk<-function(object,newdata=NULL,X=NULL,
                            Z=NULL,n.sim=500, uniform=TRUE,
                            se=TRUE,alpha=0.05,...){
@@ -79,32 +80,21 @@ predict.comprisk<-function(object,newdata=NULL,X=NULL,
         || inherits(object,'cox.aalen')))
     stop ("Must be output from comp.risk function")
 
-  if(inherits(object,'aalen')) {
-    modelType <- 'aalen';
-  } else if(inherits(object,'comprisk')) {
-    modelType <- object$model;
-  } else if(inherits(object,'cox.aalen')) {
-    modelType <- 'cox.aalen';
-  }
+  if(inherits(object,'aalen')) { modelType <- 'aalen';
+  } else if(inherits(object,'comprisk')) { modelType <- object$model;
+  } else if(inherits(object,'cox.aalen')) { modelType <- 'cox.aalen'; }
   n <- length(object$B.iid) ## Number of clusters (or number of individuals
                             ## if no cluster structure is specified)
 
-  if (is.null(object$B.iid)==TRUE & se==TRUE) {
+  if (is.null(object$B.iid)==TRUE & (se==TRUE | uniform==TRUE)) {
     stop("resample processes necessary for these computations, set resample.iid=1");
   }
-  if (is.null(object$gamma)==TRUE) {
-    semi<-FALSE
-  } else {
-    semi<-TRUE
-  }
+  if (is.null(object$gamma)==TRUE) { semi<-FALSE } else { semi<-TRUE }
 
+  ## {{{ extracts design based on the different specifications
   ## cox.aalen uses prop(...), while aalen and comp.risk use const(...)
   ## this accounts for the different number of characters
-  if(inherits(object,'cox.aalen')){
-    indexOfFirstChar <- 6;
-  } else {
-    indexOfFirstChar <- 7;
-  }
+  if(inherits(object,'cox.aalen')){ indexOfFirstChar <- 6; } else { indexOfFirstChar <- 7; }
   
   constant.covs <- NULL
   if (!is.null(newdata)) {
@@ -119,8 +109,6 @@ predict.comprisk<-function(object,newdata=NULL,X=NULL,
       const <- c(object$gamma)
       names(const) <-substr(dimnames(object$gamma)[[1]],indexOfFirstChar,
                             nchar(dimnames(object$gamma)[[1]])-1)
-###      constant.covs <- newdata[,names(const)]
-###      constant.covs<-as.matrix(constant.covs); 
     }
 
     ## Then extract the time-varying effects
@@ -128,15 +116,12 @@ predict.comprisk<-function(object,newdata=NULL,X=NULL,
     ntime <- nrow(time.coef)
     fittime <- time.coef[,1,drop=TRUE]
     ntimevars <- ncol(time.coef)-2
-### time.vars <- cbind(1,newdata[,names(time.coef)[-(1:2)],drop=FALSE])
     nobs <- nrow(newdata)
   } else if ((is.null(Z)==FALSE) || (is.null(X)==FALSE)){
 
-    if(is.null(Z) || is.matrix(Z) || is.data.frame(Z)){
-      constant.covs<-Z;
-    } else {
-      constant.covs<-matrix(Z,ncol = nrow(object$gamma));
-    }
+  if(is.null(Z) || is.matrix(Z) || is.data.frame(Z)){
+    constant.covs<-Z;
+    } else { constant.covs<-matrix(Z,ncol = nrow(object$gamma)); }
 
   if ((is.null(Z)==FALSE) && is.null(X))
   {
@@ -158,71 +143,79 @@ predict.comprisk<-function(object,newdata=NULL,X=NULL,
     stop("Must specify either newdata or X, Z\n");
   }
 
-  if (semi==TRUE) {
-    constant.part <- constant.covs %*% object$gamma
-  }
-  
+  ## }}}
+
+  ## {{{ predictions for competing risks and survival data
+
   cumhaz<-as.matrix(time.vars) %*% t(time.coef[,-1])
-  
-  time<-time.coef[,1];
+  time<-time.coef[,1]; if (semi==TRUE) pg <- ncol(constant.covs); 
   nt<-length(time);
-  if (modelType == "additive") {
-    if (semi==FALSE){
-      P1=1-exp(-cumhaz);
-    } else {
-      P1=1-exp(-cumhaz-constant.part %*% time)
-    }
-    RR<-NULL; 
-  } else if (modelType == '1-additive') { # P1=exp(-x^T b(t) - z^t gamma) 
+
+  ### set up articial time.pow for aalen  and cox.aalen to make unified code for 
+  ###  comp.risk and survival
+  if(inherits(object,'aalen') & semi==TRUE) timepow <- rep(1,pg)
+  if(inherits(object,'cox.aalen')) timepow <- rep(0,pg)
+  if(inherits(object,'comprisk')) timepow <- attr(object,"time.pow")
+
+  if (semi==TRUE)
+  constant.part <- constant.covs %*% (matrix( rep(c(time),pg)^timepow,pg,nt) *c(object$gamma) )
+
+  if (inherits(object,'comprisk')) { ## {{{ competing models
+    if (modelType == "additive") {
       if (semi==FALSE){
-         P1=exp(-cumhaz);
-       } else {
-         P1<-exp(-cumhaz-matrix(constant.part,nobs,nt));
+        P1=1-exp(-cumhaz);
+      } else {
+        P1=1-exp(-cumhaz-constant.part )
+      }
+      RR<-NULL; 
+    } else if (modelType == 'rcif') { # P1=exp(x^T b(t) + z^t t^p gamma) 
+        if (semi==FALSE){
+           P1=exp(cumhaz);
+         } else {
+         P1<-exp(cumhaz+constant.part);
        }
        RR<-1;
-  } else if (modelType == 'prop') {     #model proportional 
-    if (semi==FALSE){
-      RR<-exp(cumhaz);
-    } else {
-      RR<-exp(cumhaz+matrix(constant.part,nobs,nt));
+    } else if (modelType == 'prop') {# model proportional 
+        if (semi==FALSE){
+        RR<-exp(cumhaz);
+      } else {
+        RR<-exp(cumhaz+constant.part);
     }
     P1<-1-exp(-RR);
-  } else if (modelType == 'logistic') { #model logistic
-    if (semi==FALSE){
-      RR<-exp(cumhaz);
-    } else {
-      RR<-exp(cumhaz+matrix(constant.part,nobs,nt));
-    }
-    P1<-RR/(1+RR);
-  } else if (modelType == "aalen") {    #Aalen model
-    if (semi==FALSE){
-      S0=exp(-cumhaz);
-    } else {
-      S0=exp(-cumhaz-constant.part %*% time)
-    }
-    RR<-NULL; 
-  } else if(modelType == 'cox.aalen'){  #Cox-Aalen model
-    if(semi == FALSE){
-      RR <- NULL;
-      S0 <- exp(-cumhaz);
-    } else {
-      RR <- exp(matrix(constant.part,nobs,nt));
-      S0 <- exp(-cumhaz * RR);
-    }
-  }
+    } else if (modelType == 'logistic') { #model logistic
+      if (semi==FALSE){ RR<-exp(cumhaz); }   else { RR<-exp(cumhaz+constant.part); }
+      P1<-RR/(1+RR);
+    } ## }}}
+    } else {  # survival model  ## {{{
+       if (modelType == "aalen") {    #Aalen model
+          if (semi==FALSE){ S0=exp(-cumhaz); } else { S0=exp(-cumhaz-constant.part) }
+       RR<-NULL; 
+       } else if(modelType == 'cox.aalen'){  #Cox-Aalen model
+       if(semi == FALSE){ RR <- NULL; S0 <- exp(-cumhaz); } else {
+         RR <- exp(constant.part);
+         S0 <- exp(-cumhaz * RR);
+       }
+     }
+    } ## }}}
+
+    ## }}}
 
   se.P1 <- NULL
   se.S0 <- NULL
-  ## i.i.d decomposition for computation of standard errors 
+  ## i.i.d decomposition for computation of standard errors  ## {{{
   if (se==1) {
     pg<-length(object$gamma); 
     delta<-c();
     for (i in 1:n) {
-      tmp<- as.matrix(time.vars) %*% t(object$B.iid[[i]]) 
-      if (semi==TRUE) {
-        gammai <- matrix(object$gamma.iid[i,],pg,1); 
-        tmp.const <- constant.covs %*% gammai;
-      }
+       tmp<- as.matrix(time.vars) %*% t(object$B.iid[[i]]) 
+
+       if (semi==TRUE) {
+###       if (inherits(object,'comprisk')) {
+             gammai <- matrix(object$gamma.iid[i,],pg,1); 
+             tmp.const<-constant.covs %*% (matrix( rep(time,pg)^timepow,pg,nt)*c(gammai) )
+###          if (semi==TRUE) { tmp.const <- constant.covs %*% gammai; }
+       } 
+###       else { }
 
       if (i==0) {
         print(tmp.const);
@@ -237,13 +230,15 @@ predict.comprisk<-function(object,newdata=NULL,X=NULL,
 
       if (semi==TRUE){
         if(modelType=="additive" || modelType == "aalen") {
-           # || modelType=="1-additive") {
-          tmp<-tmp+tmp.const %*% matrix(time,1,nt)
-        } else if (modelType=="prop" || modelType=="1-additive") {
-          tmp<-RR*tmp+RR*matrix(tmp.const,nobs,nt);
+           # || modelType=="rcif") {
+          tmp<-tmp+ tmp.const ## %*% matrix(time,1,nt)
+        } else if (modelType=="prop" || modelType=="rcif") {
+###          tmp<-RR*tmp+RR*matrix(tmp.const,nobs,nt);
+          tmp<-RR*tmp+RR*tmp.const;
 	  ## modification of jeremy's code RR
         } else if (modelType=="cox.aalen") {
-          tmp <- RR * tmp + RR * cumhaz * matrix(tmp.const,nobs,nt);
+###          tmp <- RR * tmp + RR * cumhaz * matrix(tmp.const,nobs,nt);
+          tmp <- RR * tmp + RR * cumhaz * tmp.const
         }
       }
       delta<-cbind(delta,c(tmp)); 
@@ -252,7 +247,7 @@ predict.comprisk<-function(object,newdata=NULL,X=NULL,
     if(modelType == 'additive' || modelType == 'prop'){
       se.P1<-matrix(se,nobs,nt)*(1-P1) 
     } 
-    else if(modelType == '1-additive'){
+    else if(modelType == 'rcif'){
       se.P1<-matrix(se,nobs,nt)*(P1) 
     } 
     else if (modelType == 'logistic'){
@@ -261,10 +256,10 @@ predict.comprisk<-function(object,newdata=NULL,X=NULL,
     else if (modelType == 'aalen' || modelType == 'cox.aalen'){
       se.S0<-matrix(se,nobs,nt)*S0
     }
+    ## }}}
 
-    ### uniform confidence bands, based on resampling 
+    ### uniform confidence bands, based on resampling  ## {{{
     if (uniform==1) {
-
       mpt <- .C('confBandBasePredict',
                 delta = as.double(delta),
                 nObs = as.integer(nobs),
@@ -283,7 +278,7 @@ predict.comprisk<-function(object,newdata=NULL,X=NULL,
   }
 
   if(modelType == 'additive' || modelType == 'prop' || modelType=="logistic"
-     || modelType=='1-additive'){
+     || modelType=='rcif'){
     P1<-matrix(P1,nrow=nobs);
   } else if (modelType == 'aalen' || modelType == 'cox.aalen'){
     S0<-matrix(S0,nrow=nobs);
@@ -293,7 +288,7 @@ predict.comprisk<-function(object,newdata=NULL,X=NULL,
             newdata=list(X = time.vars, Z = constant.covs),RR=RR,
             call=sys.calls()[[1]], initial.call = attr(object,'Call'));
   if(modelType == 'additive' || modelType == 'prop' || modelType=="logistic"
-     || modelType=='1-additive'){
+     || modelType=='rcif'){
     out$P1 <- P1;
     out$se.P1 <- se.P1;    
   } else if (modelType == 'aalen' || modelType == 'cox.aalen'){
@@ -319,7 +314,6 @@ plot.predictCoxAalen <-  function(x,...){
   plot.predictComprisk(x,...)
 
 }
-
 
 pava = function(x, w=rep(1,length(x)))  # R interface to the compiled code
 { ## {{{
@@ -356,7 +350,7 @@ xlab="Time",ylab="Probability",transparency=FALSE,monotone=TRUE,...){
     mainLine[mainLine>1]<-1; 
     }
     mainLine.se <- object$se.S0;    
-  } else if(modelType == 'additive' || modelType == 'prop' || modelType=="logistic" || modelType=="1-additive"){
+  } else if(modelType == 'additive' || modelType == 'prop' || modelType=="logistic" || modelType=="rcif"){
     type<-"cif"
     mainLine <- object$P1;
     if (monotone==TRUE) { mainLine<-t(apply(as.matrix(mainLine),1,pava)); 
@@ -439,18 +433,12 @@ xlab="Time",ylab="Probability",transparency=FALSE,monotone=TRUE,...){
   }
 } ## }}}
 
-
-
 print.predictAalen <- function(x,...){
-
   print.predictComprisk(x,...)
-  
 }
 
 print.predictCoxAalen <- function(x,...){
-
   print.predictComprisk(x,...)
-  
 }
 
 print.predictComprisk <- function(x,...){
@@ -491,19 +479,14 @@ print.predictComprisk <- function(x,...){
 }
 
 summary.predictAalen <- function(object,...){
-
   summary.predictComprisk(object,...)
-  
 }
 
 summary.predictCoxAalen <- function(object,...){
-
   summary.predictComprisk(object,...)
-  
 }
 
 summary.predictComprisk <- function(object,...){
-
   if(!(inherits(object,'predictAalen') ||
        inherits(object,'predictCoxAalen') ||
        inherits(object,'predictComprisk'))){
@@ -586,7 +569,7 @@ plot.comprisk <-  function (x, pointwise.ci=1, hw.ci=0,
       ul<-B[,v]+c.alpha*V[,v]^.5;
       nl<-B[,v]-c.alpha*V[,v]^.5;
       if (add.to.plot==FALSE) {
-        plot(B[,1],est,ylim=1.05*range(ul,nl),type="s",xlab=xlab,ylab=ylab) 
+        plot(B[,1],est,ylim=1.05*range(ul,nl),type="s",xlab=xlab,ylab=ylab,...) 
         if (mains==TRUE) title(main=colnames(B)[v]);
       } else {
         lines(B[,1],est,type="s");
@@ -646,7 +629,7 @@ plot.comprisk <-  function (x, pointwise.ci=1, hw.ci=0,
 
           plot(object$test.procBeqC[,1],
                object$test.procBeqC[,i],
-               ylim=c(-mr,mr),lwd=2,xlab=xlab,ylab=ylab,type="s")
+               ylim=c(-mr,mr),lwd=2,xlab=xlab,ylab=ylab,type="s",...)
           if (mains==TRUE){
             title(main=colnames(object$test.procBeqC)[i]);
           }
@@ -670,12 +653,10 @@ plot.comprisk <-  function (x, pointwise.ci=1, hw.ci=0,
   cat("Competing risks Model \n\n")
   
   modelType<-object$model
-  #if (modelType=="additive" || modelType=="1-additive") 
-  if (modelType=="additive") 
-    hyp.label<-"p-value H_0: B(t)=b t" else hyp.label<-"p-value H_0: B(t)=b"
+  #if (modelType=="additive" || modelType=="rcif") 
  
   if (sum(object$obs.testBeq0)==FALSE) cat("No test for non-parametric terms\n") else
-  timetest(object,digits=digits,hyp.label=hyp.label); 
+  timetest(object,digits=digits); 
 
   if (semi) { cat("Parametric terms : \n"); coef(object); cat("   \n"); }
 

@@ -1,25 +1,22 @@
 comp.risk<-function(formula,data=sys.parent(),cause,times=NULL,Nit=50,
 clusters=NULL,gamma=0,n.sim=500,weighted=0,model="additive",
 causeS=1,cens.code=0,detail=0,interval=0.01,resample.iid=1,
-cens.model="KM",time.pow=0){
-# trans=1 P_1=1-exp(- ( x' b(b)+ z' gam t) ), 
+cens.model="KM",time.pow=NULL,time.pow.test=NULL,silent=1,conv=1e-6){
+# trans=1 P_1=1-exp( - ( x' b(b)+ z' gam t) ), 
 # trans=2 P_1=1-exp(-exp(x a(t)+ z` b )
 # trans=not done P_1=1-exp(-x a(t) exp(z` b )) is not good numerically
-# trans=3 P_1=exp(-exp(x a(t)+ z` b )
+# trans=3 logit(P_1)=(x a(t)+ z` b)
+# trans=4 P_1=exp( ( x' b(b)+ z' gam t) ), 
   if (model=="additive") trans<-1; 
-  if (model=="prop") trans<-2; 
+  if (model=="prop")     trans<-2; 
   if (model=="logistic") trans<-3; 
-  if (model=="1-additive") trans<-4; 
-  ## if (is.null(line)) {
-  if (trans==1) line<-1; if (trans==2) line<-0; 
-  if (trans==3) line<-0; if (trans==4) line<-0; 
-  ## }
-# line=1 indicates that it is tested that "b(t) = gamma t".
-# line=0 indicates that it is tested that "b(t) = gamma ".
+  if (model=="rcif")     trans<-4; 
+  line <- 0
   m<-match.call(expand = FALSE);
   m$gamma<-m$times<-m$cause<-m$Nit<-m$weighted<-m$n.sim<-
-    m$model<-m$causeS<- m$detail<- m$cens.model<-m$time.pow<-
-    m$cens.code<-m$interval<- m$clusters<-m$resample.iid<-NULL
+    m$model<-m$causeS<- m$detail<- m$cens.model<-m$time.pow<-m$silent<- 
+    m$cens.code<-m$interval<- m$clusters<-m$resample.iid<-
+    m$time.pow.test<-m$conv<-NULL
   special <- c("const","cluster")
   if (missing(data)) {
     Terms <- terms(formula, special)
@@ -62,7 +59,8 @@ cens.model="KM",time.pow=0){
   pxz <-px+pz;
 
   if (is.null(times)) {times<-sort(unique(time2[cause==causeS])); 
-                       times<-times[-c(1:5)];}
+                       ###times<-times[-c(1:5)];
+  } else times <- sort(times); 
 
   n<-nrow(X); ntimes<-length(times);
   if (npar==TRUE) {Z<-matrix(0,n,1); pg<-1; fixed<-0;} else {fixed<-1;pg<-pz;} 
@@ -115,8 +113,16 @@ cens.model="KM",time.pow=0){
   var.gamma<-matrix(0,pg,pg); 
   pred.covs.sem<-0
 
-  if (sum(time.pow)==0 & model=="prop") time.pow<-rep(0,pg); 
-  if (sum(time.pow)==0 & model=="additive") time.pow<-rep(1,pg); 
+  if (is.null(time.pow)==TRUE & model=="prop" )     time.pow<-rep(0,pg); 
+  if (is.null(time.pow)==TRUE & model=="additive")  time.pow<-rep(1,pg); 
+  if (is.null(time.pow)==TRUE & model=="rcif" )     time.pow<-rep(1,pg); 
+  if (is.null(time.pow)==TRUE & model=="logistic" ) time.pow<-rep(0,pg); 
+
+  if (is.null(time.pow.test)==TRUE & model=="prop" )     time.pow.test<-rep(0,px); 
+  if (is.null(time.pow.test)==TRUE & model=="additive")  time.pow.test<-rep(1,px); 
+  if (is.null(time.pow.test)==TRUE & model=="rcif" )     time.pow.test<-rep(1,px); 
+  if (is.null(time.pow.test)==TRUE & model=="logistic" ) time.pow.test<-rep(0,px); 
+
 
   out<-.C("itfit",
           as.double(times),as.integer(ntimes),as.double(time2),
@@ -132,6 +138,7 @@ cens.model="KM",time.pow=0){
           as.integer(causeS),as.integer(line),as.integer(detail),
           as.double(biid),as.double(gamiid),as.integer(resample.iid),
           as.double(time.pow),as.integer(clusters),as.integer(antclust),
+          as.double(time.pow.test),as.integer(silent),as.double(conv),
           PACKAGE="timereg")
 
   gamma<-matrix(out[[24]],pg,1); var.gamma<-matrix(out[[25]],pg,pg); 
@@ -221,7 +228,7 @@ print.comprisk <- function (x,...) {
   if (is.null(object$gamma)==TRUE) semi<-FALSE else semi<-TRUE
     
    # We print information about object:  
-  cat(paste(" Competing risks model with", object$model,"subdistribution hazard function\n\n"))
+  cat(paste("Competing risks model with",object$model,"\n\n"))
   cat(" Nonparametric terms : ");
   cat(colnames(object$cum)[-1]); cat("   \n");  
   if (semi) {
@@ -230,8 +237,7 @@ print.comprisk <- function (x,...) {
     cat("   \n");
   } 
   cat("   \n");  
-
-    }
+}
 
 coef.comprisk <- function(object, digits=3,...) {
 

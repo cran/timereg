@@ -29,7 +29,6 @@ aalen<-function (formula = formula(data),
                  silent=0){
 ###deltaweight<-1; # always default
   if (n.sim == 0) sim <- 0 else sim <- 1
-  scale<-0;
   if (resample.iid==1 & robust==0) {
     cat("When robust=0 no iid representaion computed\n"); resample.iid<-0;}
   if (covariance==1 & robust==0) {
@@ -65,6 +64,7 @@ aalen<-function (formula = formula(data),
   X<-des$X; Z<-des$Z; npar<-des$npar; px<-des$px; pz<-des$pz;
   covnamesX<-des$covnamesX; covnamesZ<-des$covnamesZ
 
+  scale<-0;
   if (scale==1) { X<-scale(as.matrix(X)); Z<-scale(as.matrix(Z)); 
      sXscale<- attr(X,"scaled:scale"); sXcenter<- attr(X,"scaled:center") 
      sZscale<- attr(Z,"scaled:scale"); sZcenter<- attr(Z,"scaled:center") 

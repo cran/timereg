@@ -99,7 +99,7 @@ library(survival)
 data(diabetes)
 # Marginal Cox model  with treat as covariate
 fit<-two.stage(Surv(time,status) ~ prop(treat) + cluster(id),
-diabetes,Nit=40,theta=1)
+data=diabetes,Nit=40,theta=1)
 summary(fit)
 
 # Stratification after adult 

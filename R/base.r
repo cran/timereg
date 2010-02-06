@@ -19,10 +19,11 @@ timetest<-function(object,digits=3,hyp.label="p-value H_0:constant effect")
   test0<-cbind(object$obs.testBeq0,object$pval.testBeq0)
   testC<-cbind(object$obs.testBeqC,object$pval.testBeqC)
   colnames(test0)<-c("Supremum-test of significance","p-value H_0: B(t)=0")
-  colnames(testC)<-c("Kolmogorov-Smirnov test",hyp.label)
+  colnames(testC)<-c("      Kolmogorov-Smirnov test",hyp.label)
   if (is.null(object$obs.testBeqC.is)!=TRUE)  {
   testCis<-cbind(object$obs.testBeqC.is,object$pval.testBeqC.is)
-  colnames(testCis) <-c("Cramer von Mises test",hyp.label)
+  colnames(testCis) <-
+                   c("        Cramer von Mises test",hyp.label)
   }
   cat("\n")
   cat("Test for non-significant effects \n")

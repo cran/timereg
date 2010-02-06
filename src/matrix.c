@@ -1137,7 +1137,7 @@ void invertUnsafe(matrix *A, matrix *Ainv){
 
     if (fabs(ME(Ainv,0,0))>99999999999999)  { // TS 23-10
       print_mat(Ainv);
-      printf("Inversion, unstable large elements  \n");
+      printf("Inversion unstable, large elements  \n");
       mat_zeros(Ainv);
     }
   }
@@ -1215,7 +1215,7 @@ void invertUnsafeS(matrix *A, matrix *Ainv,int silent){
     }
 
     if (fabs(ME(Ainv,0,0))>99999999999999 )  { // TS 23-10
-      if (silent==0) printf("Inversion, unstable large elements  \n");
+      if (silent==0) printf("Inversion unstable, large elements  \n");
       mat_zeros(Ainv);
     }
   }
@@ -1451,7 +1451,7 @@ void LevenbergMarquardt(matrix *S,matrix *SI,vector *U,vector *delta,double *lm,
     invert(S2,SI); Mv(SI,U,delta);
   }
   if  (*step>0.0001) scl_vec_mult(*step,delta,delta); 
-  free(S2); 
+  free_mat(S2); 
 } // }}}
 
 void readXt2(int *antpers,int *nx,int *p,double *designX,
