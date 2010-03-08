@@ -18,7 +18,7 @@ int *n,*px,*Ntimes,*Nit,*cause,*delta,*sim,*antsim,*rani,*weighted,
     *rr,*rowX,*difbeta,*qs,*bhatub,*betaub,*dcovs,*pcovs,*zi,*rowZ,*zgam; 
   vector *cumhatA[*antclust],*cumA[*antclust],*bet1,*gam,*dp,*dp1,*dp2; 
   int osilent,convt,ps,sing,sc,c,i,j,k,l,s,it,convproblems=0,pointswithconv=0; 
-  double time,sumscore,totrisk,zgamt, 
+  double time,sumscore,totrisk, 
 	 *vcudif=calloc((*Ntimes)*(*px+1),sizeof(double));
   long idum;
   float gasdev(),expdev(),ran1();
@@ -281,6 +281,7 @@ int *antpers,*px,*Ntimes,*Nit,*cause,*delta,*sim,*antsim,*rani,*weighted,
       for (s=0;s<*Ntimes;s++)
       {
 	  time=times[s]; if (s==0) dtime=0; else dtime=time-times[s-1]; 
+//	  dtime=1; 
 
 	  for(j=1;j<=*px;j++) VE(bhatt,j-1)=est[j*(*Ntimes)+s];
 	  Mv(ldesignX,bhatt,pbhat); 
