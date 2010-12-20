@@ -5,9 +5,10 @@ beta=0,Nit=60,detail=0,start.time=0,max.time=NULL,id=NULL,
 clusters=NULL, robust=1,
 rate.sim=1,beta.fixed=0,theta=NULL,theta.des=NULL,var.link=0,step=1)
 {
+## {{{ Setting up things
   ratesim<-rate.sim; inverse<-var.link
   call <- match.call()
-  m <- match.call(expand=FALSE)
+  m <- match.call(expand.dots=FALSE)
   m$robust<-m$start.time<-m$beta<-m$Nit<-m$detail<-m$max.time<-m$clusters<-m$rate.sim<-m$beta.fixed<-m$theta<-m$theta.des<-m$var.link<-m$step<-NULL
 
   if (robust==0) cat("When robust=0 no variance estimate\n"); 
@@ -48,6 +49,9 @@ rate.sim=1,beta.fixed=0,theta=NULL,theta.des=NULL,var.link=0,step=1)
 
   if ((sum(beta)==0) & (beta.fixed==0)) beta<-coxph(Surv(time,time2,status)~Z)$coef; 
 
+  ## }}}
+
+
   if (px==0) stop("No nonparametric terms (needs one!)");
   ud<-two.stageBase.reg(times,ldata,X,Z,
                         status,id,clusters,Nit=Nit,detail=detail,beta=beta,
@@ -55,6 +59,7 @@ rate.sim=1,beta.fixed=0,theta=NULL,theta.des=NULL,var.link=0,step=1)
    namesZ=covnamesZ,beta.fixed=beta.fixed,theta=theta,theta.des=theta.des,
    inverse=var.link,step=step);
 
+## {{{ output handling
   if (px>0) {
     colnames(ud$cum)<-colnames(ud$var.cum)<- c("time",covnamesX)
     if (robust==1) colnames(ud$robvar.cum)<- c("time",covnamesX) }
@@ -83,6 +88,7 @@ rate.sim=1,beta.fixed=0,theta=NULL,theta.des=NULL,var.link=0,step=1)
   attr(ud,"beta.fixed")<-beta.fixed
 
   return(ud); 
+  ## }}}
 }
 
 two.stageBase.reg<-function (times, fdata, designX, designG, status,
@@ -120,7 +126,12 @@ theta.des=NULL,inverse=0,step=1)
     cluster.size<-as.vector(table(clusters));
     maxclust<-max(cluster.size)
     idiclust<-matrix(0,fdata$antclust,maxclust); 
-    for (i in 1:fdata$antclust) { idiclust[i,]<- which( clusters %in% (i-1))-1 }
+    cs<- rep(1,fdata$antclust)
+    for (i in 1:fdata$antpers) { 
+        idiclust[clusters[i]+1,cs[clusters[i]+1]]<-i-1;
+        cs[clusters[i]+1]<- cs[clusters[i]+1]+1; 
+    } 
+    if (maxclust==1) stop("No clusters !, maxclust size=1\n"); 
 
     #dyn.load("two-stage-reg.so"); 
 
@@ -238,7 +249,8 @@ coef.two.stage<-function(object,digits=3,d2logl=1,...) {
 plot.two.stage<-function(x,pointwise.ci=1,robust=0,specific.comps=FALSE,
 		level=0.05, 
 		start.time=0,stop.time=0,add.to.plot=FALSE,mains=TRUE,
-                xlab="Time",ylab ="Cumulative regression function",...) {
+                xlab="Time",ylab ="Cumulative regression function",...) 
+{
   if (!(inherits(x, 'two.stage'))) stop("Must be a Two-Stage object")
   object <- x; rm(x);  
  
@@ -270,7 +282,5 @@ plot.two.stage<-function(x,pointwise.ci=1,robust=0,specific.comps=FALSE,
       lines(B[,1],ul,lty=robust,type="s"); 
       lines(B[,1],nl,lty=robust,type="s"); }
     abline(h=0); 
-}
+  }
 }   
-
-

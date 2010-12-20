@@ -5,10 +5,10 @@
 void itfit(times,Ntimes,x,delta,cause,KMc,z,n,px,Nit,betaS,
 score,hess,est,var,sim,antsim,rani,test,testOBS,Ut,simUt,weighted,
 gamma,vargamma,semi,zsem,pg,trans,gamma2,CA,line,detail,biid,gamiid,resample,
-timepow,clusters,antclust,timepowtest,silent,convc)
+timepow,clusters,antclust,timepowtest,silent,convc,weights)
 double *times,*betaS,*x,*KMc,*z,*score,*hess,*est,*var,*test,*testOBS,
 *Ut,*simUt,*gamma,*zsem,*gamma2,*biid,*gamiid,*vargamma,*timepow,
-	*timepowtest,*convc;
+	*timepowtest,*convc,*weights;
 int *n,*px,*Ntimes,*Nit,*cause,*delta,*sim,*antsim,*rani,*weighted,
 *semi,*pg,*trans,*CA,*line,*detail,*resample,*clusters,*antclust,*silent;
 { // {{{
@@ -26,7 +26,7 @@ int *n,*px,*Ntimes,*Nit,*cause,*delta,*sim,*antsim,*rani,*weighted,
 
   if (*semi==0) { 
     osilent=silent[0]; silent[0]=0; 
-    malloc_mat(*n,*px,X); malloc_mat(*n,*px,cX); 
+    malloc_mat(*n,*px,X); malloc_mat(*n,*px,cX);
     if (*trans==2) {malloc_mat(*n,*pg,Z);malloc_vecs(*pg,&zgam,&gam,&zi,&rowZ,NULL);}
     malloc_mats(ps,ps,&A,&AI,&VAR,NULL); 
 
@@ -60,6 +60,7 @@ for (s=0;s<*Ntimes;s++)
 
   for (it=0;it<*Nit;it++)
   {
+   R_CheckUserInterrupt();
     totrisk=0; 
 
     for (j=0;j<*n;j++) { // {{{ computation of P1 and DP1  and observed response 
@@ -90,17 +91,21 @@ for (s=0;s<*Ntimes;s++)
          VE(pbhat,j)=VE(bhat,j); 
 	 scl_vec_mult(1,xi,dp);
       }
+      scl_vec_mult(pow(weights[j],0.5),dp,dp); 
       replace_row(cX,j,dp); 
+//      replace_row(wcX,j,dp); 
 
       VE(Y,j)=((x[j]<=time) & (cause[j]==*CA))*1;
       if (it==*Nit-1) {
 	if (KMc[j]<0.00001) vec_zeros(dp); else scl_vec_mult(1/KMc[j],dp,dp); 
 	scl_vec_mult(VE(Y,j),dp,dp); vec_add(dp,qs,qs); }
-      if (KMc[j]<0.001) VE(Y,j)=(VE(Y,j)/0.001)-VE(pbhat,j); 
-      else VE(Y,j)=(VE(Y,j)/KMc[j])-VE(pbhat,j);
+      if (KMc[j]<0.001) VE(Y,j)=((VE(Y,j)/0.001)-VE(pbhat,j)); 
+      else VE(Y,j)=((VE(Y,j)/KMc[j])-VE(pbhat,j));
+      VE(Y,j)=pow(weights[j],0.5)*VE(Y,j); 
     } // }}}
 
-    totrisk=vec_sum(risk); MtA(cX,cX,A); 
+    totrisk=vec_sum(risk); 
+    MtM(cX,A); 
     invertS(A,AI,osilent); sing=0; 
     // head_matrix(cX); print_mat(A); print_mat(AI); 
 
@@ -173,7 +178,7 @@ if (convt==1 ) {
 
 } /* s=1 ... *Ntimes */ 
 
-
+   R_CheckUserInterrupt();
     if (*sim==1)
       comptestfunc(times,Ntimes,px,est,var,vcudif,antsim,test,testOBS,Ut,
 		   simUt,cumAt,weighted,antclust,gamma2,line,timepowtest); 
@@ -181,7 +186,7 @@ if (convt==1 ) {
     itfitsemi(times,Ntimes,x,delta,cause,KMc,z,n,px,Nit,
 	      score,hess,est,var,sim,antsim,rani,test,testOBS,Ut,simUt,weighted,
 	      gamma,vargamma,semi,zsem,pg,trans,gamma2,CA,line,detail,biid,
-	      gamiid,resample,timepow,clusters,antclust,timepowtest,silent,convc);
+	      gamiid,resample,timepow,clusters,antclust,timepowtest,silent,convc,weights);
   }
  
   if (convproblems>0) convc[0]=1; 
@@ -208,15 +213,15 @@ void itfitsemi(times,Ntimes,x,delta,cause,
 	       simUt,weighted,gamma,vargamma,semi,
 	       zsem,pg,trans,gamma2,CA,
 	       line,detail,biid,gamiid,resample,
-	       timepow,clusters,antclust,timepowtest,silent,convc)
+	       timepow,clusters,antclust,timepowtest,silent,convc,weights)
 double *times,*x,*KMc,*z,*score,*hess,*est,*var,*test,*testOBS,
 *Ut,*simUt,*gamma,*zsem,*vargamma,*gamma2,*biid,*gamiid,*timepow,*timepowtest,
-	*convc;
+	*convc,*weights;
 int *antpers,*px,*Ntimes,*Nit,*cause,*delta,*sim,*antsim,*rani,*weighted,
 *semi,*pg,*trans,*CA,*line,*detail,*resample,*clusters,*antclust,*silent;
 { 
   // {{{ allocation and reading of data from R
-  matrix *ldesignX,*A,*AI,*cdesignX,*ldesignG,*cdesignG;
+  matrix *ldesignX,*A,*AI,*cdesignX,*ldesignG,*cdesignG; // *wcX,*wcZ;
   matrix *S,*dCGam,*CGam,*ICGam,*VarKorG,*dC,*XZ,*ZZ,*ZZI,*XZAI; 
   matrix *Ct,*C[*Ntimes],*Acorb[*Ntimes],*tmpM1,*tmpM2,*tmpM3,*tmpM4; 
   matrix *Vargam,*dVargam,*M1M2[*Ntimes],*Delta,*dM1M2,*M1M2t,*RobVargam;
@@ -275,6 +280,7 @@ int *antpers,*px,*Ntimes,*Nit,*cause,*delta,*sim,*antsim,*rani,*weighted,
 
   for (itt=0;itt<*Nit;itt++)
     {
+   R_CheckUserInterrupt();
       mat_zeros(Ct); mat_zeros(CGam); vec_zeros(IZGdN); vec_zeros(IZGlamt); 
 
       Mv(ldesignG,gam,pghat);
@@ -354,10 +360,14 @@ int *antpers,*px,*Ntimes,*Nit,*cause,*delta,*sim,*antsim,*rani,*weighted,
 	      scl_vec_mult((1-VE(plamt,j))*(VE(pbhat,j))*VE(rr,j),zi,zi); 
 	      for (l=0;l<*pg;l++) VE(zi,l)= pow(time,timepow[l])*VE(zi,l); 
 	    }
-
 	   // }}}
+	   
+           scl_vec_mult(pow(weights[j],0.5),xi,xi); 
+           scl_vec_mult(pow(weights[j],0.5),zi,zi); 
+	   replace_row(cdesignX,j,xi); replace_row(cdesignG,j,zi); 
 
-	    replace_row(cdesignX,j,xi); replace_row(cdesignG,j,zi); 
+//           scl_vec_mult(weights[j],xi,xi); scl_vec_mult(weights[j],zi,zi); 
+//	     replace_row(wcX,j,xi); replace_row(wcZ,j,zi); 
 	    /*
 	      if (itt==*Nit-1) {
 	      if (KMc[j]<0.00001) vec_zeros(xi); else scl_vec_mult(1/KMc[j],xi,xi); 
@@ -366,8 +376,9 @@ int *antpers,*px,*Ntimes,*Nit,*cause,*delta,*sim,*antsim,*rani,*weighted,
 	    VE(Y,j)=((x[j]<=time) & (cause[j]==*CA))*1;
 	    if (KMc[j]<0.001) VE(Y,j)=(VE(Y,j)/0.001)-VE(plamt,j); 
 	    else VE(Y,j)=(VE(Y,j)/KMc[j])-VE(plamt,j);
+            VE(Y,j)=pow(weights[j],0.5)*VE(Y,j); 
 	  }
-	  MtA(cdesignX,cdesignX,A); 
+	  MtM(cdesignX,A); 
 	  invertS(A,AI,osilent); sing=0; 
 
           if (fabs(ME(AI,0,0))<.0000001) {
@@ -379,7 +390,7 @@ int *antpers,*px,*Ntimes,*Nit,*cause,*delta,*sim,*antsim,*rani,*weighted,
 
 	  if (sing==0) { 
 	  vM(cdesignX,Y,xi); Mv(AI,xi,AIXdN); 
-	  MtA(cdesignG,cdesignG,ZZ); MtA(cdesignX,cdesignG,XZ);
+	  MtM(cdesignG,ZZ); MtA(cdesignX,cdesignG,XZ);
 	  MxA(AI,XZ,XZAI); MtA(XZAI,XZ,tmpM2); 
 	  mat_subtr(ZZ,tmpM2,dCGam); 
 	  scl_mat_mult(dtime,dCGam,dCGam); mat_add(CGam,dCGam,CGam); 
@@ -440,6 +451,7 @@ int *antpers,*px,*Ntimes,*Nit,*cause,*delta,*sim,*antsim,*rani,*weighted,
 
     } /*itt løkke */ 
 
+   R_CheckUserInterrupt();
   /* ROBUST VARIANCES   */ 
   if (*robust==1) 
     {
@@ -475,6 +487,7 @@ int *antpers,*px,*Ntimes,*Nit,*cause,*delta,*sim,*antsim,*rani,*weighted,
     for (k=0;k<*pg;k++) {vargamma[k*(*pg)+j]=ME(RobVargam,j,k);}}
 
   if (convproblems>=1) convc[0]=convproblems; 
+   R_CheckUserInterrupt();
   if (*sim==1) {
     comptestfunc(times,Ntimes,px,est,var,vcudif,antsim,test,testOBS,Ut,simUt,W4t,weighted,antclust,gamma2,line,timepowtest);
   }

@@ -95,10 +95,10 @@ Martinussen and Scheike, Dynamic Regression Models for Survival Data,
 Springer (2006).}
 \author{Thomas Scheike}
 \examples{
-library(survival)
-data(diabetes)
+data(diabetes,package="timereg")
+
 # Marginal Cox model  with treat as covariate
-fit<-two.stage(Surv(time,status) ~ prop(treat) + cluster(id),
+fit<-two.stage(Surv(time,status) ~prop(treat)+cluster(id),
 data=diabetes,Nit=40,theta=1)
 summary(fit)
 

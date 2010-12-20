@@ -7,7 +7,7 @@ max.time=NULL,n.sim=500,meansub=1,weighted.test=0,resample=0)
 
   b<-bandwidth
   call <- match.call()
-  m <- match.call(expand=FALSE)
+  m <- match.call(expand.dots=FALSE)
   m$weighted.test<-m$meansub<-m$bandwidth<-m$aalenmod<-m$start.time<-m$max.time<-
   m$return.mg<-m$n.sim<-m$bhat<-m$id<-m$clusters<-m$resample<-NULL
   special <- c("const")
@@ -33,6 +33,7 @@ max.time=NULL,n.sim=500,meansub=1,weighted.test=0,resample=0)
   time<-udaal$time; time2<-udaal$time2; 
   covarA<-data.matrix(udaal$X); status<-udaal$status; 
   pa<-ncol(covarA); 
+
 
 ####################################################################
   meanY<-mean(Y); 
@@ -310,7 +311,7 @@ coef.dynreg<- function(object,...,digits=3) {
 aalen.des<-function(formula=formula(data),data=sys.parent(),model="aalen")
 {
   call <- match.call(); 
-  m <- match.call(expand=FALSE); 
+  m <- match.call(expand.dots=FALSE); 
   m$model<-NULL
   special <- c("cluster","prop","const")
   Terms <- if(missing(data)) terms(formula,special) else terms(formula, special, data=data)
