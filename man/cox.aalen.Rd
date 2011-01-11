@@ -24,7 +24,7 @@ The modelling formula uses the standard survival modelling given in the
 cox.aalen(formula=formula(data),data=sys.parent(),beta=NULL,Nit=10,detail=0,
 start.time=0,max.time=NULL,id=NULL,clusters=NULL,n.sim=500,residuals=0,
 robust=1,weighted.test=0,covariance=0,resample.iid=0,weights=NULL,rate.sim=1,
-beta.fixed=0,max.clust=1000,exact.deriv=1,silent=0)
+beta.fixed=0,max.clust=1000,exact.deriv=1,silent=0,max.timepoint.sim=100)
 }
 \arguments{
 \item{formula}{
@@ -34,9 +34,7 @@ beta.fixed=0,max.clust=1000,exact.deriv=1,silent=0)
   proportional effect are specified by the wrapper prop(), and cluster
   variables (for computing robust variances) by the wrapper cluster().
 }
-\item{data}{
-a data.frame with the variables.
-}
+\item{data}{ a data.frame with the variables.}
 \item{start.time}{start of observation period where estimates are computed.}
 \item{max.time}{end of observation period where estimates are computed. 
 Estimates thus computed from [start.time, max.time]. Default is max of data.}
@@ -52,8 +50,7 @@ test-processes used for testing
 time-varying effects.}
 \item{residuals}{to returns residuals that can be used for
 model validation in the function cum.residuals. Estimated martingale increments (dM)
-and corresponding time vector (time).
-}
+and corresponding time vector (time).}
 \item{covariance}{to compute covariance estimates for
 nonparametric terms rather than just the variances.}
 \item{resample.iid}{to return i.i.d. representation for
@@ -66,13 +63,14 @@ nonparametric and parametric terms.}
 martingales and thus valid in rate case, rate.sim=0 means that resampling is based 
 on counting processes and thus only valid in intensity case.}
 \item{beta.fixed}{option for computing score process for fixed relative risk parameter}
-  \item{max.clust}{sets the total number of i.i.d. terms in i.i.d. decompostition. This can 
+\item{max.clust}{sets the total number of i.i.d. terms in i.i.d. decompostition. This can 
 limit the amount of memory used by coarsening the clusters. When NULL then all clusters are used. Default is 1000 to save memory and time. }
 \item{exact.deriv}{if 1 then uses exact derivative in last iteration, if 2 then uses exact derivate 
 for all iterations, and if 0 then uses approximation for all computations and there may  be a small
 bias in the variance estimates. For Cox model always exact and all options give same results.
 }
 \item{silent}{if 1 then opppresses some output.}
+\item{max.timepoint.sim}{considers only this resolution on the time scale for simulations, see time.sim.resolution argument}
 }
 \details{
 The data for a subject is presented as multiple rows or 'observations',
@@ -131,7 +129,8 @@ test-processes for proportionality under the model based on resampling.}
 }
 \references{
 Martinussen and Scheike, Dynamic Regression Models for Survival Data, 
-Springer (2006).  }
+Springer (2006).  
+}
 \author{Thomas Scheike}
 \examples{
 library(survival)

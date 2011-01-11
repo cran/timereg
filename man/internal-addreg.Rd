@@ -17,6 +17,7 @@
 \alias{cox.aalenBase}
 \alias{prop.excessBase}
 \alias{read-design}
+\alias{is.diag}
 \alias{dynregBase}
 \alias{timecoxBase}
 \alias{semiaalen}
@@ -30,6 +31,9 @@
 \alias{summary.two.stage}
 \alias{predict.two.stage}
 \alias{plot.cums}
+\alias{plot.comprisk}
+\alias{plot.predict.comprisk}
+\alias{plot.predict.timereg}
 \alias{pava}
 \alias{plotScore}
 \alias{summary.comprisk}
@@ -50,24 +54,14 @@
 \alias{coefBase}
 \alias{des.aalen}
 \alias{timetest}
-\alias{plot.comprisk} 
-\alias{plot.predictAalen} 
-\alias{plot.predictComprisk}
-\alias{plot.predictCoxAalen} 
 \alias{print.pe.sasieni} 
-\alias{print.predictAalen}
-\alias{print.predictComprisk} 
-\alias{print.predictCoxAalen}
+\alias{print.predict.timereg}
 \alias{print.two.stage}
 \alias{summary.pe.sasieni}
-\alias{summary.predictAalen}
-\alias{summary.predictComprisk} 
-\alias{summary.predictCoxAalen}
+\alias{summary.predict.timereg}
 \alias{summary.pls}
 \alias{print.pls}
 \alias{predict.pls}
-\alias{my.lars}
-\alias{myplot.lars}
 \title{For internal use}
 \description{for internal use}
 \author{Thomas Scheike}

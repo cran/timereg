@@ -2,19 +2,18 @@ aalen<-function (formula = formula(data),
      data = sys.parent(), start.time = 0, max.time = NULL, 
      robust=1, id=NULL, clusters=NULL, residuals = 0, n.sim = 1000,  
      weighted.test= 0,covariance=0,resample.iid=0,
-     deltaweight=1,silent=0,weights=NULL,max.clust=1000,
+     deltaweight=1,silent=1,weights=NULL,max.clust=1000,
      gamma=NULL,offsets=0){
 ## {{{ setting up variables 
   if (n.sim == 0) sim <- 0 else sim <- 1
-  if (resample.iid==1 & robust==0) { resample.iid<-0;}
+  if (resample.iid==1) { robust <- 1; }
   if (covariance==1 & robust==0) { covariance<-0;}
   if (sim==1 & robust==0) { n.sim<-0;sim <- 0}
   if (n.sim>0 & n.sim<50) {n.sim<-50 ; cat("Minimum 50 simulations\n");}
   call <- match.call()
-  m <- match.call(expand = FALSE)
+  m <- match.call(expand.dots = FALSE)
     m$start.time <- m$weighted.test <- m$max.time <- m$robust <- 
-    m$weights <- m$residuals <- m$n.sim <- m$id <- 
-    m$covariance <- 
+    m$weights <- m$residuals <- m$n.sim <- m$id <- m$covariance <- 
     m$resample.iid <- m$clusters <- m$deltaweight<-m$silent <- 
     m$max.clust <- m$gamma <- m$offsets <- NULL
   special <- c("const","cluster") 
@@ -44,6 +43,7 @@ aalen<-function (formula = formula(data),
   start.call <- survs$start
   status<-survs$status; 
   dtimes <- sort(survs$stop[survs$status==1])
+  orig.max.clust <- survs$antclust
 
   nobs <- nrow(X); 
 
@@ -145,6 +145,8 @@ ldata<-list(start=survs$start,stop=survs$stop,
   attr(ud, "start") <- start.call
   attr(ud, "status") <- survs$status
   attr(ud, "residuals") <- residuals
+  attr(ud, "max.clust") <- max.clust; 
+  attr(ud, "orig.max.clust") <- orig.max.clust 
   class(ud) <- "aalen"
   ud$call<-call
   return(ud)

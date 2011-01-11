@@ -57,10 +57,10 @@ int *nx,*p,*antpers,*Ntimes,*status;
 void robaalen(times,Ntimes,designX,nx,p,antpers,start,stop,cu,vcu,
 	      robvcu,sim,antsim,retur,cumAit,test,testOBS,status,
 	      Ut,simUt,id,weighted,robust,covariance,covs,resample,
-	      Biid,clusters,antclust,silent,weights,entry,mof,offsets) 
+	      Biid,clusters,antclust,silent,weights,entry,mof,offsets,strata) 
 double *designX,*times,*start,*stop,*cu,*vcu,*robvcu,*cumAit,*test,*testOBS,*Ut,*simUt,*covs,*Biid,*weights,*offsets; 
 int *nx,*p,*antpers,*Ntimes,*sim,*retur,*antsim,*status,*id,*covariance,
-    *weighted,*robust,*resample,*clusters,*antclust,*silent,*entry,*mof;
+    *weighted,*robust,*resample,*clusters,*antclust,*silent,*entry,*mof,*strata;
 { // {{{
  // {{{ setting up variables and allocating
   matrix *ldesignX,*wX,*A,*AI,*Vcov;
@@ -71,11 +71,9 @@ int *nx,*p,*antpers,*Ntimes,*sim,*retur,*antsim,*status,*id,*covariance,
       *cluster=calloc(*antpers,sizeof(int)),
       *idd=calloc(*antpers,sizeof(int));
 //  int *int0=calloc(*antpers,sizeof(int));
-  int var1,var2;
-  double time,ahati,dt,tau,*vcudif=calloc((*Ntimes)*(*p+1),sizeof(double));
+  double time,ahati,*vcudif=calloc((*Ntimes)*(*p+1),sizeof(double));
   double fabs(),sqrt();
   
-  dt=times[*Ntimes-1]-times[0]; var1=1; var2=0; 
 
   if (*robust==1) {
     for (i=0;i<*antclust;i++) { malloc_vec(*p,cumhatA[i]); 
@@ -143,9 +141,10 @@ for (s=1;s<*Ntimes;s++){
 //    MtM(ldesignX,AI); print_mat(AI); 
 
     invertS(A,AI,silent[0]); 
-    if (ME(AI,0,0)==0.0 && *silent==0){ 
+    if (ME(AI,0,0)==0.0 && *silent==0 && *strata==1){ 
        printf(" X'X not invertible at time %lf \n",time); }
-       if (s < -1) { print_mat(AI); print_mat(A);	}
+    if (*strata==1)  {for (k=0;k<*p;k++) if (fabs(ME(A,k,k))<0.000001)  ME(AI,k,k)=0; else ME(AI,k,k)=1/ME(A,k,k);  }
+    if (s < -1) { print_mat(AI); print_mat(A);	}
 
     extract_row(wX,pers,xi);
 //    scl_vec_mult(weights[ci],xi,xi); 
@@ -212,7 +211,6 @@ for (s=1;s<*Ntimes;s++){
   } /* s = 1..Ntimes */ 
 
   R_CheckUserInterrupt();
-  tau=time; 
 
   if (*sim==1) {
     comptest(times,Ntimes,p,cu,robvcu,vcudif,antsim,test,testOBS,Ut,simUt,cumAt,weighted,antclust);
@@ -246,12 +244,12 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*robust,*status
   vector *VdB,*difX,*xi,*tmpv1,*tmpv2; 
   vector *dAoff,*dA,*rowX,*dN,*AIXWdN,*bhatt,*pbhat,*plamt;
   vector *korG,*pghat,*rowZ,*gam,*gamoff,*dgam,*ZHdN,*IZHdN,*zi,*offset;
-  int cin,ci=0,i,j,k,l,c,s,count,pers=0,pmax,stat,maxtime,
+  int cin,ci=0,i,j,k,l,c,s,count,pers=0,pmax,stat,
       *cluster=calloc(*antpers,sizeof(int)),
       *idd=calloc(*antpers,sizeof(int)),
       *ls=calloc(*Ntimes,sizeof(int)); 
-  double time,dtime,dtime1,fabs(),sqrt();
-  double ahati,ghati,hati,tau,dMi;
+  double time,dtime,fabs(),sqrt();
+  double ahati,ghati,hati,tau;
   double *vcudif=calloc((*Ntimes)*(*px+1),sizeof(double)),
 	 *times=calloc(*Ntimes,sizeof(double)),
          *cumoff=calloc((*Nalltimes)*(*px+1),sizeof(double)); 
@@ -290,7 +288,6 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*robust,*status
   pmax=max(*pg,*px); 
   mat_zeros(Ct); mat_zeros(CGam); vec_zeros(IZHdN);
   times[0]=alltimes[0]; l=0; 
-  maxtime=alltimes[*Nalltimes]; 
 
   for (c=0;c<*nx;c++) cluster[id[c]]=clusters[c]; 
   for (c=0;c<*nx;c++) idd[id[c]]=id[c]; 
@@ -459,7 +456,7 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*robust,*status
   l=0; 
   for (s=1;s<*Nalltimes;s++) {
     time=alltimes[s]; vec_zeros(dN); dtime=time-alltimes[s-1]; 
-    stat=0; dMi=0; 
+    stat=0; 
 
   // {{{ reading design and making matrix products
    if (s==1)  { // {{{ reading start design 
@@ -584,7 +581,6 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*robust,*status
     } // }}} /* robust ==1 */
 
     if (stat==1) {
-      if (*deltaweight==0) dtime1=1; else dtime1=dtime; 
 //      extract_row(X,pers,xi); ahati=vec_prod(xi,dA); 
 //      extract_row(WX,pers,xi);
 //      vec_star(xi,dA,rowX); 
