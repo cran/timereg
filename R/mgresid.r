@@ -1,8 +1,9 @@
-cum.residuals<-function(object,data=sys.parent(),modelmatrix=0,cum.resid=1,
-n.sim=500,weighted.test=1,start.design=1)
-{
-  if (!(class(object)!="aalen" | class(object)!="timecox" |
-        class(object)!="cox.aalen" ))
+cum.residuals<-function(object,data=sys.parent(),modelmatrix=0,cum.resid=1,n.sim=500,
+	weighted.test=1,max.point.func=50)
+{ ## {{{
+## {{{ setting up
+  start.design<-1
+  if (!(class(object)!="aalen" | class(object)!="timecox" | class(object)!="cox.aalen" ))
     stop ("Must be output from aalen() timecox() or cox.aalen() functions\n") 
   if (class(object)=="timecox") if (object$method!="basic") 
     stop("Residuals available only for method=basic\n")
@@ -12,48 +13,81 @@ n.sim=500,weighted.test=1,start.design=1)
     stop("Residuals available only for Aalen model with no const terms\n")
   if (is.null(object$residuals$dM)==TRUE) 
     stop("Residuals not computed, add option residuals=1\n");
-
   if (sum(modelmatrix)==0 && cum.resid==0) 
     stop("No modelmatrix or continous covariates given to cumulate residuals\n"); 
 
   if (class(object)=="cox.aalen") {
     dcum<-apply(as.matrix(object$cum[,-1]),2,diff); 
-    beta<-object$gamma; coxaalen<-1; } else {
-      dcum<-0; beta<-0; coxaalen<-0; pg<-0;designG<-0; }
+    beta<-object$gamma; coxaalen<-1; 
+  } else { dcum<-0; beta<-0; coxaalen<-0; pg<-0;Z<-0; }
 
   id<-attr(object,"id"); cluster<-attr(object,"cluster"); 
   formula<-attr(object,"Formula"); 
   start.time<-attr(object,"start.time"); 
+  if (sum(start.time)==0) type <- "right" else type <- "counting"
   pers<-unique(id); antpers<-length(pers); 
   clust<-unique(cluster); antclust<-length(clust); 
 
-if (class(object)=="cox.aalen") 
+  if (class(object)=="cox.aalen") 
   ldata<-aalen.des(formula,data,model="cox.aalen") else ldata<-aalen.des(formula,data) 
 
-  X<-ldata$X; 
-  time<-ldata$time; time2<-ldata$time2; 
-  covar<-X; 
-  time2<-attr(object,"stop"); 
-  time<-attr(object,"start"); 
+  X<-ldata$X; covar<-X; px<-ldata$px; 
+  timel<-ldata$time; time2l<-ldata$time2; 
+  time<-attr(object,"start"); time2<-attr(object,"stop"); 
+  statusl<-ldata$status; 
+  status<-attr(object,"status");  
 
-  status<-ldata$status; 
   if (coxaalen==1) {
-    designG<-ldata$Z;  covnamesZ<-ldata$covnamesZ; 
-    pg<-ncol(designG); }
+    Z<-ldata$Z;  covnamesZ<-ldata$covnamesZ; 
+    pg<-ncol(Z); 
+  } else Z <- 0
   Ntimes <- sum(status); 
 
-  if (sum(duplicated(time2[status==1]))>0) 
-    cat("Ties may cause difficulties, break them ! \n"); 
-  
+  if (sum(modelmatrix)==0) {modelmatrix<-0;model<-0;pm<-1;}  else 
+  {model<-1; modelmatrix<-as.matrix(modelmatrix); pm<-ncol(modelmatrix); 
+   test<-matrix(0,n.sim,3*pm); testOBS<-rep(0,2*pm); 
+   covnames<-colnames(modelmatrix); 
+  }
 
   times<-c(start.time,time2[status==1]); times<-sort(times);
-  antpers=length(time); ntot<-nrow(X); px<-ldata$px
+  antpers=length(unique(id)); ntot<-nrow(X); 
   lmgresids<-length(object$residuals$time); 
 
-  if (coxaalen==1) gamma.iid<-object$residuals$gamma.iid else gamma.iid<-0;
+if ( type == "right" )  {  ## {{{
+   ot<-order(-time2,status==1); # order in time, status=0 first for ties
+   time2<-time2[ot]; status<-status[ot]; 
+   X<-as.matrix(X[ot,])
+   if (coxaalen==1) Z<-as.matrix(Z[ot,])
+   if (model==1) modelmatrix<-as.matrix(modelmatrix[ot,])
+   stop<-time2;
+   cluster<-cluster[ot]
+   id<-id[ot];
+###   weights <- weights[ot]
+###   if (sum(offsets)!=0) offsets <- offsets[ot]
+   entry=rep(-1,ntot); 
+  } else {
+        eventtms <- c(time,time2)
+        status <- c(rep(0, ntot), status)
+        ix <- order(-eventtms,status==1)
+        etimes    <- eventtms[ix]  # Entry/exit times
+	status <- status[ix]
+        stop  <- etimes; 
+        start <- c(start,start)[ix]; 
+        tdiff    <- c(-diff(etimes),start.time) # Event time differences
+        entry  <- c(rep(c(1, -1), each = ntot))[ix]
+        X        <- X[rep(1:ntot, 2)[ix],]
+	if (coxaalen==1) Z <- Z[rep(1:ntot,2)[ix],]
+        if (model==1) modelmatrix<-as.matrix(modelmatrix[rep(1:ntot,2)[ix],])
+	id <- rep(id,2)[ix]
+	cluster <- rep(cluster,2)[ix]
+###        weights <- rep(weights, 2)[ix]
+###	if (sum(offsets)!=0) offsets <- rep(offsets,2)[ix]
+    } ## }}}
 
-  if (coxaalen==1) {covar<-cbind(X,designG);
-                    ptot<-px+pg;} else {covar<-covar; ptot<-px;}
+  if (coxaalen==1) { gamma.iid<-object$gamma.iid 
+                     covar<-cbind(X,Z);
+                     ptot<-px+pg;
+  } else { covar<-covar; ptot<-px; gamma.iid<-0; }
 
   covnames0<-colnames(covar); 
   antal<-0;  maxval<-0; intercept<-0; antal2<-0;  maxval2<-0; 
@@ -63,6 +97,7 @@ if (class(object)=="cox.aalen")
   keepcumz<-c(); k<-0
   for (j in 1:ptot) { 
     z<-unique(covar[,j]); z<-sort(z); 
+    if (length(z)> max.point.func) z <- quantile(z,probs=seq(0,1,length=max.point.func))
     antal<-antal+1; ant[j]<-length(z); 
     if (ant[j]>2) { k<-k+1; keepcumz<-c(keepcumz,j); xvals[[k]]<-z;
         maxval<-max(maxval,length(z)); }
@@ -71,28 +106,23 @@ if (class(object)=="cox.aalen")
   if (sum(keepcumz)==0 && cum.resid==1) 
     stop(" No continous covariates given to cumulate residuals \n"); 
 
-  pcumz<-length(keepcumz); 
-  test<-matrix(0,n.sim,pcumz); uni.test<-matrix(0,n.sim,pcumz); 
-  testOBS<-rep(0,4*pcumz); 
-  univar.proc<-matrix(0,maxval,pcumz); 
-  robvarcumz<-matrix(0,maxval,pcumz); 
+  pcumz<-length(keepcumz); uni.test<-matrix(0,n.sim,pcumz); 
+  univar.proc<-matrix(0,maxval,pcumz);robvarcumz<-matrix(0,maxval,pcumz);
   sim.univar.proc<-matrix(0,maxval,50*pcumz); 
-  time.proc<-matrix(0,lmgresids,2); 
-  sim.time.proc<-matrix(0,lmgresids,50); 
-  simcumz<-matrix(0,n.sim,pcumz);
-  xval<-matrix(0,maxval,pcumz); 
+  time.proc<-matrix(0,lmgresids,2); sim.time.proc<-matrix(0,lmgresids,50); 
+  simcumz<-matrix(0,n.sim,pcumz); xval<-matrix(0,maxval,pcumz); 
   k<-1; 
   for (i in keepcumz) {xval[1:ant[i],k]<-xvals[[k]]; k<-k+1;}
 
-
   # testOBS size and location of supremum, test simulated sup's
-  unitime.test<-time.test<-mult.test<-multtime.test<-test
+  unitime.test<-time.test<-mult.test<-multtime.test<- matrix(0,n.sim,2*pcumz); 
   unitime.testOBS<-uni.testOBS<-time.testOBS<-mult.testOBS<-
-  multtime.testOBS<-testOBS
+  multtime.testOBS<-rep(0,pcumz); 
 
   inXorZ<-rep(0,pcumz); 
+
   if (pcumz>0) {
-    antX<-(sum(ant[1:px]>2)) 
+  antX<-(sum(ant[1:px]>2)) 
     if (antX>0) {inX<-(1:px)[(ant[1:px]>2)]; inXorZ[1:antX]<-1} else {inX<-c();} 
     if (coxaalen==1) {inZ<-(1:pg)[(ant[(px+1):(px+pg)]>2)]; }  else inZ<-c()
     inXZ<-c(inX,inZ); 
@@ -100,54 +130,49 @@ if (class(object)=="cox.aalen")
   } else {inXZ<-0; inXorZ<-0} 
   ant<-ant[keepcumz]; 
 
+  Ut<- cummgt<- robvarcum <- matrix(0,lmgresids,pm+1); 
+  simUt<-matrix(0,lmgresids,pm*50); test<-matrix(0,n.sim,3*pm); 
+  testOBS <- rep(0,3*pm); 
+  ## }}}
 
-  if (sum(modelmatrix)==0) {modelmatrix<-0;model<-0;pm<-1;}  else 
-  {model<-1; modelmatrix<-as.matrix(modelmatrix); pm<-ncol(modelmatrix); 
-   test<-matrix(0,n.sim,3*pm); testOBS<-rep(0,2*pm); 
-   covnames<-colnames(modelmatrix); 
-  }
+###dyn.load("mgresid.so");
 
-  Ut<-cummgt<-matrix(0,lmgresids,pm+1); 
-  robvarcum<-matrix(0,lmgresids,pm+1); 
-  simUt<-matrix(0,lmgresids,pm*50); 
-
-#dyn.load("mgresid.so");
-
-  mgout<- .C("mgresid",
+  mgout<- .C("mgresid", ## {{{
      as.double(X),as.integer(ntot),as.integer(px), 
      as.integer(antpers),as.double(time),as.double(time2),
      as.integer(status),as.integer(id),as.double(object$residuals$time),
      as.integer(lmgresids),as.double(object$residuals$dM),as.integer(n.sim),
-     as.integer(rani),as.double(xval), as.integer(ant), 
-     as.double(univar.proc),as.double(time.proc),as.double(sim.univar.proc),
-     as.double(sim.time.proc),as.double(uni.test),as.double(uni.testOBS),
-     as.double(time.test),as.double(time.testOBS),as.double(unitime.test),
-     as.double(unitime.testOBS),as.double(modelmatrix),as.integer(model),
-     as.integer(pm),as.double(cummgt),as.double(object$residuals$dM.iid),
-     as.double(robvarcum),as.double(testOBS),as.double(test),
-     as.double(simUt),as.double(Ut),as.integer(cum.resid),
-     as.integer(maxval),as.integer(start.design),as.integer(coxaalen),
-     as.double(dcum),as.double(beta),as.double(designG),
-     as.integer(pg),as.double(gamma.iid),as.integer(cluster),
-     as.integer(antclust), as.double(robvarcumz), as.double(simcumz),
-     as.integer(inXZ), as.integer(inXorZ),as.integer(pcumz),PACKAGE="timereg")
+     as.double(xval), as.integer(ant), as.double(univar.proc),
+     as.double(time.proc),as.double(sim.univar.proc), as.double(sim.time.proc),
+     as.double(uni.test),as.double(uni.testOBS), as.double(time.test),
+     as.double(time.testOBS),as.double(unitime.test), as.double(unitime.testOBS),
+     as.double(modelmatrix),as.integer(model), as.integer(pm),
+     as.double(cummgt),as.double(0), as.double(robvarcum),  # 10 
+     as.double(testOBS),as.double(test), as.double(simUt),
+     as.double(Ut),as.integer(cum.resid), as.integer(maxval),
+     as.integer(start.design),as.integer(coxaalen), as.double(dcum),
+     as.double(beta),as.double(Z), as.integer(pg),
+     as.double(gamma.iid),as.integer(cluster), as.integer(antclust), 
+     as.double(robvarcumz), as.double(simcumz), as.integer(inXZ), 
+     as.integer(inXorZ),as.integer(pcumz), as.integer(entry),PACKAGE="timereg")
+## }}}
 
+## {{{ handling output from C
   if (model==1) {
-    cum<-matrix(mgout[[29]],lmgresids,pm+1); 
-    robvar.cum<-matrix(mgout[[31]],lmgresids,pm+1);
-    var.cum<-robvar.cum; Ut<-matrix(mgout[[35]],lmgresids,pm+1);
+    cum<-matrix(mgout[[28]],lmgresids,pm+1); 
+    robvar.cum<-matrix(mgout[[30]],lmgresids,pm+1);
+    var.cum<-robvar.cum; Ut<-matrix(mgout[[34]],lmgresids,pm+1);
 
-    colnames(Ut)<-colnames(cum)<-colnames(var.cum)<-
-      colnames(robvar.cum)<- c("time",covnames)
+    colnames(Ut)<-colnames(cum)<-colnames(var.cum)<- colnames(robvar.cum)<- c("time",covnames)
     test.procBeq0<-Ut; 
 
-    sim<-1; 
-    if (sim>=1) {
-      Uit<-matrix(mgout[[34]],lmgresids,50*pm);
-      UIt<-list(); for (i in (0:49)*pm) UIt[[i/pm+1]]<-as.matrix(Uit[,i+(1:pm)]);
-      testOBS<-mgout[[32]];
-      test<-matrix(mgout[[33]],n.sim,3*pm);
-      #simcumz<-matrix(mgout[[48]],n.sim,pcumz);
+      simUt<-matrix(mgout[[33]],lmgresids,50*pm);
+      UIt<-list(); 
+      for (i in (0:49)*pm) {
+	UIt[[i/pm+1]]<-as.matrix(simUt[,i+(1:pm)]);
+      }
+      testOBS<-mgout[[31]];
+      test<-matrix(mgout[[32]],n.sim,3*pm);
       testval<-c(); unifCI<-c(); 
       for (i in 1:(2*pm)) testval<-c(testval,pval(test[,i],testOBS[i]))
       for (i in 1:pm) unifCI<-as.vector(c(unifCI,percen(test[,2*pm+i],0.95)));
@@ -160,35 +185,27 @@ if (class(object)=="cox.aalen")
       sim.test.procBeq0<-UIt; 
       names(unifCI)<- names(pval.testBeq0)<- names(obs.testBeq0)<- 
         names(pval.testBeq0.is)<- names(obs.testBeq0.is)<- covnames
-    } else {
-      test<-unifCI<-Ut<-UIt<-pval.testBeq0<-pval.testBeq0.is<-obs.testBeq0<-
-        obs.testBeq0.is<-sim.testBeq0<-NULL; }
   } else {
     cum<-robvar.cum<-test<-unifCI<-Ut<-UIt<-pval.testBeq0<-
       pval.testBeq0.is<-obs.testBeq0<-obs.testBeq0.is<-sim.testBeq0<-NULL; 
   } 
 
   if (cum.resid>=1) {
-    univar.p<-matrix(mgout[[16]],maxval,pcumz)
-    #print(univar.p)
-    robvarcumz<-matrix(mgout[[47]],maxval,pcumz)
-    #print(robvarcumz)
-    simcumz<-matrix(mgout[[48]],n.sim,pcumz)
-    #print(sim.cumz); 
+    univar.p<-matrix(mgout[[15]],maxval,pcumz)
+    robvarcumz<-matrix(mgout[[46]],maxval,pcumz)
+    simcumz<-matrix(mgout[[47]],n.sim,pcumz)
     univar.proc<-list(); 
     for (i in 1:pcumz) {
       univar.proc[[i]]<-cbind(xvals[[i]],univar.p[1:ant[i],i]); 
       colnames(univar.proc[[i]])<-c(covnames0[keepcumz[i]],"cum. martingale residual"); 
     }
-    Uiz<-matrix(mgout[[18]],maxval,50*pcumz);
+    Uiz<-matrix(mgout[[17]],maxval,50*pcumz);
     UIz<-list(); 
     k<-1; 
-    for (i in 1:pcumz) {
-       UIz[[i]]<-matrix(Uiz[1:ant[i],i+(0:49)*pcumz],ncol=50);
-      k<-k+1;}
-    uni.test<-matrix(mgout[[20]],n.sim,pcumz)
+    for (i in 1:pcumz) { UIz[[i]]<-matrix(Uiz[1:ant[i],i+(0:49)*pcumz],ncol=50); k<-k+1;}
+    uni.test<-matrix(mgout[[19]],n.sim,pcumz)
     uni.test<-as.matrix(uni.test); 
-    uni.testOBS<-mgout[[25]][1:pcumz]; 
+    uni.testOBS<-mgout[[24]][1:pcumz]; 
     testval<-c(); 
 
     for (i in 1:pcumz)  testval<-c(testval,pval(uni.test[,i],uni.testOBS[i])) 
@@ -202,39 +219,37 @@ if (class(object)=="cox.aalen")
   } else { unifCIz<-uni.testOBS<-uni.pval<-proc.cumz<-UIz<-
            unitime.pval<-unitime.testOBS<-NULL;}
 
+## }}}
+
   ud<-list(cum=cum,robvar.cum=robvar.cum,robvar.cumz=robvarcumz,
-           pval.testBeq0=pval.testBeq0, obs.testBeq0=obs.testBeq0,
-           pval.testBeq0.is=pval.testBeq0.is, obs.testBeq0.is=obs.testBeq0.is,
-           sim.testBeq0=sim.testBeq0,
-           procBeq0=Ut,sim.test.procBeq0=UIt,
-           conf.band=unifCI,
-           conf.band.cumz=unifCIz,
-           obs.test=uni.testOBS,pval.test=uni.pval,
-           sim.test=uni.test,
-           #pval.testtime=unitime.pval,
-           proc.cumz=univar.proc,sim.test.proccumz=UIz)
+      pval.testBeq0=pval.testBeq0, obs.testBeq0=obs.testBeq0,
+      pval.testBeq0.is=pval.testBeq0.is, obs.testBeq0.is=obs.testBeq0.is,
+      sim.testBeq0=sim.testBeq0, procBeq0=Ut,sim.test.procBeq0=UIt,
+      conf.band=unifCI, conf.band.cumz=unifCIz,
+      obs.test=uni.testOBS,pval.test=uni.pval, sim.test=uni.test,
+      proc.cumz=univar.proc,sim.test.proccumz=UIz)
 
   attr(ud,"Call")<-sys.call(); 
   class(ud)<-"cum.residuals"
   return(ud); 
-}
+} ## }}}
 
 "print.cum.residuals"<- function (x,...)
-{
+{ ## {{{
     object <- x; rm(x);
 	if (!inherits(object, 'cum.residuals')) stop ("Must be an MG resid object")
 
 	cat("  Call: \n")
 	dput(attr(object, "Call"))
 	cat("\n")
-}
+} ## }}}
 
 "plot.cum.residuals" <- function (x,pointwise.ci=1,hw.ci=0,sim.ci=0,
-		robust=1, specific.comps=FALSE,level=0.05, start.time = 0, 
+	robust=1, specific.comps=FALSE,level=0.05, start.time = 0, 
 	stop.time = 0, add.to.plot=FALSE, mains=TRUE, 
 	xlab="Time",ylab ="Cumulative Residuals",ylim=NULL,
 	score=0,conf.band=FALSE,...) 
-{
+{## {{{
   object <- x; rm(x);
   if (!inherits(object,'cum.residuals') ) stop ("Must be output from cum.residuals()") 
 
@@ -294,15 +309,13 @@ if (class(object)=="cox.aalen")
     } ## }}}
   } else if (score==1)  ## {{{
     {
-                                        # plot score proces
       dim1<-ncol(object$procBeq0)
       if (sum(specific.comps)==FALSE) comp<-2:dim1 else comp<-specific.comps+1
 
       for (i in comp)
         {
           ranyl<-range(object$procBeq0[,i]);
-          for (j in 1:50) ranyl<-range(c(ranyl,
-                                         (object$sim.test.procBeq0[[j]])[,i-1]));
+          for (j in 1:50) ranyl<-range(c(ranyl, (object$sim.test.procBeq0[[j]])[,i-1]));
           mr<-max(abs(ranyl));
 
           if (add.to.plot==FALSE)
@@ -366,11 +379,10 @@ if (class(object)=="cox.aalen")
   }
 
     } ## }}}
-}
+} ## }}}
 
-"summary.cum.residuals" <-
-function (object,digits=3,...) 
-{
+"summary.cum.residuals" <- function (object,digits=3,...) 
+{## {{{
   if (!inherits(object, 'cum.residuals')) stop ("Must be an cum.residuals object")
 
   # We print information about object:  
@@ -409,4 +421,5 @@ function (object,digits=3,...)
   }
   cat("  \n");cat("  Call: \n");dput(attr(object, "Call"));
   cat("\n");
-}
+} ## }}}
+

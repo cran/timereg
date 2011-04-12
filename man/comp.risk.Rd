@@ -112,13 +112,9 @@ observed cumulative and estimate under null of constant effect.}
 \item{conv}{information on convergence for time points used for estimation.}
 }
 \references{
-Scheike and Zhang (2011), Analyzing competing risks Data using the R timereg package, Journal of Statistical Software, 38 (2), 1-15. 
+Scheike, Zhang and Gerds (2008), Predicting cumulativeincidence probability by direct binomial regression,Biometrika, 95, 205-220.           
 
-Scheike, Zhang and Gerds (2008), Predicting cumulative incidence probability 
-by direct binomial regression,Biometrika, 95, 205-220.           
-
-Scheike and Zhang (2007), Flexible competing risks regression modelling and 
-goodness of fit, LIDA, 14, 464-483.
+Scheike and Zhang (2007), Flexible competing risks regression modelling and goodness of fit, LIDA, 14, 464-483.
 
 Martinussen and Scheike (2006), Dynamic regression models for survival data, Springer.
 }

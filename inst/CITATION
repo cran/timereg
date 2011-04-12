@@ -1,20 +1,5 @@
 citHeader("To cite timereg in publications use:")
 
-citEntry(entry = "Book",
-         title = "Dynamic Regression Models for Survival Data",
-         author = personList(as.person("Torben Martinussen"), 
-	                     as.person("Thomas H. Scheike")),
-         year         = "2006",
-         publisher    = "Springer-Verlag",
-	 address      = "New York",
-	 note         = "{ISBN} 978-0-387-20274-7",
-         
-         textVersion = 
-         paste("Torben Martinussen and Thomas H. Scheike (2006).", 
-               "Dynamic Regression Models for Survival Data.",
-               "New York: Springer-Verlag. ISBN 978-0-387-20274-7.")
-)
-
 citEntry(entry = "Article",
   title        = "Analyzing Competing Risk Data Using the {R} {timereg} Package",
   author       = personList(as.person("Thomas H. Scheike"),
@@ -30,7 +15,6 @@ citEntry(entry = "Article",
   paste("Thomas H. Scheike, Mei-Jie Zhang (2011).",
         "Analyzing Competing Risk Data Using the R timereg Package.",
         "Journal of Statistical Software, 38(2), 1-15.",
-        "URL http://www.jstatsoft.org/v38/i02/."),
-	 header = "For the comp.risk() function, please cite"
+        "URL http://www.jstatsoft.org/v38/i02/.")
 )
 

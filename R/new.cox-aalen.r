@@ -1,25 +1,22 @@
 prop<-function(x) x
 
 cox.aalen<-function(formula=formula(data),data=sys.parent(),
-beta=0,Nit=10,detail=0,start.time=0,max.time=NULL, id=NULL, 
+beta=NULL,Nit=10,detail=0,start.time=0,max.time=NULL, id=NULL, 
 clusters=NULL, n.sim=500, residuals=0,robust=1,
 weighted.test=0,covariance=0,resample.iid=0,weights=NULL,
-rate.sim=1,beta.fixed=0,max.clust=1000)
-{
-  ridge<-0; ratesim<-rate.sim; if (n.sim==0) sim<-0 else sim<-1; 
+rate.sim=1,beta.fixed=0,max.clust=1000,exact.deriv=1,silent=0)
+{ ## {{{
+	offsets=0; 
+## {{{ set up variables 
   call <- match.call()
-  m <- match.call(expand.dots=FALSE)
-  m$robust<-m$start.time<-m$scaleLWY<-m$weighted.test<-m$beta<-m$Nit<-m$detail<-m$max.time<-m$residuals<-m$n.sim<-m$id<-m$covariance<-m$resample.iid<-m$clusters<-m$rate.sim<-m$beta.fixed<-m$max.clust <- NULL
+  m <- match.call(expand=FALSE)
+  m$robust<-m$start.time<-m$scaleLWY<-m$weighted.test<-m$beta<-m$Nit<-m$detail<-m$max.time<-m$residuals<-m$n.sim<-m$id<-m$covariance<-m$resample.iid<-m$clusters<-m$rate.sim<-m$beta.fixed<-
+  m$max.clust <- m$exact.deriv <- m$silent <- NULL
 
-  if (resample.iid==1 & robust==0) {
-    cat("When robust=0 no iid representaion computed\n"); 
-    resample.iid<-0;}
-  if (covariance==1 & robust==0) {
-    cat("When robust=0 no covariance computed \n"); 
-    cat("Covariance based on robust iid representation\n")
-    covariance<-0;}
-  if (sim==1 & robust==0) {
-    cat("When robust=0, No simulations \n"); cat("n.sim set to 0\n"); n.sim <- 0; sim<-0;}
+  if (n.sim == 0) sim <- 0 else sim <- 1
+  if (resample.iid==1 & robust==0) { resample.iid<-0;}
+  if (covariance==1 & robust==0) { covariance<-0;}
+  if (sim==1 & robust==0) { n.sim <- 0; sim<-0;}
   if (n.sim>0 & n.sim<50) {n.sim<-50 ; cat("Minimum 50 simulations\n");}
   if (beta.fixed==1) Nit<-1; 
 
@@ -42,38 +39,80 @@ rate.sim=1,beta.fixed=0,max.clust=1000)
   
   pxz <- px + pz;
 
-  survs<-read.surv(m,id,npar,clusters,start.time,max.time,model="cox.aalen")
+  survs<-read.surv(m,id,npar,clusters,start.time,max.time,model="cox.aalen",silent=silent)
   times<-survs$times;id<-id.call<-survs$id.cal;
   clusters<-cluster.call<-survs$clusters; 
-  time<-survs$start; time2<-survs$stop; status<-survs$status;
+  start.call <- start <-  survs$start; 
+  stop.call <- time2 <- survs$stop; 
+  status<-survs$status;
+
   ldata<-list(start=survs$start,stop=survs$stop,
               antpers=survs$antpers,antclust=survs$antclust);
 
-      if ( (!is.null(max.clust)) )  {  
-       if (max.clust < survs$antclust) {
+  nobs <- nrow(X); 
+  if (is.null(weights)) weights <- rep(1,nrow(X));  
+  if (sum(abs(offsets))!=0) stop("no offsets in this version \n"); 
+  weights <- rep(1,nrow(X)); 
+
+  if ( (!is.null(max.clust)) )  {  
+     if (max.clust < survs$antclust)   {
        qq <- quantile(clusters, probs = seq(0, 1, by = 1/max.clust))       
        qqc <- cut(clusters, breaks = qq, include.lowest = TRUE)    
        clusters <- as.integer(factor(qqc, labels = 1:max.clust)) -1
        survs$antclust <- max.clust    
-       ldata$antclust <- max.clust    
-       cluster.call <- clusters; 
-       }
-      }                                                         
+       ldata$antclust <- max.clust
+     }
+  }                                                         
+  cluster.call<-clusters; 
+
+  if ((length(beta)!=pz) && (is.null(beta)==FALSE)) beta <- rep(beta[1],pz); 
+  if ((is.null(beta))) beta<-coxph(Surv(survs$start,survs$stop,survs$status)~Z)$coef; 
+## }}}
+
+if ( (attr(m[, 1], "type") == "right" ) ) {  ## {{{
+   ot<-order(-time2,status==1); # order in time, status=0 first for ties
+   time2<-time2[ot]; status<-status[ot]; 
+   X<-as.matrix(X[ot,])
+   if (npar==FALSE) Z<-as.matrix(Z[ot,])
+   stop<-time2;
+   clusters<-clusters[ot]
+   id<-id[ot];
+   weights <- weights[ot]
+   if (sum(abs(offsets))!=0) offsets <- offsets[ot]
+   entry=rep(-1,nobs); 
+  } else {
+        eventtms <- c(survs$start,time2)
+        status <- c(rep(0, nobs), status)
+        ix <- order(-eventtms,status==1)
+        etimes    <- eventtms[ix]  # Entry/exit times
+	status <- status[ix]
+        stop  <- etimes; 
+        start <- c(survs$start,survs$start)[ix]; 
+        tdiff    <- c(-diff(etimes),start.time) # Event time differences
+        entry  <- c(rep(c(1, -1), each = nobs))[ix]
+        weights <- rep(weights, 2)[ix]
+        X        <- X[rep(1:nobs, 2)[ix],]
+	if (npar==FALSE) Z <- Z[rep(1:nobs,2)[ix],]
+	id <- rep(id,2)[ix]
+	clusters <- rep(clusters,2)[ix]
+	if (sum(abs(offsets))!=0) offsets <- rep(offsets,2)[ix]
+    } ## }}}
+
+ldata<-list(start=start,stop=stop,antpers=survs$antpers,antclust=survs$antclust);
 
   if (npar==FALSE) covar<-data.matrix(cbind(X,Z)) else 
   stop("Both multiplicative and additive model needed");
   Ntimes <- sum(status); 
 
-  if ((sum(beta)==0) & (beta.fixed==0)) beta<-coxph(Surv(time,time2,status)~Z)$coef; 
 
   #cat("Cox-Aalen Survival Model"); cat("\n")
   if (px==0) stop("No nonparametric terms (needs one!)");
   ud<-cox.aalenBase(times,ldata,X,Z,
-                    status,id,clusters,Nit=Nit,detail=detail,beta=beta,weights=weights,
-                    sim=sim,antsim=n.sim,residuals=residuals,robust=robust,
-                    weighted.test=weighted.test,ratesim=ratesim,
-                    covariance=covariance,resample.iid=resample.iid,namesX=covnamesX,namesZ=covnamesZ,
-                    beta.fixed=beta.fixed);
+            status,id,clusters,Nit=Nit,detail=detail,beta=beta,weights=weights,
+            sim=sim,antsim=n.sim,residuals=residuals,robust=robust,
+            weighted.test=weighted.test,ratesim=rate.sim,
+            covariance=covariance,resample.iid=resample.iid,namesX=covnamesX,
+	    namesZ=covnamesZ,beta.fixed=beta.fixed,entry=entry,offsets=0,exactderiv=exact.deriv);
 
   colnames(ud$test.procProp)<-c("time",covnamesZ)
   if (beta.fixed==1) colnames(ud$var.score)<-c("time",covnamesZ)
@@ -104,12 +143,18 @@ rate.sim=1,beta.fixed=0,max.clust=1000)
   attr(ud,"Formula")<-formula;
   attr(ud,"id")<-id.call;
   attr(ud,"cluster")<-cluster.call;
-  attr(ud,"start")<-start.time; 
   attr(ud,"time2")<-time2; 
+  attr(ud,"start.time")<-start.time; 
+  attr(ud,"start")<-start.call; 
+  attr(ud,"stop")<-stop.call; 
+  attr(ud,"beta.fixed")<-beta.fixed
+  attr(ud,"status")<-survs$status; 
+  attr(ud,"residuals")<-residuals; 
   ud$call<-call
 
   return(ud); 
-}
+} ## }}}
+
 
 "plot.cox.aalen" <-  function (x,..., pointwise.ci=1, hw.ci=0,
 sim.ci=0, robust=0, specific.comps=FALSE,level=0.05, start.time = 0,
