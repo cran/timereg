@@ -14,9 +14,8 @@ gcc -shared -Wl -o  addmult.so addmult.o -L/coll/local/lib -lm meschach.a
 */
 
 
-#include <stdio.h>
+//#include <stdio.h>
 #include <math.h>
-
 #include "matrix.h"
 #include"R_ext/Random.h"
 
@@ -121,7 +120,7 @@ void addmult(time,status,Xinp,Xtilinp,Zinp,Uinp,dUinp,optinp,
   for (l=0;l<*q;++l){beta_tmp[l]=beta[l];} /* beta_0 */
 //  eps=0.01;
   tau=0;
-  dum=1;dum1=0;
+  dum=1;dum1=0; dum1=dum1+0; 
   nummer=50; /* Antal iterationer der højst udføres */
   del=1000;
   del_old=10000;

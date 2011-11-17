@@ -182,12 +182,14 @@ summary.two.stage<-function (object,digits = 3,...) { ## {{{
   if (prop) {
     if (p.o==FALSE) cat("Proportional Cox terms :  \n") else  cat("Covariate effects \n")
 
-    coef.two.stage(object,digits=digits);
+    out=coef.two.stage(object,digits=digits);
+    out=signif(out,digits=digits)
+    print(out)
+
   }
   }
    cat("   \n");  cat("  Call: \n"); dput(attr(object, "Call")); cat("\n");
 } ## }}}
-
 
 print.two.stage <- function (x,digits = 3,...) { ## {{{
   if (!(inherits(x, 'two.stage') )) stop("Must be a Two-Stage object")
