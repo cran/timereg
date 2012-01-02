@@ -2,7 +2,7 @@ Gprop<-function(x) x
 
 two.stage<-function(margsurv,data=sys.parent(),
 Nit=60,detail=0,start.time=0,max.time=NULL,id=NULL,clusters=NULL,
-robust=1,theta=NULL,theta.des=NULL,var.link=0,step=1,notaylor=0)
+robust=1,theta=NULL,theta.des=NULL,var.link=0,step=0.5,notaylor=0)
 { ## {{{
 ## {{{ seting up design and variables
  rate.sim <- 1; 
@@ -12,16 +12,23 @@ robust=1,theta=NULL,theta.des=NULL,var.link=0,step=1,notaylor=0)
  ldata<-aalen.des(formula,data=data,model="cox.aalen");
  id <- attr(margsurv,"id"); clusters <- attr(margsurv,"cluster")
  X<-ldata$X; time<-ldata$time2; Z<-ldata$Z;  status<-ldata$status;
+ if (nrow(X)!=length(clusters)) 
+stop("Length of margsurv data not consistent with nrow of data\n"); 
  time2 <- attr(margsurv,"stop"); start <- attr(margsurv,"start")
  antpers<-nrow(X);
  if (is.null(Z)==TRUE) {npar<-TRUE; semi<-0;}  else { Z<-as.matrix(Z); npar<-FALSE; semi<-1;}
   if (npar==TRUE) {Z<-matrix(0,antpers,1); pz<-1; fixed<-0;} else {fixed<-1;pz<-ncol(Z);}
   px<-ncol(X);
-  antclust <- length(unique(clusters))
 
   if (!is.null(attr(margsurv,"max.clust")))
   if (attr(margsurv,"max.clust")< attr(margsurv,"orig.max.clust")) 
 	  cat("Probably want to estimate marginal model with max.clust=NULL\n"); 
+
+  out.clust <- cluster.index(clusters);  
+  maxclust <- out.clust$maxclust 
+  antclust <- out.clust$antclust
+  idiclust <- out.clust$idclust
+  cluster.size <- out.clust$cluster.size
 
   if (sum(abs(start))>0) lefttrunk <- 1  else lefttrunk <- 0;  cumhazleft <- 0; 
 
@@ -73,14 +80,28 @@ robust=1,theta=NULL,theta.des=NULL,var.link=0,step=1,notaylor=0)
   if (length(theta)!=ptheta) theta<-rep(theta[1],ptheta); 
   theta.score<-rep(0,ptheta);Stheta<-var.theta<-matrix(0,ptheta,ptheta); 
 
-  cluster.size<-as.vector(table(clusters));
-  maxclust<-max(cluster.size)
-  idiclust<-matrix(0,antclust,maxclust); 
-  cs<- rep(1,antclust)
-  for (i in 1:antpers) { 
-      idiclust[clusters[i]+1,cs[clusters[i]+1]]<-i-1;
-      cs[clusters[i]+1]<- cs[clusters[i]+1]+1; 
-  } 
+  out.clust <- cluster.index(clusters,index.type=TRUE);  
+  maxclust <- out.clust$maxclust 
+  antclust <- out.clust$antclust
+  idiclust <- out.clust$idclust
+
+###  nclust <- .C("nclusters",
+###		as.integer(antpers), as.integer(clusters), as.integer(rep(0,antpers)), 
+###		as.integer(0), as.integer(0), package="timereg")
+###  clustud <- .C("clusterindex",as.integer(clusters),
+###		as.integer(antclust),as.integer(antpers),
+###                as.integer(rep(0,antclust*maxclust)),as.integer(rep(0,antclust)),
+###	  package="timereg")
+###idiclust <- matrix(clustud[[4]],antclust,maxclust)
+
+###  cluster.size<-as.vector(table(clusters));
+###  maxclust<-max(cluster.size)
+###  idiclust<-matrix(0,antclust,maxclust); 
+###  cs<- rep(1,antclust)
+###  for (i in 1:antpers) { 
+###      idiclust[clusters[i]+1,cs[clusters[i]+1]]<-i-1;
+###      cs[clusters[i]+1]<- cs[clusters[i]+1]+1; 
+###  } 
   if (maxclust==1) stop("No clusters !, maxclust size=1\n"); 
   ## }}}
 
@@ -256,29 +277,41 @@ predict.two.stage <- function(object,X=NULL,Z=NULL,times=NULL,times2=NULL,theta.
 { ## {{{
 time.coef <- data.frame(object$cum)
 if (!is.null(times)) {
-cum <- Cpred(object$cum,times)
-} else cum <- object$cum
+cum <- Cpred(object$cum,times);
+cum2 <- Cpred(object$cum,times);
+} else { cum <- object$cum; cum2 <- object$cum }
+if (!is.null(times2)) cum2 <- Cpred(object$cum,times2);
 
+if (is.null(X)) X <- 1;
 if (is.null(X) & (!is.null(Z))) { Z <- as.matrix(Z);  X <- matrix(1,nrow(Z),1)}
 if (is.null(Z) & (!is.null(X)))  {X <- as.matrix(X);  Z <- matrix(0,nrow(X),1); gamma <- 0}
 
 if (diag==FALSE) {
    time.part <-  X %*% t(cum[,-1]) 
-   if (!is.null(object$gamma)) { RR <- exp( Z %*% gamma ); cumhaz <- t( t(time.part) * RR )}
-	    else cumhaz <- time.part;  
-} else time.part <-  apply(as.matrix(X*cum[,-1]),1,sum) 
+   time.part2 <-  X %*% t(cum2[,-1]) 
+   if (!is.null(object$gamma)) { RR <- exp( Z %*% gamma ); 
+       cumhaz <- t( t(time.part) * RR ); cumhaz2 <- t( t(time.part2) * RR )}
+	    else { cumhaz <- time.part;  cumhaz2 <- time.part2;   }
+} else { 
+	time.part <-  apply(as.matrix(X*cum[,-1]),1,sum) 
+	time.part2 <-  apply(as.matrix(X*cum2[,-1]),1,sum) 
+}
 
 if (!is.null(object$gamma)) {
-	RR<- exp(Z%*%gamma); cumhaz <- t( t(time.part) * RR )} else cumhaz <- time.part;  
-S1 <- exp(- cumhaz); S2 <- exp(- cumhaz)
+	RR<- exp(Z%*%gamma); 
+	cumhaz <- t( t(time.part) * RR );  
+	cumhaz2 <- t( t(time.part2) * RR )} else {
+		cumhaz <- time.part;  cumhaz2 <- time.part2; 
+} 
+S1 <- exp(-cumhaz); S2 <- exp(-cumhaz2)
+
 if (attr(object,"var.link")==1) theta  <- exp(object$theta) else theta <- object$theta
 if (!is.null(theta.des)) theta <- c(theta.des %*% object$theta)
 
-if (diag==FALSE) 
-St1t2<- (outer(c(S1)^{-1/c(theta)},c(S2)^{-1/c(theta)},FUN="+") - 1)^(-c(theta)) else 
-St1t2<- ((S1^{-1/theta}+S2^{-1/theta})-1)^(-theta)
+if (diag==FALSE) St1t2<- (outer(c(S1)^{-(theta)},c(S2)^{-(theta)},FUN="+") - 1)^(-1/(theta)) else 
+St1t2<- ((S1^{-(theta)}+S2^{-(theta)})-1)^(-1/(theta))
 
-out=list(St1t2=St1t2,S1=S1,times=times,theta=theta)
+out=list(St1t2=St1t2,S1=S1,S2=S2,times=times,times2=times2,theta=theta)
 return(out)
 } ## }}}
 

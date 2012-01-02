@@ -28,9 +28,9 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*sim,*antsim,*rani,*id,*status
   vector *tmpv1,*tmpv2,*rowX,*rowZ,*difX,*VdB,*lht; 
   vector *W2[*antpers],*W3[*antpers],*reszpbeta,*res1dim,*dAt[*Ntimes]; 
   int t,c,robust=1,pers=0,i,j,k,l,s,it,count,pmax; 
+  int *ipers=calloc(*Ntimes,sizeof(int)); 
   double time=0,dummy,ll; 
   double tau,hati=0,random,sumscore; 
-  int *ipers=calloc(*Ntimes,sizeof(int)); 
   double norm_rand(); 
   void GetRNGstate(),PutRNGstate();  
 
@@ -127,8 +127,10 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*sim,*antsim,*rani,*id,*status
 	scl_vec_mult(VE(dlamt,j),xi,xtilde); 
 	replace_row(cdesX2,j,xtilde); 
 
-	scl_vec_mult(-exp(-VE(Gbeta,j)),zi,tmpv2); 
+//	scl_vec_mult(-exp(-VE(Gbeta,j)),zi,tmpv2);  // update 27-2-2012
+	scl_vec_mult(-exp(-VE(Gbeta,j)),zi,tmpv2); // update 27-2-2012
 	vM(dG[s-1],xi,rowZ); 
+//	scl_vec_mult(-exp(-VE(Gbeta,j)),rowZ,rowZ);  // update 27-2-2012
 	vec_add(tmpv2,rowZ,rowZ); 
 	scl_vec_mult(VE(dlamt,j),rowZ,rowZ); 
 	replace_row(ddesG,j,rowZ); 

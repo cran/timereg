@@ -190,6 +190,12 @@ vector *extract_col(matrix *M, int col_to_get, vector *v);
 
 void Cpred(double *cum,int *nx,int *px,double *xval,int *nxval,double *pred); 
 
+void sindex(int *index, double *jump, double *eval, int *njump, int *neval);
+
+void nclusters(int *npers,int *clusters, int *nclust, int *mclust);
+
+void clusterindex(int *clusters, int *nclust,int *npers,int *idclust, int *clustsize); 
+ 
 void comptest(double *times,int *Ntimes,int *px,double *cu,double *vcu,
 	      double *vcudif,int *antsim,double *test,double *testOBS,
 	      double *Ut,double *simUt,matrix **W4t,int *weighted,int *antpers); 
@@ -210,7 +216,8 @@ void itfitsemi(double *times,int *Ntimes,double *x,int *delta,int *cause,double 
 	       double *vargamma,int *semi,double *zsem,int *pg,int *trans,double *gamma2,
 	       int *CA,int *line,int *detail,double *biid,double *gamiid,int *resample,
 	       double *timepow,int *clusters,int *antclust,double *timepowtest,int *silent,double *convc,
-	       double *weight,double *entry,double *trunkp,int *estimator,int *fixgamma ,int *stratum);
+	       double *weight,double *entry,double *trunkp,int *estimator,int *fixgamma ,int *stratum,
+               int *ordertime,int *robust);
 
 
 void LevenbergMarquardt(matrix *S,matrix *SI,vector *U,vector *delta,double *lm,double *step); 

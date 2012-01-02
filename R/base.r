@@ -17,7 +17,7 @@ wald.test <- function(object,contrast,coef.null=NULL,
 		      Sigma=NULL,null=NULL)
 { ## {{{
   if (is.null(Sigma)) {
-     if (attr(object,"Type")=="cor") Sigma <- object$var.theta else Sigma <- object$var.gamma;
+     if (class(object)=="cor") Sigma <- object$var.theta else Sigma <- object$var.gamma;
   }
   coefs <- coefBase(object)[,1]
   nl <- length(coefs)
@@ -95,4 +95,26 @@ ndiag <- sum(abs(c(m - dm)))
 if (ndiag>0.0000001) ud <- FALSE;
 return(ud)
 }
+
+cluster.index <- function(clusters,index.type=FALSE)
+{ ## {{{
+ antpers <- length(clusters)
+if (index.type==FALSE)  {
+	max.clust <- length(unique(clusters))
+	clusters <- as.integer(factor(clusters, labels = 1:max.clust)) -1
+}
+ nclust <- .C("nclusters",
+	as.integer(antpers), as.integer(clusters), as.integer(rep(0,antpers)), 
+	as.integer(0), as.integer(0), package="timereg")
+  maxclust <- nclust[[5]]
+  antclust <- nclust[[4]]
+  cluster.size <- nclust[[3]][1:antclust]
+  clustud <- .C("clusterindex",as.integer(clusters),
+		as.integer(antclust),as.integer(antpers),
+                as.integer(rep(0,antclust*maxclust)),as.integer(rep(0,antclust)),
+	  package="timereg")
+idclust <- matrix(clustud[[4]],antclust,maxclust)
+
+out <- list(maxclust=maxclust,antclust=antclust,idclust=idclust,cluster.size=cluster.size)
+} ## }}}
 
