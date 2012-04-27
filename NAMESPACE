@@ -6,16 +6,15 @@ export("aalen",
        "aalen.des",
        "aalenBase",
        "aalenBaseC",
-       "additive.pls",
+###       "additive.pls",
        "additive.compSs",
-       "additive.plsR",
+###       "additive.plsR",
        "check.missing",
        "rm.missing",
        "coefBase",
        "comp.risk",
-       "cluster.index",
        "const",       
-       "cox",
+###       "cox",
        "cox.aalen",	
        "cox.aalenBase",
        "cum.residuals",
@@ -23,10 +22,11 @@ export("aalen",
        "Csmooth2B",	
        "CsmoothB",	
        "cum.residuals",
-       "cv.folds",
-       "dynreg",   	
-       "dynregBase",	
+###       "cv.folds",
+###       "dynreg",   	
+###       "dynregBase",	
        "Gprop.odds",
+       "Gprop.odds.subdist",
        "is.diag",
        "krylow.pls",
        "localTimeReg",
@@ -36,24 +36,24 @@ export("aalen",
        "percen",
        "pred.cum",
        "pred.des",
-       "summary.pls",
+       "predictpropodds",
+###       "summary.pls",
        "prop",	
-       "prop.excess",	
-       "prop.excessBase",
+###       "prop.excess",	
+###       "prop.excessBase",
        "prop.odds",
+       "prop.odds.subdist",
        "pval",
        "pava",
        "read.design",
        "read.surv",
        "residualsTimereg",
        "semiaalen",	
-       "semicox",	
-       "semiregBase",
-       "slaaop",
-       "sindex.prodlim",
-       "pls.surv.cv",
-       "timecox",
-       "timecoxBase",
+###       "semicox",	
+###       "semiregBase",
+###       "pls.surv.cv",
+###       "timecox",
+###       "timecoxBase",
        "timetest",
        "two.stage",
        "wald.test"
@@ -63,10 +63,10 @@ S3method(plot,aalen)
 S3method(plot,comprisk)
 S3method(plot,cum.residuals)
 S3method(plot,cox.aalen)
-S3method(plot,dynreg)
+###S3method(plot,dynreg)
 S3method(plot,predict.timereg)
-S3method(plot,prop.excess)
-S3method(plot,timecox)
+###S3method(plot,prop.excess)
+###S3method(plot,timecox)
 S3method(plot,two.stage)
 S3method(plot,predict.timereg)
 
@@ -74,36 +74,36 @@ S3method(print,aalen)
 S3method(print,cox.aalen)
 S3method(print,comprisk)
 S3method(print,cum.residuals)
-S3method(print,dynreg)
+###S3method(print,dynreg)
 S3method(print,pe.sasieni)
 S3method(print,predict.timereg)
-S3method(print,prop.excess)
-S3method(print,timecox)
+###S3method(print,prop.excess)
+###S3method(print,timecox)
 S3method(print,two.stage)
-S3method(print,pls)
+###S3method(print,pls)
 
 S3method(summary,aalen)
 S3method(summary,cox.aalen)
 S3method(summary,comprisk)
 S3method(summary,cum.residuals)
-S3method(summary,dynreg)
+###S3method(summary,dynreg)
 S3method(summary,pe.sasieni)
 S3method(summary,predict.timereg)
-S3method(summary,prop.excess)
-S3method(summary,timecox)
+###S3method(summary,prop.excess)
+###S3method(summary,timecox)
 S3method(summary,two.stage)
-S3method(summary,pls)
+###S3method(summary,pls)
 
 S3method(predict,aalen)
 S3method(predict,comprisk)
 S3method(predict,cox.aalen)
 S3method(predict,two.stage)
-S3method(predict,pls)
+###S3method(predict,pls)
 
 S3method(coef,aalen)
 S3method(coef,cox.aalen)
-S3method(coef,dynreg)
-S3method(coef,timecox)
+###S3method(coef,dynreg)
+###S3method(coef,timecox)
 S3method(coef,two.stage)
 
 export("plot.aalen",
@@ -112,35 +112,35 @@ export("plot.aalen",
        "plot.cox.aalen",
        "plot.cums",
        "plotScore",
-       "plot.dynreg",
+###       "plot.dynreg",
        "plot.predict.timereg",
-       "plot.prop.excess",
-       "plot.timecox",
+###       "plot.prop.excess",
+###       "plot.timecox",
        "plot.two.stage",
        "print.aalen",
        "print.cox.aalen",
        "print.comprisk",
        "print.cum.residuals",
-       "print.dynreg",
+###       "print.dynreg",
        "print.pe.sasieni",
        "print.predict.timereg",
-       "print.prop.excess",
-       "print.timecox",
+###       "print.prop.excess",
+###       "print.timecox",
        "print.two.stage",
-       "print.pls",
+###       "print.pls",
        "summary.aalen",
        "summary.cox.aalen",
        "summary.comprisk",
        "summary.cum.residuals",
-       "summary.dynreg",
+###       "summary.dynreg",
        "summary.pe.sasieni",
-       "summary.pls",
+###       "summary.pls",
        "summary.predict.timereg",
-       "summary.prop.excess",
-       "summary.timecox",
+###       "summary.prop.excess",
+###       "summary.timecox",
        "summary.two.stage",
        "predict.aalen",
-       "predict.pls",
+###       "predict.pls",
        "predict.comprisk",
        "predict.timereg",
        "predict.cox.aalen",
@@ -148,7 +148,7 @@ export("plot.aalen",
        "coef.aalen",
        "coef.cox.aalen",
        "coef.comprisk",
-       "coef.dynreg",
-       "coef.timecox",
+###       "coef.dynreg",
+###       "coef.timecox",
        "coef.two.stage"
 )

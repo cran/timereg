@@ -13,12 +13,14 @@ coefBase<- function(object, digits=3, d2logl=0) { ## {{{
   return(res)
 } ## }}}
 
-wald.test <- function(object,contrast,coef.null=NULL,Sigma=NULL,null=NULL)
+wald.test <- function(object=NULL,coef=NULL,contrast,coef.null=NULL,Sigma=NULL,null=NULL)
 { ## {{{
   if (is.null(Sigma)) {
-     if (class(object)=="cor") Sigma <- object$var.theta else Sigma <- object$var.gamma;
+     if (class(object)=="cor" || class(object)=="twostage") Sigma <- object$var.theta else Sigma <- object$var.gamma;
   }
-  coefs <- coefBase(object)[,1]
+  if (!is.null(object)) {
+     if (class(object)=="cor" || class(object)=="twostage") coefs <- object$theta else coefs <- object$gamma;
+  } else if (!is.null(coef)) coefs <- coef else stop("No estimates given \n"); 
   nl <- length(coefs)
   if (missing(contrast)) {
       contrast <- rep(1,length(coefs))
@@ -36,13 +38,6 @@ wald.test <- function(object,contrast,coef.null=NULL,Sigma=NULL,null=NULL)
   p <- coefs
   if (is.vector(B)) { B <- rbind(B); colnames(B) <- names(contrast) }
 
-### if (ncol(B)<length(p)) {
-###    nn <- colnames(B)
-###    myidx <- parpos(Model(object),p=nn)
-###    B0 <- matrix(0,nrow=nrow(B),ncol=length(coef(object)))
-###    B0[,myidx] <- B[,attributes(myidx)$ord]
-###    B <- B0
-### }
  Q <- t(B%*%p-null)%*%solve(B%*%Sigma%*%t(B))%*%(B%*%p-null)
  df <- qr(B)$rank; names(df) <- "df"
  attributes(Q) <- NULL; names(Q) <- "chisq";
@@ -164,3 +159,64 @@ if (class(object)=="aalen")
 residuals <- status- cumhaz
 out <- list(residuals=c(residuals),status=c(status),cumhaz=c(cumhaz),cumhazleft=c(cumhazleft),RR=RR)
 } ## }}}
+
+risk.index <- function(start,stop,id,times)
+{ ## {{{
+n <- length(start)
+nstop <- length(stop)
+if (n!=nstop) stop("start and stop not of same length\n"); 
+if (is.null(id)) id <- 1:n
+nid <- length(id)
+if (n!=nid) stop("id and start not of same length\n"); 
+
+nt <- length(times)
+
+ nclust <- .C("atriskindex",
+	as.double(start), as.double(stop), as.integer(id), as.integer(n),
+	as.double(times), as.integer(nt), as.integer(rep(0,nt)),as.integer(rep(0,nt*n)),PACKAGE="timereg")
+
+  nrisk <- nclust[[7]]
+  riskindex <- matrix(nclust[[8]],nt,n)
+
+out <- list(nrisk=nrisk,riskindex=riskindex)
+} ## }}}
+
+namematrix<-function(mat,names)
+{ colnames(mat)<-names; rownames(mat)<-names; return(mat); }
+nameestimate<-function(mat,names)
+{ colnames(mat)<-"estimate"; rownames(mat)<-names; return(mat); }
+
+aalen.des<-function(formula=formula(data),data=sys.parent(),model="aalen")
+{ ## {{{
+  call <- match.call(); 
+  m <- match.call(expand.dots=FALSE); 
+  m$model<-NULL
+  special <- c("cluster","prop","const")
+  Terms <- if(missing(data)) terms(formula,special) else terms(formula, special, data=data)
+  m$formula <- Terms
+  m[[1]] <- as.name("model.frame")
+  m <- eval(m, sys.parent())
+  mt <- attr(m, "terms")
+  intercept<-attr(mt, "intercept")
+  Y <- model.extract(m,"response")
+
+  des<-read.design(m,Terms,model=model)
+  X<-des$X; Z<-des$Z; npar<-des$npar; px<-des$px;
+  pz<-des$pz;
+  covnamesX<-des$covnamesX; covnamesZ<-des$covnamesZ;
+  clusters<-des$clusters;
+
+  if (attr(m[, 1], "type") == "right") {
+    type<-"right"; 
+    status <- m[, 1][, "status"];
+    time2  <- m[, 1][, "time"]; time   <- rep(0,length(time2)); 
+  } else if (attr(m[, 1], "type") == "counting") {
+    type<-"counting"; 
+    time   <- m[, 1][,1]; time2  <- m[, 1][,2]; status <- m[, 1][,3];
+  } else { stop("only right-censored or counting processes data") } 
+return(list(type=type,time=time,time2=time2,status=status,
+ X=X,Z=Z,px=px,pz=pz,npar=npar,
+ covnamesX=covnamesX,covnamesZ=covnamesZ,clusters=clusters))
+} ## }}}
+
+

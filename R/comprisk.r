@@ -79,6 +79,8 @@ trunc.p=NULL,entry.time=NULL,cens.weight=NULL,admin.cens=NULL,conservative=1)
 
   pxz <-px+pz;
 
+  if (is.character(cause)) cause <- data[,cause]
+
   if (is.null(times)) {
           timesc<-sort(unique(time2[cause==causeS])); 
 	  if (!is.null(n.times)) {
@@ -105,11 +107,11 @@ if (estimator==1 || estimator==4) {
 if (is.null(cens.weight)) { ## {{{ censoring model stuff with possible truncation
   if (cens.model=="KM") { ## {{{
     if (is.null(entry.time)) { ud.cens<-survfit(Surv(time2,cause==cens.code)~+1);
-###                               ud.censcum <- aalen(Surv(time2,cause==cens.code)~+1,n.sim=0,robust=0)
+###ud.censcum <- aalen(Surv(time2,cause==cens.code)~+1,n.sim=0,robust=0)
     }
     else {
-	    ud.cens<-survfit(Surv(entry,time2,cause==cens.code)~+1); 
-###            ud.censcum <- aalen(Surv(entry,time2,cause==cens.code)~+1,n.sim=0,robust=0)
+    ud.cens<-survfit(Surv(entry,time2,cause==cens.code)~+1); 
+### ud.censcum <- aalen(Surv(entry,time2,cause==cens.code)~+1,n.sim=0,robust=0)
     }
     Gfit<-cbind(ud.cens$time,ud.cens$surv)
     Gfit<-rbind(c(0,1),Gfit); 
@@ -253,7 +255,7 @@ if (is.null(cens.weight)) { ## {{{ censoring model stuff with possible truncatio
 	  as.double(conv),as.double(weights),as.double(entry),
 	  as.double(trunc.p),as.integer(estimator),as.integer(fix.gamma),
 	  as.integer(stratum),as.integer(ordertime-1),as.integer(conservative), 
-	  as.double(ssf), PACKAGE="timereg") ## }}}
+	  as.double(ssf), as.double(Gctimes),PACKAGE="timereg") ## }}}
 
  ## {{{ handling output
   ssf <- out[[51]]; 
@@ -342,8 +344,6 @@ if (is.null(cens.weight)) { ## {{{ censoring model stuff with possible truncatio
   attr(ud, "coarse.clust") <- coarse.clust
   attr(ud, "max.clust") <- max.clust
   attr(ud, "clusters") <- clusters
-###  attr(ud, "se.cluster") <- list(clusters=clusters,cluster.call=cluster.call,
-###				 coarse.clust=coarse.clust,max.clust=max.clust)
   attr(ud, "causeS") <- causeS
   attr(ud, "cens.code") <- cens.code
   attr(ud, "times") <- times
@@ -513,4 +513,3 @@ plot.comprisk <-  function (x, pointwise.ci=1, hw.ci=0,
     }
   }
 } ## }}}
-

@@ -57,7 +57,6 @@ aalen<-function (formula = formula(data),
 	survs$antclust <- max.clust    
   }                                                         
 
-
   if ( (attr(m[, 1], "type") == "right" ) ) {  ## {{{
    ot <- order(-time2,status==1); 
    time2<-time2[ot]; status<-status[ot]; 
@@ -137,6 +136,7 @@ ldata<-list(start=survs$start,stop=survs$stop,antpers=survs$antpers,antclust=sur
     rownames(ud$var.gamma) <- c(covnamesZ)
   } ## }}}
 
+  attr(ud,"stratum")<-ud$stratum; 
   attr(ud, "Call") <- sys.call()
   attr(ud, "Formula") <- formula
   attr(ud, "id") <- id.call

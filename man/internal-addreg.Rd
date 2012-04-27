@@ -1,6 +1,5 @@
 \name{pval}
 \alias{pval}
-\alias{cv.folds}
 \alias{additive.compSs}
 \alias{CsmoothB}
 \alias{mypbc}
@@ -15,21 +14,20 @@
 \alias{aalenBase}
 \alias{aalenBaseC}
 \alias{cox.aalenBase}
-\alias{prop.excessBase}
 \alias{read-design}
 \alias{is.diag}
-\alias{dynregBase}
-\alias{timecoxBase}
 \alias{semiaalen}
-\alias{semicox}
 \alias{semiregBase}
 \alias{check.missing} 
 \alias{read.design}
 \alias{read.surv}
+\alias{risk.index}
+\alias{faster.reshape}
 \alias{rm.missing}
 \alias{plot.two.stage}
 \alias{summary.two.stage}
 \alias{predict.two.stage}
+\alias{predictpropodds}
 \alias{plot.cums}
 \alias{plot.comprisk}
 \alias{plot.predict.comprisk}
@@ -42,14 +40,10 @@
 \alias{pred.des}
 \alias{Cpred}
 \alias{plot.cox.aalen2}
-\alias{plot.prop.excess2}
-\alias{plot.timecox2}
 \alias{plot.predict}
 \alias{coef.aalen}
 \alias{coef.cox.aalen}
 \alias{coef.comprisk}
-\alias{coef.dynreg}
-\alias{coef.timecox}
 \alias{coef.two.stage}
 \alias{cluster.index}
 \alias{coefBase}
@@ -61,10 +55,7 @@
 \alias{residualsTimereg}
 \alias{summary.pe.sasieni}
 \alias{summary.predict.timereg}
-\alias{summary.pls}
 \alias{sindex.prodlim}
-\alias{print.pls}
-\alias{predict.pls}
 \alias{wald.test}
 \title{For internal use}
 \description{for internal use}

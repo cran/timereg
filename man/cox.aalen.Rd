@@ -12,6 +12,9 @@ Time dependent variables and counting process data
 
 The model thus contains the Cox's regression  model as special case. 
 
+To fit a stratified Cox model it is important to parametrize the baseline
+apppropriately (see example below).
+
 Resampling is used for computing p-values for tests of
 time-varying effects.
 Test for proportionality is considered by
@@ -24,7 +27,7 @@ The modelling formula uses the standard survival modelling given in the
 cox.aalen(formula=formula(data),data=sys.parent(),beta=NULL,Nit=10,detail=0,
 start.time=0,max.time=NULL,id=NULL,clusters=NULL,n.sim=500,residuals=0,
 robust=1,weighted.test=0,covariance=0,resample.iid=0,weights=NULL,rate.sim=1,
-beta.fixed=0,max.clust=1000,exact.deriv=1,silent=0,max.timepoint.sim=100)
+beta.fixed=0,max.clust=1000,exact.deriv=1,silent=1,max.timepoint.sim=100)
 }
 \arguments{
 \item{formula}{
@@ -145,10 +148,15 @@ summary(out)
 par(mfrow=c(2,3))
 plot(out,score=1) 
 
+# Fits stratified Cox model 
+out<-cox.aalen(Surv(time,status==9)~-1+factor(vf)+ prop(age)+prop(sex)+
+	       prop(chf)+prop(diabetes),data=sTRACE,max.time=7,n.sim=100)
+summary(out)
+
+
 # Fits Cox-Aalen model 
 out<-cox.aalen(Surv(time,status==9)~prop(age)+prop(sex)+
 vf+chf+prop(diabetes),data=sTRACE,max.time=7,n.sim=100)
-
 summary(out)
 par(mfrow=c(2,3))
 plot(out)

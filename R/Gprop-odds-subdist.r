@@ -1,13 +1,17 @@
-Gprop.odds<-function(formula=formula(data),data=sys.parent(),beta=0,Nit=50,detail=0,start.time=0,max.time=NULL,id=NULL,n.sim=500,weighted.test=0,sym=0,mle.start=0)
+Gprop.odds.subdist<-function(formula=formula(data),data=sys.parent(),cause=NULL,
+                            beta=0,Nit=50,detail=0,start.time=0, max.time=NULL,
+			    id=NULL,n.sim=500,weighted.test=0,sym=0,mle.start=0,causeS=1,
+			    cens.code=0,cens.model="KM")
 {
+## {{{ setting up variables
 id.call<-id; call<-match.call(); residuals<-0;  
 robust<-0; ratesim<-0; profile<-0; exppar<-0; 
 m<-match.call(expand.dots = FALSE); 
-m$max.time<-m$start.time<-m$weighted.test<-m$n.sim<-m$id<-m$Nit<-m$detail<-m$beta<-m$sym<-m$mle.start<-NULL
+m$cens.model <- m$cens.code <- m$cause <- m$max.time<-m$start.time <-m$weighted.test<-m$n.sim<-m$id<-m$Nit<-m$detail<-m$beta<-m$sym<-m$mle.start<-m$causeS <- NULL
 if (n.sim==0) sim<-0 else sim<-1; 
 antsim<-n.sim; 
 
-  special <- c("prop")
+  special <- c("prop","const")
   Terms <- if(missing(data)) terms(formula, special)
            else              terms(formula, special, data=data)
   m$formula <- Terms
@@ -39,11 +43,6 @@ antsim<-n.sim;
        }
     else {X<-as.matrix(XZ); covnamesZ<-dimnames(XZ)[[2]]}
 
-#    print("X"); print(X[1,]); print(covnamesX); 
-#    if (renaalen==FALSE) {print("Z"); print(Z[1,]);
-#    print(covnamesZ); 
-#    }
-
     px <- ncol(X)
     if (renaalen == FALSE) pz <- ncol(Z) else pz <- 0
     pxz <- px + pz
@@ -68,23 +67,57 @@ if (attr(m[, 1], "type") == "counting") {
 Ntimes <- sum(status); 
 
 # adds random noise to make survival times unique
-if (sum(duplicated(time2[status==1]))>0) {
+if (sum(duplicated(time2[cause==causeS]))>0) {
 #cat("Non unique survival times: break ties ! \n")
 #cat("Break ties yourself\n");
 ties<-TRUE
-dtimes<-time2[status==1]; index<-(1:length(time2))[status==1];
+dtimes<-time2[cause==causeS]; index<-(1:length(time2))[cause==causeS];
 ties<-duplicated(dtimes); nties<-sum(ties); index<-index[ties]
 dt<-diff(sort(time2)); dt<-min(dt[dt>0]);
 time2[index]<-time2[index]+runif(nties,0,min(0.001,dt/2));
 } else ties<-FALSE; 
 
 start<-time; stop<-time2; 
-times<-c(start.time,time2[status==1]); times<-sort(times);
+times<-time2[cause==causeS]; 
+index<-(1:length(time2))[cause==causeS];
+index <- index[order(times)]; times<-sort(times);
 if (is.null(max.time)) maxtimes<-max(times)+0.1 else maxtimes<-max.time; 
 times<-times[times<maxtimes]
 Ntimes <- length(times); 
+## }}}
 
-########################################################################
+if (is.null(cause)) stop(" cause must be given\n"); 
+
+## {{{ censoring and estimator
+if (cens.model=="KM") { ## {{{
+    ud.cens<-survfit(Surv(time2,cause==cens.code)~+1);
+    Gfit<-cbind(ud.cens$time,ud.cens$surv)
+    Gfit<-rbind(c(0,1),Gfit); 
+    KMti<-Cpred(Gfit,time2)[,2];
+    KMtimes<-Cpred(Gfit,times)[,2]; ## }}}
+  } else if (cens.model=="cox") { ## {{{
+###    if (npar==TRUE) XZ<-X[,-1] else XZ<-cbind(X,Z)[,-1];
+###    ud.cens<-coxph(Surv(time2,cause==cens.code)~XZ)
+###    aseout <- basehaz(ud.cens,centered=FALSE); 
+###    baseout <- cbind(baseout$time,baseout$hazard)
+###    Gcx<-Cpred(baseout,time2)[,2];
+###    RR<-exp(XZ %*% coef(ud.cens))
+###    KMti<-exp(-Gcx*RR)
+###    KMtimes<-Cpred(Gfit,times)[,2]; 
+    ## }}}
+  } else if (cens.model=="aalen") {  ## {{{
+###    if (npar==TRUE) XZ<-X else XZ<-cbind(X,Z);
+###    ud.cens<-aalen(Surv(time2,cause==cens.code)~-1+XZ+cluster(clusters),n.sim=0,residuals=0,robust=0,silent=1)
+###    KMti <- Cpred(ud.cens$cum,time2)[,-1];
+###    Gcx<-exp(-apply(Gcx*XZ,1,sum))
+###    Gcx[Gcx>1]<-1; Gcx[Gcx<0]<-0
+###    Gfit<-rbind(c(0,1),cbind(time2,Gcx)); 
+###    KMti <- Gcx
+###    KMtimes<-Cpred(Gfit,times)[,2]; ## }}}
+    } else  stop('Unknown censoring model') 
+## }}}
+
+## {{{ defining further variables for program 
 if (is.null(id)==TRUE) {antpers<-length(time); id<-0:(antpers-1); }
 else { pers<-unique(id); antpers<-length(pers); 
        id<-as.integer(factor(id,labels=1:(antpers)))-1; }
@@ -109,13 +142,14 @@ testval<-c();
 rani<--round(runif(1)*10000); 
 Ut<-matrix(0,Ntimes,pg+1); simUt<-matrix(0,antsim,pg);
 loglike<-0; 
-########################################################################
+## }}}
 
 #cat("Generalised Proportional odds model \n"); 
-#dyn.load("Gprop-odds.so")
 
-nparout<- .C("Gtranssurv",
-as.double(times),as.integer(Ntimes),as.double(desZ),
+
+## {{{ C-call
+nparout<- .C("Gpropoddssubdist",
+as.double(times),as.integer(Ntimes), as.double(desZ),
 as.integer(nx),as.integer(px),as.double(desX),
 as.integer(nx),as.integer(pg),as.integer(antpers),
 as.double(start),as.double(stop),as.double(beta),
@@ -125,10 +159,14 @@ as.integer(detail),as.integer(sim),as.integer(antsim),
 as.integer(rani),as.double(Rvcu), as.double(RVarbeta),
 as.double(test),as.double(testOBS), as.double(Ut),
 as.double(simUt),as.double(Uit),as.integer(id),
-as.integer(status),as.integer(weighted.test),as.double(score),
+as.integer(cause),as.integer(weighted.test),as.double(score),
 as.double(cumAi),as.double(cumAiiid),as.integer(residuals),
-as.integer(exppar),as.integer(sym),as.integer(mle.start),as.integer(stratum),PACKAGE="timereg");
+as.integer(exppar),as.integer(sym),as.integer(mle.start),
+as.double(KMtimes),as.double(KMti),as.double(time2),as.integer(causeS),
+as.integer(index-1),as.integer(stratum),PACKAGE="timereg");
+## }}}
 
+## {{{ output handling
 gamma<-matrix(nparout[[12]],pg,1);
 cumint<-matrix(nparout[[14]],Ntimes,px+1);
 vcum<-matrix(nparout[[15]],Ntimes,px+1);
@@ -199,7 +237,7 @@ rownames(ud$score)<-c(covnamesX); colnames(ud$score)<-"score";
 namematrix(ud$var.gamma,covnamesX);
 namematrix(ud$robvar.gamma,covnamesX);
 namematrix(ud$D2linv,covnamesX);
-
+## }}}
 
 attr(ud,"Call")<-sys.call(); 
 attr(ud,"Formula")<-formula; 
@@ -207,3 +245,4 @@ attr(ud,"id")<-id.call;
 class(ud)<-"cox.aalen"
 return(ud); 
 }
+

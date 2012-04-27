@@ -94,6 +94,7 @@ extern void
 F77_SUB(dgetri)(const int* n, double* a, const int* lda,
                  int* ipiv, double* work, const int* lwork, int* info);
 
+
 // cumsum of matrix apply(X,2,cusum)
 // rev=1 apply(X[n:1,],2,cumsum)[n:1,]
 // for rev=1 possible to return only apply(X[n:1,],2,cumsum)[nindex,]
@@ -321,7 +322,7 @@ void invertSPDunsafe(matrix *A, matrix *AI){
   double qraux[n];
   double work[2*n];
   int rank = 0;
-  int job;
+  int job=1;
   double tol = 1.0e-07;
   
   // First copy the matrix A into the matrix AI
@@ -331,6 +332,9 @@ void invertSPDunsafe(matrix *A, matrix *AI){
     }
   }
     
+//  dqrdc(x,ldx,n,p, qraux,jpvt,work,job)
+//  F77_CALL(dqrdc)(AI->entries, &n, &n, &n, &rank, qraux, pivot, work,job);
+//  dqrdc2(x,ldx,n,p,tol,k,qraux,jpvt,work)
   F77_CALL(dqrdc2)(AI->entries, &n, &n, &n, &tol, &rank, qraux, pivot, work);
 
   for(i = 0; i < n; i++){
@@ -1203,6 +1207,7 @@ void invertUnsafeS(matrix *A, matrix *Ainv,int silent){
     if(rcond < tol ){
       if (silent==0) Rprintf("Error in invert: estimated reciprocal condition number = %7.7e\n",rcond); 
       mat_zeros(Ainv);
+      free(work); free(iwork); free(dwork); free(ipiv);
       return;
     }
 
@@ -1220,10 +1225,7 @@ void invertUnsafeS(matrix *A, matrix *Ainv,int silent){
     }
   }
   
-  free(work);
-  free(iwork);
-  free(dwork);
-  free(ipiv);
+  free(work); free(iwork); free(dwork); free(ipiv);
 }
 
 
@@ -1445,9 +1447,9 @@ void LevenbergMarquardt(matrix *S,matrix *SI,vector *U,vector *delta,double *lm,
   if  (ss > *lm ) {
      MxA(S,S,S2);
      for (i=0;i<nrow;i++) ME(S2,i,i)=ME(S2,i,i)+min(VE(U,i)*VE(U,i),100);
-     invert(S2,SI); MxA(SI,S,S2); Mv(S2,U,delta);
+     invertS(S2,SI,1); MxA(SI,S,S2); Mv(S2,U,delta);
   } else {
-    invert(S2,SI); Mv(SI,U,delta);
+    invertS(S2,SI,1); Mv(SI,U,delta);
   }
   if  (*step>0.0001) scl_vec_mult(*step,delta,delta); 
   free_mat(S2); 

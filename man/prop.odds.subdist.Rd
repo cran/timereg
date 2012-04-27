@@ -1,10 +1,10 @@
-\name{Gprop.odds}
-\alias{Gprop.odds}
-\title{Fit Generalized Semiparametric Proportional 0dds Model}
+\name{prop.odds.subdist}
+\alias{prop.odds.subdist}
+\title{Fit Semiparametric Proportional 0dds Model for the competing risks subdistribution}
 \description{
 Fits a semiparametric  proportional odds model:
 \deqn{
-logit(1-S_{X,Z}(t)) = log(X^T A(t)) + \beta^T Z 
+logit(F_1(t;X,Z)) = log( A(t)) + \beta^T Z 
 }
 where A(t) is increasing but otherwise unspecified. Model is 
 fitted by maximising the modified partial likelihood. 
@@ -13,19 +13,19 @@ considering the score functions is also computed by resampling methods.
 
 An alternative way of writing the model :
 \deqn{
-S_{X,Z}(t)) = \frac{ \exp( - \beta^T Z )}{
- (X^T A(t)) + \exp( - \beta^T Z)  }
+F_1(t;X,Z)  = \frac{ \exp(  \beta^T Z )}{
+ (A(t)) + \exp(  \beta^T Z)  }
 }
-such that \eqn{\beta} is the log-odds-ratio of dying before time t,
+such that \eqn{\beta} is the log-odds-ratio of cause 1 before time t,
 and \eqn{A(t)} is the odds-ratio.
 
 The modelling formula uses the standard survival modelling given in the
 \bold{survival} package.
 }
 \usage{
-Gprop.odds(formula = formula(data),data=sys.parent(),beta=0,Nit=50,
-detail=0,start.time=0,max.time=NULL,id=NULL,n.sim=500,weighted.test=0,
-sym=0,mle.start=0)
+prop.odds.subdist(formula,data=sys.parent(),cause=NULL,causeS=1,beta=NULL,
+Nit=10,detail=0,start.time=0,max.time=NULL,id=NULL,n.sim=500,weighted.test=0,
+profile=1,sym=0,cens.code=0,cens.model="KM",clusters=NULL,max.clust=100,baselinevar=1)
 }
 \arguments{
 \item{formula}{
@@ -33,26 +33,28 @@ a formula object, with the response on the left of a '~' operator, and
 the terms on the right.  The response must be a survival object as
 returned by the `Surv' function.
 }
-\item{data}{a data.frame with the variables.}
-\item{start.time}{start of observation period where estimates are computed.}
-\item{max.time}{
-end of observation period where estimates are computed.
-Estimates thus computed from [start.time, max.time]. 
-This is very useful to obtain stable estimates, especially for the
-baseline. Default is max of data.}
-\item{id}{For timevarying covariates the variable must
-associate each record with the id of a subject.}
-\item{n.sim}{number of simulations in resampling.}
-\item{weighted.test}{to compute a variance weighted version of the
-test-processes used for testing time-varying effects.}
+j\item{data}{a data.frame with the variables.}
+\item{cause}{cause indicator for competing risks.}
 \item{beta}{starting value for relative risk estimates}
 \item{Nit}{number of iterations for Newton-Raphson algorithm.}
-\item{detail}{if 0 no details is printed during iterations, 
-if 1 details are given.}
-\item{sym}{to use symmetrized second derivative in the case
-of the estimating equation approach (profile=0). 
+\item{detail}{if 0 no details is printed during iterations, if 1 details are given.}
+\item{start.time}{start of observation period where estimates are computed.}
+\item{max.time}{ end of observation period where estimates are computed. 
+       	Estimates thus computed from [start.time, max.time]. 
+       This is very useful to obtain stable estimates, especially for the baseline. Default is max of data.}
+\item{id}{For timevarying covariates the variable must associate each record with the id of a subject.}
+\item{n.sim}{number of simulations in resampling.}
+\item{weighted.test}{to compute a variance weighted version of the test-processes used for 
+	testing time-varying effects.}
+\item{profile}{use profile version of score equations.}
+\item{sym}{to use symmetrized second derivative in the case of the estimating equation approach (profile=0). 
 This may improve the numerical performance.  }
-\item{mle.start}{starting values for relative risk parameters.}
+\item{causeS}{specifies cause of interst. numeric value.}
+\item{cens.code}{specifies censoring code.}
+\item{cens.model}{specifies censoring model. So far only Kaplan-Meier "KM".}
+\item{clusters}{to compute cluster based standard errors.}
+\item{max.clust}{number of maximum clusters to be used, to save time in iid decomposition.}
+\item{baselinevar}{set to 0 to save time on computations.}
 }
 \details{
 The data for a subject is presented as multiple rows or "observations",
@@ -104,7 +106,7 @@ based on resampling.}
 }
 \references{
 Scheike, A flexible semiparametric transformation model for
-survival data, Lifetime Data Anal. (to appear). 
+survival data, Lifetime Data Anal. (2007). 
 
 Martinussen and Scheike, Dynamic Regression Models for Survival Data,
 Springer (2006).
@@ -112,20 +114,20 @@ Springer (2006).
 \author{Thomas Scheike}
 \examples{
 \donttest{
-library(timereg)
-data(sTRACE)
-# Fits Proportional odds model with stratified baseline
-age.c<-scale(sTRACE$age,scale=FALSE); 
-out<-Gprop.odds(Surv(time,status==9)~-1+factor(diabetes)+prop(age.c)+prop(chf)+
-                prop(sex)+prop(vf),data=sTRACE,max.time=7,n.sim=50)
+data(bmt)
+# Fits Proportional odds model 
+out <- prop.odds.subdist(Surv(time,cause==1)~platelet+age+tcell,data=bmt,
+		 cause=bmt$cause,cens.code=0,cens.model="KM",causeS=1,detail=0,n.sim=1000)
 summary(out) 
 par(mfrow=c(2,3))
 plot(out,sim.ci=2); plot(out,score=1) 
 
-# Fits Proportional odds model with baseline on additive form
-# thus giving odds-ratio of dyings for vf and diabetes
-out<-Gprop.odds(Surv(time,status==9)~vf+diabetes+prop(age.c)+prop(chf)+
-		prop(sex),data=sTRACE,max.time=7,n.sim=50)
+pout <- predictpropodds(out,X=model.matrix(~platelet+age+tcell,data=bmt)[,-1])
+matplot(pout$time,pout$pred,type="l")
+
+# Fits Proportional odds model with stratified baseline, slow  !
+out <- Gprop.odds.subdist(Surv(time,cause==1)~-1+factor(platelet)+prop(age)+prop(tcell),data=bmt,
+		 cause=bmt$cause,cens.code=0,cens.model="KM",causeS=1,detail=0,n.sim=1000)
 summary(out) 
 par(mfrow=c(2,3))
 plot(out,sim.ci=2); plot(out,score=1) 
