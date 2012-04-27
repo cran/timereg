@@ -1,4 +1,4 @@
-294ec3f1f55f8a52279258d6c04840d5 *DESCRIPTION
+6069b3829a60a2e96f0a465282ce7c08 *DESCRIPTION
 49654369044ce431326dbe7bf43c22d4 *NAMESPACE
 7395651d6a5b58a22153dbcb36c32bdb *R.css
 662d742ccaac237516adb55cc7f0d81b *R/Cpred.r
@@ -20,7 +20,7 @@ ca97fbcd8b1d135b7451270804c7cf71 *R/faster.reshape.r
 ef0a6f155a97324b6105aded8f248e03 *R/new.cox-aalen.r
 2cd446323dbd73e32fe4410f11938b64 *R/new.pe-sasieni.r
 69ec7a0c82ded46b0dcde355fa79fea1 *R/plots.r
-63282154b9de701198c1e0130fda3166 *R/predict-timereg.r
+7b7dca45dc64e2f2e85830bdd795bd61 *R/predict-timereg.r
 33528e78d0c41f81d522aaf121411993 *R/prop-odds-subdist.r
 06344fd7499213fd733eb483113032c7 *R/prop-odds.r
 7b632cdc0c8e4994bb71638c62986c4a *R/read-design.r
@@ -43,7 +43,7 @@ d108fe8aa8e72f626ae94585b477523e *man/TRACE.Rd
 7722b8cf85fa4c585a6d54a124623fd6 *man/aalen.Rd
 7fbc7eae8f3bfea691b749c4b527e3ea *man/bmt.Rd
 6d2ea3277d577d050fab1524b69b7b2c *man/cd4.Rd
-70d25bd235fcc29c617ca12a5d8eba09 *man/comp.risk.Rd
+1a5c860aea7e1fd67ab84fe26ca3d764 *man/comp.risk.Rd
 ecce209a875da3896c5060db43e9b039 *man/const.Rd
 36b68360923feee77e9ecaf4a76cb34c *man/cox.aalen.Rd
 a492a8b2210cd1576538a38cb9044e15 *man/csl.Rd
