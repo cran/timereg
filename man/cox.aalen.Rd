@@ -26,7 +26,7 @@ The modelling formula uses the standard survival modelling given in the
 \usage{
 cox.aalen(formula=formula(data),data=sys.parent(),beta=NULL,Nit=10,detail=0,
 start.time=0,max.time=NULL,id=NULL,clusters=NULL,n.sim=500,residuals=0,
-robust=1,weighted.test=0,covariance=0,resample.iid=0,weights=NULL,rate.sim=1,
+robust=1,weighted.test=0,covariance=0,resample.iid=1,weights=NULL,rate.sim=0,
 beta.fixed=0,max.clust=1000,exact.deriv=1,silent=1,max.timepoint.sim=100)
 }
 \arguments{
@@ -42,7 +42,7 @@ beta.fixed=0,max.clust=1000,exact.deriv=1,silent=1,max.timepoint.sim=100)
 \item{max.time}{end of observation period where estimates are computed. 
 Estimates thus computed from [start.time, max.time]. Default is max of data.}
 \item{robust}{to compute robust variances and construct processes for
-resampling. May be set to 0 to save memory.}
+resampling. May be set to 0 to save memory and time, in particular for rate.sim=1.}
 \item{id}{For timevarying covariates the variable must 
 associate each record with the id of a subject.}
 \item{clusters}{cluster variable for computation of robust 
@@ -57,7 +57,7 @@ and corresponding time vector (time).}
 \item{covariance}{to compute covariance estimates for
 nonparametric terms rather than just the variances.}
 \item{resample.iid}{to return i.i.d. representation for
-nonparametric and parametric terms.}
+nonparametric and parametric terms. based on counting process or martingale resduals (rate.sim).}
 \item{beta}{starting value for relative risk estimates.}
 \item{Nit}{number of iterations for Newton-Raphson algorithm.}
 \item{detail}{if 0 no details is printed during iterations, if 1 details are given.}
@@ -140,8 +140,7 @@ library(timereg)
 data(sTRACE)
 # Fits Cox model 
 out<-cox.aalen(Surv(time,status==9)~prop(age)+prop(sex)+
-prop(vf)+prop(chf)+prop(diabetes),data=sTRACE,max.time=7,n.sim=100)
-
+prop(vf)+prop(chf)+prop(diabetes),data=sTRACE)
 
 # makes Lin, Wei, Ying test for proportionality
 summary(out)
@@ -156,18 +155,9 @@ summary(out)
 
 # Fits Cox-Aalen model 
 out<-cox.aalen(Surv(time,status==9)~prop(age)+prop(sex)+
-vf+chf+prop(diabetes),data=sTRACE,max.time=7,n.sim=100)
+               vf+chf+prop(diabetes),data=sTRACE,max.time=7,n.sim=100)
 summary(out)
 par(mfrow=c(2,3))
 plot(out)
-
-# Fits model Cox-Aalen model  and 
-# simulates based on time-grouping to save computing time 
-out<- cox.aalen(Surv(time,status==9)~prop(sex)+prop(age)+prop(wmi),data=sTRACE,
-        	max.timepoint.sim=30,n.sim=100)
-summary(out)
-par(mfrow=c(2,2))
-plot(out)
-plot(out,score=1)
 }
 \keyword{survival}

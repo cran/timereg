@@ -230,11 +230,10 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*robust,*status
 // {{{ setting up variables and allocating
   matrix *Vcov,*X,*WX,*A,*AI,*AIXW,*Z,*WZ;
   matrix *IdCGam,*dCGam,*CGam,*Ct,*ICGam,*VarKorG,*dC,*ZH,*XWZ,*ZWZ,*XWZAI;
-  matrix *Acorb[*Nalltimes],*Vargam,*dVargam,*M1M2[*Ntimes],*GCdM1M2,*Vargam2;
-  matrix *C[*Nalltimes],*dM1M2,*M1M2t,*RobVargam; 
-  matrix *tmpM2,*tmpM3,*tmpM4;
+  matrix *Vargam,*dVargam,*GCdM1M2,*Vargam2;
+  matrix *dM1M2,*M1M2t,*RobVargam,*tmpM2,*tmpM3,*tmpM4;
   matrix *W3t[*antclust],*W4t[*antclust];
-  matrix *AIs[*Nalltimes]; 
+//  matrix *AIs[*Nalltimes],*C[*Nalltimes],*Acorb[*Nalltimes],*M1M2[*Ntimes]; 
   vector *W2[*antclust],*W3[*antclust];
   vector *VdB,*difX,*xi,*tmpv1,*tmpv2; 
   vector *dAoff,*dA,*rowX,*dN,*AIXWdN,*bhatt,*pbhat,*plamt;
@@ -261,17 +260,26 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*robust,*status
   malloc_vecs(*px,&dA,&dAoff,&VdB,&difX,&xi,&tmpv1,&korG,&rowX,&AIXWdN,&bhatt,NULL);
   malloc_vecs(*pg,&dgam2,&gam2,&zi,&tmpv2,&rowZ,&gam,&gamoff,&dgam,&ZHdN,&IZHdN,NULL);
   malloc_vecs(*antpers,&offset,&pbhat,&dN,&pghat,&plamt,NULL);
+ 
+  matrix *AIn,*XZAIn,*Cn,*M1M2n; 
+malloc_mat((*px)*(*Nalltimes),*px,AIn); 
+malloc_mat((*px)*(*Nalltimes),*pg,XZAIn); 
+malloc_mat((*px)*(*Nalltimes),*pg,Cn); 
+malloc_mat(*pg,(*px)*(*Ntimes),M1M2n); 
 
   for (j=0;j<*Nalltimes;j++) {
-	  malloc_mat(*px,*pg,Acorb[j]); malloc_mat(*px,*pg,C[j]);stats[j]=0; 
+//	  malloc_mat(*px,*pg,Acorb[j]); 
+//	  malloc_mat(*px,*pg,C[j]);
+	  stats[j]=0; 
   }
-  for (j=0;j<*Ntimes;j++) { malloc_mat(*px,*pg,M1M2[j]); }
+//  for (j=0;j<*Ntimes;j++) malloc_mat(*px,*pg,M1M2[j]); 
 
   if (*robust==1) {
-	  for (j=0;j<*antclust;j++) { malloc_mat(*Ntimes,*px,W3t[j]);
-		  malloc_mat(*Ntimes,*px,W4t[j]); malloc_vec(*pg,W2[j]); 
-		  malloc_vec(*px,W3[j]); }
-         for (j=0;j<*Nalltimes;j++) malloc_mat(*px,*px,AIs[j]);  
+	  for (j=0;j<*antclust;j++) { 
+		  malloc_mat(*Ntimes,*px,W3t[j]); malloc_mat(*Ntimes,*px,W4t[j]); 
+		  malloc_vec(*pg,W2[j]); malloc_vec(*px,W3[j]); 
+	  }
+//         for (j=0;j<*Nalltimes;j++) malloc_mat(*px,*px,AIs[j]);  
   }
 
   pmax=max(*pg,*px); 
@@ -365,7 +373,7 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*robust,*status
 
 	  invertS(A,AI,silent[0]);
 	  if (ME(AI,0,0)==0.0 && *silent==0){ 
-		  Rprintf(" X'X not invertible at time %lf \n",time);
+	      Rprintf(" X'X not invertible at time %lf \n",time);
 	  }
 	  MxA(AI,XWZ,XWZAI); MtA(XWZAI,XWZ,tmpM2);
 	  mat_subtr(ZWZ,tmpM2,dCGam);
@@ -380,12 +388,8 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*robust,*status
 		  vM(XWZ,AIXWdN,tmpv2); vec_subtr(zi,tmpv2,ZHdN);
 		  if (*deltaweight==0){ scl_vec_mult(dtime,ZHdN,ZHdN); }
 		  vec_add(ZHdN,IZHdN,IZHdN);
-//                invertS(dCGam,IdCGam,silent[0]);
-//		  Mv(IdCGam,ZHdN,dgam2);  
-//	          scl_vec_mult(dtime,dgam2,dgam2); 
-//		  vec_add(dgam2,gam2,gam2); 
 	  }
-	  mat_copy(XWZAI,Acorb[s]);
+
 
 	  /* correction from offsets calculated here */
 	  if (*mof==1)  {vM(WX,offset,rowX); Mv(AI,rowX,tmpv1); 
@@ -394,14 +398,17 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*robust,*status
 		  vec_subtr(rowZ,dgam,dgam); 
 		  vec_add_mult(gamoff,dgam,dtime,gamoff); 
 		  for (k=1;k<=*px;k++) cumoff[k*(*Nalltimes)+s]=VE(tmpv1,k-1); 
-		  //	Rprintf("==================================== %d \n",s); 
-		  //	print_vec(offset); 
-		  //	print_vec(gamoff); 
-		  //	print_vec(tmpv1); 
 	  } 
 
 	  scl_mat_mult(dtime,XWZAI,tmpM4);
-	  mat_add(tmpM4,Ct,Ct); mat_copy(Ct,C[s]);
+	  mat_add(tmpM4,Ct,Ct); 
+
+//	  mat_copy(XWZAI,Acorb[s]);
+//	  mat_copy(Ct,C[s]);
+         for (j=0;j<*pg;j++) for (i=0;i<*px;i++)  {
+	    ME(XZAIn,(s-1)*(*px)+i,j)=ME(XWZAI,i,j); 
+	    ME(Cn,(s-1)*(*px)+i,j)=ME(Ct,i,j); 
+	 }
 
 	  if (stat==1) {
 		  vcu[l]=time; cu[l]=time; times[l]=time; 
@@ -413,7 +420,8 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*robust,*status
 		  }
 		  mat_add(dVargam,Vargam,Vargam);
 		  mat_add(dM1M2,M1M2t,M1M2t);
-		  mat_copy(M1M2t,M1M2[l]);
+//		  mat_copy(M1M2t,M1M2[l]);
+                 for (j=0;j<*pg;j++) for (i=0;i<*px;i++) ME(M1M2n,j,l*(*px)+i)=ME(M1M2t,j,i); 
 
 	for (k=1;k<=*px;k++) {
 	  cu[k*(*Ntimes)+l]=VE(AIXWdN,k-1); 
@@ -421,7 +429,9 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*robust,*status
 	}
       }
 
-      if (*robust==1)  mat_copy(AI,AIs[s]);
+      if (*robust==1)  
+         for (j=0;j<*px;j++) for (i=0;i<*px;i++) ME(AIn,(s-1)*(*px)+j,i)=ME(AI,j,i); 
+//	      AIs[s]=mat_copy(AI,AIs[s]); 
 //	for (i=0;i<*antpers;i++) {
 //	 extract_row(WX,i,xi);Mv(AI,xi,rowX);replace_row(AIxit[i],s,rowX); 
 //	}
@@ -529,7 +539,16 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*robust,*status
     /* terms for robust variance   */ 
     if (*robust==1 )  // {{{
     { 
-	mat_subtr(C[s],C[s-1],tmpM4); Mv(tmpM4,gam,korG); 
+      for (j=0;j<*pg;j++) for (i=0;i<*px;i++) {
+	      ME(tmpM4,i,j)= dtime*ME(XZAIn,(s-1)*(*px)+i,j); 
+	      ME(XWZAI,i,j)= ME(XZAIn,(s-1)*(*px)+i,j); 
+      }
+      for (j=0;j<*px;j++) for (i=0;i<*px;i++) ME(AI,j,i)= ME(AIn,(s-1)*(*px)+j,i); 
+//      print_mat(tmpM4); 
+//	mat_subtr(C[s],C[s-1],tmpM4); 
+//      print_mat(tmpM4); 
+
+	Mv(tmpM4,gam,korG); 
 
 	for (i=0;i<*antpers;i++) 
 	{
@@ -542,14 +561,15 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*robust,*status
 
 	  if (*robust==1) {
 	  extract_row(WX,i,xi); extract_row(WZ,i,zi); 
-	  vM(Acorb[s],xi,tmpv2); 
+//	  vM(Acorb[s],xi,tmpv2); 
+	  vM(XWZAI,xi,tmpv2); 
 	  vec_subtr(zi,tmpv2,tmpv2); 
 	  if (i==pers && stat==1) vec_add(tmpv2,W2[cin],W2[cin]); 
 	  scl_vec_mult(hati,tmpv2,rowZ); 
 	  vec_subtr(W2[cin],rowZ,W2[cin]); 
 
 //	  extract_row(AIxit[i],s,rowX); 
-          Mv(AIs[s],xi,rowX);
+          Mv(AI,xi,rowX);
 
 	  if (i==pers && stat==1) { vec_add(rowX,W3[cin],W3[cin]); }
 	  scl_vec_mult(hati,rowX,rowX); 
@@ -574,10 +594,15 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*robust,*status
 
       for (k=1;k<=*px;k++) cu[k*(*Ntimes)+l]=cu[k*(*Ntimes)+l-1]+cu[k*(*Ntimes)+l]+VE(dAoff,k-1); 
 
-      MxA(C[ls[l]],Vargam,tmpM4); 
-      MAt(tmpM4,C[ls[l]],VarKorG);
-      MxA(M1M2[l],ICGam,tmpM4); 
-      MAt(C[ls[l]],tmpM4,GCdM1M2);
+      for (j=0;j<*pg;j++){
+	 for (i=0;i<*px;i++) ME(Ct,i,j)=ME(Cn,(ls[l]-1)*(*px)+i,j);
+         for (i=0;i<*px;i++) ME(M1M2t,j,i)=ME(M1M2n,j,l*(*px)+i); 
+      }
+
+//      MxA(C[ls[l]],Vargam,tmpM4); MAt(tmpM4,C[ls[l]],VarKorG);
+//      MxA(M1M2[l],ICGam,tmpM4); MAt(C[ls[l]],tmpM4,GCdM1M2);
+      MxA(Ct,Vargam,tmpM4); MAt(tmpM4,Ct,VarKorG);
+      MxA(M1M2t,ICGam,tmpM4); MAt(Ct,tmpM4,GCdM1M2);
 
      for (k=1;k<=*px;k++) vcu[k*(*Ntimes)+l]+= ME(VarKorG,k-1,k-1)-2.0*ME(GCdM1M2,k-1,k-1); 
     }
@@ -590,7 +615,11 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*robust,*status
 
   for (s=1;s<*Ntimes;s++) {
 
-    Mv(C[ls[s]],gam,korG); 
+      for (j=0;j<*pg;j++)
+      for (i=0;i<*px;i++) ME(Ct,i,j)=ME(Cn,(ls[l]-1)*(*px)+i,j);
+
+//    Mv(C[ls[s]],gam,korG); 
+    Mv(Ct,gam,korG); 
     for (k=1;k<=*px;k++) cu[k*(*Ntimes)+s]=cu[k*(*Ntimes)+s]-VE(korG,k-1); 
 
     if (*robust==1) { // {{{ ROBUST VARIANCES  
@@ -598,7 +627,8 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*robust,*status
 
       for (j=0;j<*antclust;j++) {
 	Mv(ICGam,W2[j],tmpv2); 
-        if (*fixedgamma==1) vec_zeros(rowX);  else Mv(C[ls[s]],tmpv2,rowX); 
+//        if (*fixedgamma==1) vec_zeros(rowX);  else Mv(C[ls[s]],tmpv2,rowX); 
+        if (*fixedgamma==1) vec_zeros(rowX);  else Mv(Ct,tmpv2,rowX); 
 	extract_row(W3t[j],s,tmpv1); 
 	vec_subtr(tmpv1,rowX,difX); 
 	replace_row(W4t[j],s,difX); 
@@ -616,8 +646,6 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*robust,*status
 	}
 
 	if (s==1)  for (c=0;c<*pg;c++) for (k=0;k<*pg;k++) ME(RobVargam,c,k)=ME(RobVargam,c,k)+VE(W2[j],c)*VE(W2[j],k);
-	    
-	  
 	
       } /* j =1 ..Antclust */ 
     } // }}} /* robust==1 */
@@ -660,6 +688,7 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*robust,*status
 
   // {{{ freeing
   
+  free_mats(&AIn,&XZAIn,&Cn,&M1M2n,NULL);  
   free_mat(X); free_mat(WX); free_mat(Z); free_mat(WZ); free_mat(AIXW); free_mat(ZH);
   free_mats(&Vcov,&A,&AI,&GCdM1M2,&VarKorG,NULL); 
   free_mats(&tmpM2,&ZWZ,&RobVargam,&Vargam,&dVargam,&ICGam,&CGam,&IdCGam,&dCGam,NULL); 
@@ -669,15 +698,16 @@ int *nx,*px,*antpers,*Nalltimes,*Ntimes,*nb,*ng,*pg,*sim,*antsim,*robust,*status
   free_vecs(&zi,&tmpv2,&rowZ,&gam,&gamoff,&dgam,&ZHdN,&IZHdN,NULL);
   free_vecs(&offset,&pbhat,&dN,&pghat,&plamt,NULL);
 
-  for (j=0;j<*Nalltimes;j++) { free_mat(Acorb[j]); free_mat(C[j]); }
-  for (j=0;j<*Ntimes;j++) { free_mat(M1M2[j]);  }
+//  for (j=0;j<*Nalltimes;j++) { free_mat(Acorb[j]); free_mat(C[j]); }
+//  for (j=0;j<*Ntimes;j++) { free_mat(M1M2[j]);  }
   if (*robust==1) {
-    for (j=0;j<*Nalltimes;j++) free_mat(AIs[j]); 
+//    for (j=0;j<*Nalltimes;j++) free_mat(AIs[j]); 
     for (j=0;j<*antclust;j++) { 
       free_mat(W3t[j]); free_mat(W4t[j]); free_vec(W2[j]); free_vec(W3[j]);    } 
   }
   free(vcudif); free(times); free(cumoff); 
   free(stats); free(idd); free(cluster); free(ls); 
   // }}}
+  
 } // }}}
 

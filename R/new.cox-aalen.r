@@ -3,16 +3,16 @@ prop<-function(x) x
 cox.aalen<-function(formula=formula(data),data=sys.parent(),
 beta=NULL,Nit=10,detail=0,start.time=0,max.time=NULL, id=NULL, 
 clusters=NULL, n.sim=500, residuals=0,robust=1,
-weighted.test=0,covariance=0,resample.iid=0,weights=NULL,
-rate.sim=1,beta.fixed=0,max.clust=1000,exact.deriv=1,silent=1,
+weighted.test=0,covariance=0,resample.iid=1,weights=NULL,
+rate.sim=0,beta.fixed=0,max.clust=1000,exact.deriv=1,silent=1,
 max.timepoint.sim=100)
 { ## {{{
 offsets=0; 
 ## {{{ set up variables 
   if (n.sim == 0) sim <- 0 else sim <- 1
   if (resample.iid==1 & robust==0) { robust <- 1;}
-  if (covariance==1 & robust==0) { covariance<-0;}
-  if (sim==1 & robust==0) { n.sim <- 0; sim<-0;}
+  if (covariance==1 & robust==0) {covariance<-0;cat("Covariance of baseline only for robust=1\n"); }
+  if (robust==0 ) { n.sim <- 0; sim<-0;}
   if (n.sim>0 & n.sim<50) {n.sim<-50 ; cat("Minimum 50 simulations\n");}
   if (beta.fixed==1) Nit<-1; 
   call <- match.call()
@@ -36,6 +36,9 @@ offsets=0;
   covnamesX<-des$covnamesX; covnamesZ<-des$covnamesZ
   if(is.null(clusters)) clusters <- des$clusters  
   pxz <- px + pz;
+
+  if ( (nrow(Z)!=nrow(data)) && (!is.null(id))) stop("Missing values in design matrix not allowed with id\n"); 
+###  if (nrow(Z)!=nrow(data)) stop("Missing values in design matrix not allowed\n"); 
 
   cluster.call<-clusters; 
   survs<-read.surv(m,id,npar,clusters,start.time,max.time,model="cox.aalen",silent=silent)
@@ -63,7 +66,11 @@ offsets=0;
   if ((is.null(beta))) {
         if ( (attr(m[, 1], "type") == "right" ) ) 
         beta<-coxph(Surv(survs$stop,survs$status)~Z)$coef
-        else beta<-coxph(Surv(survs$start,survs$stop,survs$status)~Z)$coef; 
+        else { 
+          if (survs$antpers< 10000) beta<-coxph(Surv(survs$start,survs$stop,survs$status)~Z)$coef 
+	  else beta<-coxph(Surv(survs$stop,survs$status)~Z)$coef;  
+	}
+	if (detail>=2) {cat("starting values (coxph) \n");  print(beta);}
   }
 
 if ( (attr(m[, 1], "type") == "right" ) ) {  ## {{{
@@ -142,6 +149,8 @@ ldata<-list(start=start,stop=stop, antpers=survs$antpers,antclust=survs$antclust
   class(ud)<-"cox.aalen"
   attr(ud,"stratum")<-ud$stratum; 
   attr(ud,"Formula")<-formula;
+  attr(ud,"rate.sim")<-rate.sim;
+  attr(ud,"id.call")<-id.call;
   attr(ud,"id")<-id.call;
   attr(ud,"cluster.call")<-cluster.call;
   attr(ud,"cluster")<-clusters;
