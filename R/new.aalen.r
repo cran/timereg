@@ -47,13 +47,16 @@ aalen<-function (formula = formula(data),
   nobs <- nrow(X); 
   if (is.null(weights)) weights <- rep(1,nrow(X)); 
 
-  if ( (!is.null(max.clust)) )    if (max.clust < survs$antclust) {
-	qq <- quantile(clusters, probs = seq(0, 1, by = 1/max.clust)) 
+  if ((!is.null(max.clust))) if (max.clust<survs$antclust) {
+	qq <- unique(quantile(clusters, probs = seq(0, 1, by = 1/max.clust)))
 	qqc <- cut(clusters, breaks = qq, include.lowest = TRUE)    
-	clusters <- as.integer(factor(qqc, labels = 1:max.clust)) -1
+	clusters <- as.integer(qqc)-1
+	max.clusters <- length(unique(clusters))
+###	clusters <- as.integer(factor(qqc, labels = 1:max.clust)) -1
 	survs$antclust <- max.clust    
   }                                                         
   cluster.call<-clusters; 
+
 
   if ( (attr(m[, 1], "type") == "right" ) ) {  ## {{{
    ot <- order(-time2,status==1); 
@@ -84,8 +87,7 @@ aalen<-function (formula = formula(data),
 	if (sum(offsets)!=0) offsets <- rep(offsets,2)[ix]
 } ## }}}
 
-ldata<-list(start=survs$start,stop=survs$stop,
-	antpers=survs$antpers,antclust=survs$antclust);
+ldata<-list(start=survs$start,stop=survs$stop,antpers=survs$antpers,antclust=survs$antclust);
 
 ## }}}
 
@@ -145,6 +147,7 @@ ldata<-list(start=survs$start,stop=survs$stop,
   attr(ud, "status") <- survs$status
   attr(ud, "residuals") <- residuals
   attr(ud, "max.clust") <- max.clust; 
+  attr(ud, "max.time") <- max.time; 
   attr(ud, "orig.max.clust") <- orig.max.clust 
   class(ud) <- "aalen"
   ud$call<-call

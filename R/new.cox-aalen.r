@@ -49,15 +49,16 @@ offsets=0;
   weights <- rep(1,nrow(X)); 
   if (sum(abs(offsets))!=0) stop("no offsets in this version \n"); 
 
-  if ( (!is.null(max.clust)) )  {  
-     if (max.clust < survs$antclust)   {
-       qq <- quantile(clusters, probs = seq(0, 1, by = 1/max.clust))       
-       qqc <- cut(clusters, breaks = qq, include.lowest = TRUE)    
-       clusters <- as.integer(factor(qqc, labels = 1:max.clust)) -1
-       survs$antclust <- max.clust    
-     }
+  if ((!is.null(max.clust))) if (max.clust<survs$antclust) {
+	qq <- unique(quantile(clusters, probs = seq(0, 1, by = 1/max.clust)))
+	qqc <- cut(clusters, breaks = qq, include.lowest = TRUE)    
+	clusters <- as.integer(qqc)-1
+	max.clusters <- length(unique(clusters))
+###	clusters <- as.integer(factor(qqc, labels = 1:max.clust)) -1
+	survs$antclust <- max.clust    
   }                                                         
   cluster.call<-clusters; 
+
 
   if ((length(beta)!=pz) && (is.null(beta)==FALSE)) beta <- rep(beta[1],pz); 
   if ((is.null(beta))) beta<-coxph(Surv(survs$start,survs$stop,survs$status)~Z)$coef; 
@@ -146,6 +147,7 @@ ldata<-list(start=start,stop=stop, antpers=survs$antpers,antclust=survs$antclust
   attr(ud,"status")<-survs$status; 
   attr(ud,"residuals")<-residuals; 
   attr(ud,"max.clust")<-max.clust; 
+  attr(ud,"max.time")<-max.time; 
   attr(ud,"orig.max.clust")<- orig.max.clust 
   attr(ud,"max.timepoint.sim")<-max.timepoint.sim; 
   ud$call<-call
