@@ -43,7 +43,7 @@ In general p may be powers of the same length as z.
 }
 \usage{
 comp.risk(formula,data=sys.parent(),cause,times=NULL,Nit=50,
-clusters=NULL,est=NULL,fix.gamma=0,gamma=0,n.sim=500,weighted=0,model="additive",
+clusters=NULL,est=NULL,fix.gamma=0,gamma=0,n.sim=500,weighted=0,model="fg",
 causeS=1,cens.code=0,detail=0,interval=0.01,resample.iid=1,
 cens.model="KM",cens.formula=NULL,
 time.pow=NULL,time.pow.test=NULL,silent=1,conv=1e-6,
@@ -127,7 +127,7 @@ observed cumulative and estimate under null of constant effect.}
 \item{conv}{information on convergence for time points used for estimation.}
 }
 \references{
-Scheike, Zhang and Gerds (2008), Predicting cumulativeincidence probability by direct binomial regression,Biometrika, 95, 205-220.           
+Scheike, Zhang and Gerds (2008), Predicting cumulative incidence probability by direct binomial regression,Biometrika, 95, 205-220.           
 
 Scheike and Zhang (2007), Flexible competing risks regression modelling and goodness of fit, LIDA, 14, 464-483.
 
@@ -137,6 +137,10 @@ Martinussen and Scheike (2006), Dynamic regression models for survival data, Spr
 \examples{
 library(timereg)
 data(bmt); 
+
+clust <- rep(1:204,each=2)
+addclust<-comp.risk(Surv(time,cause>0)~platelet+age+tcell+cluster(clust),data=bmt,
+bmt$cause,causeS=1,resample.iid=1,n.sim=100)
 
 add<-comp.risk(Surv(time,cause>0)~platelet+age+tcell,data=bmt,
 bmt$cause,causeS=1,resample.iid=1,n.sim=100)

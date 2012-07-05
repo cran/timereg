@@ -273,7 +273,6 @@ if (convt==1 ) {
 
     for (i=0;i<*antclust;i++) {free_vec(cumhatA[i]); free_vec(cumA[i]); 
     free_mat(cumAt[i]);}
-
   }
 free(vcudif); free(cumentry); free(cifentry);  
 } // }}}
@@ -291,7 +290,7 @@ double *times,*x,*KMc,*z,*score,*hess,*est,*var,*test,*testOBS,*Ut,*simUt,*gamma
        *vargamma,*gamma2,*biid,*gamiid,*timepow,*timepowtest,*entry,*trunkp,*convc,*weights;
 int *antpers,*px,*Ntimes,*Nit,*cause,*censcode,*sim,*antsim,*rani,*weighted,
 *semi,*pg,*trans,*CA,*line,*detail,*resample,*clusters,*antclust,*silent,*estimator,*fixgamma,*stratum,*ordertime,*robust;
-{ 
+{ // {{{
   // {{{ allocation and reading of data from R
   matrix *ldesignX,*A,*AI,*cdesignX,*ldesignG,*cdesignG,*censX,*censZ;
   matrix *S,*dCGam,*CGam,*ICGam,*VarKorG,*dC,*XZ,*ZZ,*ZZI,*XZAI; 
@@ -357,7 +356,7 @@ int *antpers,*px,*Ntimes,*Nit,*cause,*censcode,*sim,*antsim,*rani,*weighted,
 	if (j<*px) ME(ldesignX,c,j)= z[j*(*antpers)+c];
 	if (j<*pg) ME(ldesignG,c,j)=zsem[j*(*antpers)+c]; } } }
 
-  for (itt=0;itt<*Nit;itt++)
+  for (itt=0;itt<*Nit;itt++)  // {{{
     {
    R_CheckUserInterrupt();
       mat_zeros(Ct); mat_zeros(CGam); vec_zeros(IZGdN); vec_zeros(IZGlamt); 
@@ -537,7 +536,6 @@ int *antpers,*px,*Ntimes,*Nit,*cause,*censcode,*sim,*antsim,*rani,*weighted,
            else scl_vec_mult(pow(weights[j],0.5)*(time< KMc[j])*(time>entry[j]),zi,zi); 
 	   replace_row(cdesignX,j,xi); replace_row(cdesignG,j,zi); 
 
-
 	   if (*estimator==1) {
 	   if (KMc[j]<0.001) VE(Y,j)=((VE(Y,j)/0.001)-VE(plamt,j)/trunkp[j])*(time>entry[j]); 
 	   else VE(Y,j)=((VE(Y,j)/KMc[j])-VE(plamt,j)/trunkp[j])*(time>entry[j]);
@@ -658,13 +656,14 @@ int *antpers,*px,*Ntimes,*Nit,*cause,*censcode,*sim,*antsim,*rani,*weighted,
 	Rprintf("===========================================================\n"); 
       }
 
-    } /*itt løkke */ 
+    } /*itt løkke */  // }}}
+
 
    R_CheckUserInterrupt();
   /* ROBUST VARIANCES   */ 
 //  if (*robust==1) 
-//    {
-      for (s=0;s<*Ntimes;s++) {
+//    { //    }
+      for (s=0;s<*Ntimes;s++) { // {{{ robust variances 
 	vec_zeros(VdB); 
 	 for (i=0;i<*antclust;i++) {
           if (*fixgamma==0) { 
@@ -684,8 +683,7 @@ int *antpers,*px,*Ntimes,*Nit,*cause,*censcode,*sim,*antsim,*rani,*weighted,
 	}  /* for (i=0;i<*antclust;i++) */ 
 	for (k=1;k<*px+1;k++) var[k*(*Ntimes)+s]=VE(VdB,k-1); 
 
-      } /* s=0..Ntimes*/
-//    }
+      } /* s=0..Ntimes*/ // }}}
 
   /* MxA(RobVargam,ICGam,tmpM2); MxA(ICGam,tmpM2,RobVargam);*/
   /* print_mat(RobVargam);  */ 
@@ -718,7 +716,7 @@ int *antpers,*px,*Ntimes,*Nit,*cause,*censcode,*sim,*antsim,*rani,*weighted,
   free(vcudif); free(inc); free(n); free(nx);  free(cumentry); free(px1); 
   free(cifentry); 
   // }}}
-}
+} // }}}
 
 double mypow(double x,double p)
 {

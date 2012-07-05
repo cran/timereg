@@ -88,11 +88,9 @@ Martinussen and Scheike, Dynamic Regression Models for Survival Data,
 Springer (2006).}
 \author{Thomas Scheike}
 \examples{
-library(timereg)
 data(diabetes)
 # Marginal Cox model  with treat as covariate, residuals=2, resample.iid=1 !
-marg <- cox.aalen(Surv(time,status) ~ prop(treat) + cluster(id),
-	 data=diabetes,residuals=2,resample.iid=1,n.sim=0)
+marg <- cox.aalen(Surv(time,status)~prop(treat)+cluster(id),data=diabetes,robust=0,n.sim=0)
 
 fit<-two.stage(marg,data=diabetes,theta=1.0,detail=0,Nit=40)
 summary(fit)
@@ -105,7 +103,7 @@ design.treat<-cbind(des.t[,-1]*(diabetes$adult==1),
 
 # test for common baselines included here 
 marg1<-cox.aalen(Surv(time,status)~-1+factor(adult)+prop(design.treat)+cluster(id),
- data=diabetes,residuals=2,resample.iid=1)
+ data=diabetes,residuals=2,resample.iid=1,Nit=50)
 
 fit.s<-two.stage(marg1,data=diabetes,Nit=40,theta=1,theta.des=theta.des)
 summary(fit.s)
@@ -122,6 +120,12 @@ summary(fit.s3)
 # to fit model without covariates, use beta.fixed=1 and prop or aalen function
 marg <- aalen(Surv(time,status) ~+1+ cluster(id),
 	 data=diabetes,residuals=2,resample.iid=1,n.sim=0)
+fita<-two.stage(marg,data=diabetes,theta=0.95,detail=0)
+summary(fita)
+
+# same model but se's without variation from marginal model to speed up computations
+marg <- aalen(Surv(time,status) ~+1+ cluster(id),
+	 data=diabetes,residuals=2,robust=0,resample.iid=0,n.sim=0)
 fit<-two.stage(marg,data=diabetes,theta=0.95,detail=0)
 summary(fit)
 }
