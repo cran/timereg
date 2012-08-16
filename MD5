@@ -1,4 +1,4 @@
-c1f5d93f7f386287e1c92b0991457481 *DESCRIPTION
+d031144416f4f206fd99878aa4415034 *DESCRIPTION
 20ec3b03fec0d4be591886e8acdac2f5 *NAMESPACE
 7395651d6a5b58a22153dbcb36c32bdb *R.css
 4090f142a3e33c9b143b91918f20c0ab *R/Cpred.r
@@ -9,8 +9,8 @@ b20bb5d3166aee9cc680d92d17ce0cfb *R/Gprop-odds.r
 828e7d515d1ddb5e6ff407e835c9d0d6 *R/aalenC.r
 e4a6a575bb17a14a2f3ad39c67151cda *R/additive-compSs.r
 9a2936a376168712c3a741fd156e1f9c *R/additive-pls.r
-18f5efa627c13cf2908ca94f4e72ed86 *R/base.r
-7b16efc8c41c17ea9225f11c93bac752 *R/comprisk.r
+5ee70b41f394a2b8b6582ce8b797eac0 *R/base.r
+6df416cc4b5303dc49395a39a474edcc *R/comprisk.r
 2f1e54a8008a56799205b51c5f1cde56 *R/cox-aalen.r
 e16aaca1cf459fc8e17c21c93602ce02 *R/dynadd.r
 66e7b8702ff128ffe79fcad9bae43947 *R/krylow.pls.r
@@ -24,12 +24,12 @@ e31f2b05a6f11f57fec4aa7103722ddb *R/libdef.r
 4b3330f35c5c4f18b80b225fcbde0174 *R/new.timecox.r
 69ec7a0c82ded46b0dcde355fa79fea1 *R/plots.r
 cb64349a842db361e6f0899ae542805e *R/pls.cv.r
-13109bc6ae9f5a452b8c2693d15038fa *R/predict-timereg.r
+c32c6b8d743c31bc9ad1fa7f0ab78ed1 *R/predict-timereg.r
 f0777837a9ce52a7d62cddac3b5f3310 *R/prop-excess.r
 1265c43afd079c6f8c42f84c857a763d *R/prop-odds.r
 46f6ad6316215fc54eb9787a071f5836 *R/read-design.r
 0866d946b993e8abeb9956c059e10493 *R/timecox.r
-17e7fa85f101e26f7979ebed755c7e40 *R/two-stage-reg.r
+793ce5affdbdeb780c81cded84233aab *R/two-stage-reg.r
 f9cf9dc925b0eb4532905279dcd07a3f *data/TRACE.txt.gz
 4287db3533e463a0c4899b7faad8962b *data/bmt.txt.gz
 82f961ec5ff8c270f587e6b37fa0dc36 *data/cd4.txt.gz
@@ -48,7 +48,7 @@ d108fe8aa8e72f626ae94585b477523e *man/TRACE.Rd
 830216d3f3c72ed50d1f9dfdc8e8d027 *man/additive-pls.Rd
 7fbc7eae8f3bfea691b749c4b527e3ea *man/bmt.Rd
 6d2ea3277d577d050fab1524b69b7b2c *man/cd4.Rd
-cb36dd5d9b077e5f93cd24a6225a8b3f *man/comp.risk.Rd
+70d25bd235fcc29c617ca12a5d8eba09 *man/comp.risk.Rd
 ecce209a875da3896c5060db43e9b039 *man/const.Rd
 815f74eb689d99d1698c526a202319f5 *man/cox.Rd
 3939e83945828993ff307ad6a13f695b *man/cox.aalen.Rd
@@ -72,7 +72,7 @@ a91cf1b7104e2ca2190ec65b4521eb9b *man/prop.Rd
 37e4e9d3b59fa4c1d54a09f537b307dc *man/summary.aalen.Rd
 ed0ccc5c46625f9a9cd3550639ecd476 *man/summary.cum.residuals.Rd
 07f75b72391b771a56f04c46e6339bf2 *man/timecox.Rd
-b9cae473a7c056fa310c5b0d248042b8 *man/two.stage.reg.Rd
+c7aa218dc1a87fe1bef4a46ac2139a54 *man/two.stage.reg.Rd
 d8f4d1297b46aa2408275d5cddce1f61 *src/Gprop-odds.c
 7736ff91d0cb6e5ece5ddf86cea27065 *src/Makevars
 51b5faa1e9abb86cf25443475cd50fd3 *src/aalen-test.c
@@ -81,14 +81,14 @@ d8f4d1297b46aa2408275d5cddce1f61 *src/Gprop-odds.c
 37c8d7f302b0075f8746e09a1c10d6ec *src/additive-compSs.c
 17c9e87f22f9ae95a56aa71607ce9655 *src/additive-pls-new.c
 d17d07200a41e92f18f235a1c310777d *src/breslow.c
-d2c9eab9a089d8ce18c464f3e2903351 *src/comprisk.c
+d783b03c3ac2f372b2527fe90da1c2db *src/comprisk.c
 d08f12f2415fe3b166f139e6a62fac19 *src/comptest-cmprsk.c
 52d62edf54d5d36bd0f290de5fb93cbd *src/comptest.c
 98b744b57b1f4d44b5b7cbdeefd741ee *src/cox-aalen.c
 3d5e2c80e281caf0bf59a27ab845a268 *src/dynadd.c
 404d988896fe5ad38ada48b97bcd9b73 *src/kim-kim.c
 fa85e5e32bc0d5c9d176aafc1cd00a9a *src/matrix.c
-d45876ae071532690cebce15ea80f7e7 *src/matrix.h
+3b5baa7478fa86356174afe1db65e9a1 *src/matrix.h
 26a5127f3860b1c5d0504ee372ba03dc *src/mgresid.c
 49bbf5d16d6ae2d81a62597862480bbd *src/pava.c
 8a24d9e8e4ccb5dc5d13d3108ef947a0 *src/pe-sasieni.c
@@ -98,5 +98,5 @@ b641d93b27ddd7ce7f67ae3b20824726 *src/prop-excess.c
 8290d2df2558319dc1a15da71108fa53 *src/smooth.c
 32efbb4239c8e57fd02c4061a2158110 *src/smooth2.c
 4931740f86e47615d9280556d582a067 *src/timecox.c
-6ee82460f0bd69a7c005458254da1864 *src/two-stage-reg.c
+f57fd1a558f85cc6effff06b8cd8f832 *src/two-stage-reg.c
 2c9c6cdb651a96cf6aa10733e9b55a84 *src/unifConfBandResampling.c
