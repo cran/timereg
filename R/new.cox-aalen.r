@@ -37,9 +37,10 @@ offsets=0;
   if(is.null(clusters)) clusters <- des$clusters  
   pxz <- px + pz;
 
+  cluster.call<-clusters; 
   survs<-read.surv(m,id,npar,clusters,start.time,max.time,model="cox.aalen",silent=silent)
   times<-survs$times;id<-id.call<-survs$id.cal;
-  clusters<-cluster.call<-survs$clusters; 
+  clusters<-survs$clusters; 
   start.call <- start <-  survs$start; 
   stop.call <- time2 <- survs$stop; 
   status<-survs$status;
@@ -57,7 +58,6 @@ offsets=0;
 ###	clusters <- as.integer(factor(qqc, labels = 1:max.clust)) -1
 	survs$antclust <- max.clust    
   }                                                         
-  cluster.call<-clusters; 
 
 
   if ((length(beta)!=pz) && (is.null(beta)==FALSE)) beta <- rep(beta[1],pz); 
@@ -138,7 +138,8 @@ ldata<-list(start=start,stop=stop, antpers=survs$antpers,antclust=survs$antclust
   class(ud)<-"cox.aalen"
   attr(ud,"Formula")<-formula;
   attr(ud,"id")<-id.call;
-  attr(ud,"cluster")<-cluster.call;
+  attr(ud,"cluster.call")<-cluster.call;
+  attr(ud,"cluster")<-clusters;
   attr(ud,"time2")<-time2; 
   attr(ud,"start.time")<-start.time; 
   attr(ud,"start")<-start.call; 

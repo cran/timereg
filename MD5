@@ -1,4 +1,4 @@
-956ed6c73787ba1c046dc818b91d348d *DESCRIPTION
+c1f5d93f7f386287e1c92b0991457481 *DESCRIPTION
 20ec3b03fec0d4be591886e8acdac2f5 *NAMESPACE
 7395651d6a5b58a22153dbcb36c32bdb *R.css
 4090f142a3e33c9b143b91918f20c0ab *R/Cpred.r
@@ -9,15 +9,15 @@ b20bb5d3166aee9cc680d92d17ce0cfb *R/Gprop-odds.r
 828e7d515d1ddb5e6ff407e835c9d0d6 *R/aalenC.r
 e4a6a575bb17a14a2f3ad39c67151cda *R/additive-compSs.r
 9a2936a376168712c3a741fd156e1f9c *R/additive-pls.r
-ee65bca54ab413bb69c264c0facb9f2c *R/base.r
+18f5efa627c13cf2908ca94f4e72ed86 *R/base.r
 7b16efc8c41c17ea9225f11c93bac752 *R/comprisk.r
 2f1e54a8008a56799205b51c5f1cde56 *R/cox-aalen.r
 e16aaca1cf459fc8e17c21c93602ce02 *R/dynadd.r
 66e7b8702ff128ffe79fcad9bae43947 *R/krylow.pls.r
 e31f2b05a6f11f57fec4aa7103722ddb *R/libdef.r
 1c3e6b221458f128ee91abd6318dd80d *R/mgresid.r
-97bbbd54c72d035fcae358e35edf4069 *R/new.aalen.r
-f5a1013566d58c8c9942a70387557b16 *R/new.cox-aalen.r
+3c47d2d6b3fe8b529fa47fb2c0c34e5a *R/new.aalen.r
+28e1512dd9b4bc24324b523743d212ec *R/new.cox-aalen.r
 2fb90f0bc23d7123d795a0bc48c54503 *R/new.dynreg.r
 2cd446323dbd73e32fe4410f11938b64 *R/new.pe-sasieni.r
 0688a3b064e57e720c932cdc69e2b34c *R/new.prop-excess.r
@@ -29,7 +29,7 @@ f0777837a9ce52a7d62cddac3b5f3310 *R/prop-excess.r
 1265c43afd079c6f8c42f84c857a763d *R/prop-odds.r
 46f6ad6316215fc54eb9787a071f5836 *R/read-design.r
 0866d946b993e8abeb9956c059e10493 *R/timecox.r
-8daa10556f1e3c6fe21b5d6a2ac6c207 *R/two-stage-reg.r
+17e7fa85f101e26f7979ebed755c7e40 *R/two-stage-reg.r
 f9cf9dc925b0eb4532905279dcd07a3f *data/TRACE.txt.gz
 4287db3533e463a0c4899b7faad8962b *data/bmt.txt.gz
 82f961ec5ff8c270f587e6b37fa0dc36 *data/cd4.txt.gz

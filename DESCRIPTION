@@ -1,8 +1,7 @@
 Package: timereg
-Title: timereg package for Flexible regression models for survival
-        data.
-Version: 1.6-7
-Date: 2012-06-14
+Title: Flexible regression models for survival data.
+Version: 1.6-8
+Date: 2012-08-16
 Author: Thomas Scheike with contributions from Torben Martinussen and
         Jeremy Silver
 Maintainer: Thomas Scheike <ts@biostat.ku.dk>
@@ -16,6 +15,6 @@ Description: Programs for Martinussen and Scheike (2006), `Dynamic
 Depends: survival, R (>= 2.4.0)
 LazyLoad: yes
 License: GPL (>= 2)
-Packaged: 2012-07-05 09:07:59 UTC; bhd252
+Packaged: 2012-08-23 08:14:05 UTC; bhd252
 Repository: CRAN
-Date/Publication: 2012-07-05 12:52:35
+Date/Publication: 2012-08-23 08:33:46

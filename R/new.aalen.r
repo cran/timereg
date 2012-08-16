@@ -36,9 +36,10 @@ aalen<-function (formula = formula(data),
   if(is.null(clusters)) clusters <- des$clusters ##########
   pxz <- px + pz; 
 
+  cluster.call<-clusters; 
   survs<-read.surv(m,id,npar,clusters,start.time,max.time,silent=silent)
   times<-survs$times; id<-survs$id.cal; id.call<-id; 
-  clusters<-cluster.call<-survs$clusters; 
+  clusters<-survs$clusters; 
   stop.call <- time2<-survs$stop
   start.call <- survs$start
   status<-survs$status; 
@@ -55,7 +56,6 @@ aalen<-function (formula = formula(data),
 ###	clusters <- as.integer(factor(qqc, labels = 1:max.clust)) -1
 	survs$antclust <- max.clust    
   }                                                         
-  cluster.call<-clusters; 
 
 
   if ( (attr(m[, 1], "type") == "right" ) ) {  ## {{{
@@ -140,7 +140,8 @@ ldata<-list(start=survs$start,stop=survs$stop,antpers=survs$antpers,antclust=sur
   attr(ud, "Call") <- sys.call()
   attr(ud, "Formula") <- formula
   attr(ud, "id") <- id.call
-  attr(ud, "cluster") <- cluster.call
+  attr(ud, "cluster.call") <- cluster.call
+  attr(ud, "cluster") <- clusters
   attr(ud, "start.time") <- start.time
   attr(ud, "stop") <- stop.call
   attr(ud, "start") <- start.call
