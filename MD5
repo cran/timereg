@@ -1,6 +1,5 @@
-a05fca344fc0d5ba6ff656e624b3fed5 *DESCRIPTION
+3937ba8aa20ba70d75361756ee6285fa *DESCRIPTION
 29c0731ecd6f1aa2832bfa940e8c62ed *NAMESPACE
-7395651d6a5b58a22153dbcb36c32bdb *R.css
 662d742ccaac237516adb55cc7f0d81b *R/Cpred.r
 099387f56334cc736e8cb231fb9c45a9 *R/Csmooth.r
 2d1cef349f672edd3875e94779bbb0ad *R/Gprop-odds-subdist.r
@@ -10,15 +9,15 @@ f9d73c0fc23d3efdb52378f349d50187 *R/Gprop-odds.r
 828e7d515d1ddb5e6ff407e835c9d0d6 *R/aalenC.r
 e4a6a575bb17a14a2f3ad39c67151cda *R/additive-compSs.r
 b89505e86396bacac2ddd37330f24452 *R/base.r
-eb7730d59786666e0a2763d1a69b2032 *R/clusterindex-reshape.r
+86882af79c7bd8b1ff7f11caf1e52dc7 *R/clusterindex-reshape.r
 72047e5c705f1656118933b95982252e *R/comprisk.r
-69cffd2d3b20feef2bdcbb818782fe88 *R/cox-aalen.r
+673529171dd0f9b8ee7b8bb840436f18 *R/cox-aalen.r
 af2c288707ae8a74eac2105f5c72354d *R/dynadd.r
 ca97fbcd8b1d135b7451270804c7cf71 *R/faster.reshape.r
 8c7472ffaff32d2f645adb1fa020bf2d *R/krylow.pls.r
 7e23c068ad0501bf7db10868ca32de14 *R/mgresid.r
-e04dc3169ef58af91ed6133ef3411168 *R/new.aalen.r
-17e1f3116fb4e9555b012b3cfdbfaf21 *R/new.cox-aalen.r
+f0b8f570fd6fd2a6d25d3e7145243b19 *R/new.aalen.r
+440b7decd3a19005516b7393bf831ed6 *R/new.cox-aalen.r
 2fb90f0bc23d7123d795a0bc48c54503 *R/new.dynreg.r
 2f9cb1421849986b2b1a3b0a9dbcc67a *R/new.pe-sasieni.r
 0688a3b064e57e720c932cdc69e2b34c *R/new.prop-excess.r
@@ -27,10 +26,10 @@ e04dc3169ef58af91ed6133ef3411168 *R/new.aalen.r
 f5388f16cc32d2b76d479a212af9144d *R/predict-timereg.r
 6e53ef2cbd40202e19f4eea93b9b92dd *R/prop-excess.r
 006b8cf59dffdc0c7e40228c2dd13d12 *R/prop-odds-subdist.r
-07012a1db4576cc54028a42f0590705a *R/prop-odds.r
+ea67ca7f0d4d1e6609a23bf88d1c572e *R/prop-odds.r
 0f24d37c1e93840eff5eaafefd0de226 *R/read-design.r
 0866d946b993e8abeb9956c059e10493 *R/timecox.r
-a93afd54831fdceff22fc8540538c316 *R/two-stage-reg.r
+2b9010c7367e9c8ca8eb3d53a5f062f7 *R/two-stage-reg.r
 f9cf9dc925b0eb4532905279dcd07a3f *data/TRACE.txt.gz
 4287db3533e463a0c4899b7faad8962b *data/bmt.txt.gz
 82f961ec5ff8c270f587e6b37fa0dc36 *data/cd4.txt.gz
@@ -41,7 +40,6 @@ f9cf9dc925b0eb4532905279dcd07a3f *data/TRACE.txt.gz
 0515e4b60fa4a9bb9c5d9752f2545050 *data/mypbc.txt.gz
 f3f92fad3fa105fa22ddbd56db3648f4 *data/sTRACE.txt.gz
 b61d3b8771eadd513bb517dfa7487cbf *data/tTRACE.txt.gz
-88d77139cc983317b6acd8c5f1252ab9 *gnugpl2.txt
 5b84bad5b96e8bb979af005c11e59526 *inst/CITATION
 ab5b636704677a942475e06e991eaf81 *man/Gprop.odds.Rd
 22a4c04f759967ad93c4862ca1ad213a *man/Gprop.odds.subdist.Rd
@@ -52,7 +50,7 @@ d108fe8aa8e72f626ae94585b477523e *man/TRACE.Rd
 6c9718ed9c72a2f6af244d907158b488 *man/comp.risk.Rd
 ecce209a875da3896c5060db43e9b039 *man/const.Rd
 815f74eb689d99d1698c526a202319f5 *man/cox.Rd
-39620d97797b2f135689c9c2907a9ef5 *man/cox.aalen.Rd
+26f7511751d1106db639021bf56aed9e *man/cox.aalen.Rd
 a492a8b2210cd1576538a38cb9044e15 *man/csl.Rd
 638a3985458b47593dc13a03cf5502c6 *man/cum.residuals.Rd
 bdabc53ef7f9e7fc6252f34bfd78c0a8 *man/diabetes.Rd
@@ -74,7 +72,7 @@ abb721f97ef8a8d92df131deaa0935b5 *man/prop.odds.Rd
 37e4e9d3b59fa4c1d54a09f537b307dc *man/summary.aalen.Rd
 ed0ccc5c46625f9a9cd3550639ecd476 *man/summary.cum.residuals.Rd
 6418128c9e8374473550568eea6c82a6 *man/timecox.Rd
-58d9ae60c9dac73c56dee15280846335 *man/two.stage.reg.Rd
+fd155e1735c35c9b82832b3886feae67 *man/two.stage.reg.Rd
 0f78c593c283b75546fd3aa6b26f23b0 *src/Gprop-odds-subdist.c
 d50881ace9146d86b5f4850260d93fcb *src/Gprop-odds.c
 0535599c937e420572b3266c1fb5f2c3 *src/Makevars
@@ -87,7 +85,7 @@ d17d07200a41e92f18f235a1c310777d *src/breslow.c
 0be1145e118d61549b3d5ab820300c5b *src/comprisk.c
 d08f12f2415fe3b166f139e6a62fac19 *src/comptest-cmprsk.c
 52d62edf54d5d36bd0f290de5fb93cbd *src/comptest.c
-1b52d20dbce3c649cda3c26ad44e4cc4 *src/cox-aalen.c
+08df84a17c9ecba124935ed50a1a22b4 *src/cox-aalen.c
 404d988896fe5ad38ada48b97bcd9b73 *src/kim-kim.c
 1a69199af048270080a2184d11c81735 *src/matrix.c
 3a034f23cc1217cfe0bdb24d9277ad9e *src/matrix.h
@@ -100,5 +98,5 @@ fa61430cf606919ec3f70df418eb60fb *src/prop-odds-subdist2.c
 f873fb25d2538bc56f4813b7d028790f *src/prop-odds.c
 8290d2df2558319dc1a15da71108fa53 *src/smooth.c
 32efbb4239c8e57fd02c4061a2158110 *src/smooth2.c
-5fd76a030463baaa900436f808e7e9e8 *src/two-stage-reg.c
+7dbb48460d0fa8e731d78d74ffd08ccb *src/two-stage-reg.c
 2c9c6cdb651a96cf6aa10733e9b55a84 *src/unifConfBandResampling.c

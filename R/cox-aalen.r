@@ -3,7 +3,7 @@ cox.aalenBase<-function (times, fdata, designX, designG, status,
     sim = 1, antsim = 1000, weighted.test= 0, robust = 1, 
     ratesim = 0, residuals = 0, covariance = 1,
     resample.iid=0,namesZ=NULL,namesX=NULL,beta.fixed=0,
-    entry=NULL,offsets=0,exactderiv=1,max.timepoint.sim=100,silent=1) 
+    entry=NULL,offsets=0,exactderiv=1,max.timepoint.sim=100,silent=1,basesim=0) 
 { ## {{{
   additive.resamp <-0; ridge <- 0; XligZ <- 0; 
   Ntimes <- length(times)
@@ -21,7 +21,6 @@ cox.aalenBase<-function (times, fdata, designX, designG, status,
 
 ###  print(cbind(times,time.group)); 
 ###  print(length(unique(time.group))); 
-
 
   designX <- as.matrix(designX); designG <- as.matrix(designG)
   if (is.matrix(designX) == TRUE) px <- as.integer(dim(designX)[2])
@@ -52,6 +51,7 @@ cox.aalenBase<-function (times, fdata, designX, designG, status,
   var.score<- matrix(0, Ntimes , pg + 1); 
 
   if (is.diag(  t(designX) %*% designX  )==TRUE) stratum <- 1 else stratum <- 0
+  if (basesim==1) sim <- 2; 
 
   nparout <- .C("score", as.double(times), as.integer(Ntimes), 
                 as.double(designX), as.integer(nx), as.integer(px), 
@@ -92,6 +92,7 @@ cox.aalenBase<-function (times, fdata, designX, designG, status,
   Ut <- matrix(nparout[[31]], mts , pg + 1)
   if (beta.fixed==1) var.score<-matrix(nparout[[57]],Ntimes,pg+1)
 
+  gammaiid <-t( matrix(nparout[[44]],pg,fdata$antclust * 1))
   gamiid<-matrix(nparout[[53]],fdata$antclust,pg);
   if (resample.iid==1)  {
     biid<-matrix(nparout[[54]],mts,fdata$antclust*px);
@@ -107,31 +108,37 @@ cox.aalenBase<-function (times, fdata, designX, designG, status,
     cov.list <- list()
     for (i in 1:mts) cov.list[[i]] <- matrix(covit[i,], px, px) 
   } else cov.list <- NULL
-  gammaiid <-t( matrix(nparout[[44]],pg,fdata$antclust * 1))
   if (residuals == 1) cumAi <- matrix(nparout[[43]],Ntimes,fdata$antpers * 1)
   if (residuals == 2) cumAi <- nparout[[43]]
   cumAi <- list(time = times, dM = cumAi)
+
+    testUt <- test <- unifCI <- supUtOBS <- UIt <- testOBS <- testval <- pval.testBeq0 <- 
+    pval.testBeqC <- obs.testBeq0 <- obs.testBeqC <- sim.testBeq0 <- sim.testBeqC <- testUt <- sim.supUt <- NULL 
 	               
-  if (sim == 1) {
+  if (sim >= 1) {
     Uit <- matrix(nparout[[33]], mts, 50 * pg)
     UIt <- list()
     for (i in (0:49) * pg) UIt[[i/pg + 1]] <- as.matrix(Uit[, i + (1:pg)])
     simUt <- matrix(nparout[[32]], antsim, pg)
-    test <- matrix(nparout[[29]], antsim, 2 * px)
-    testOBS <- nparout[[30]]
     supUtOBS <- apply(abs(as.matrix(Ut[, -1])), 2, max)
-    for (i in 1:(2 * px)) testval <- c(testval, pval(test[, i], testOBS[i]))
-    for (i in 1:px) unifCI <- c(unifCI, percen(test[, i], 0.95))
     testUt <- c()
     for (i in 1:pg) testUt <- c(testUt, pval(simUt[, i], supUtOBS[i]))
-    pval.testBeq0 <- as.vector(testval[1:px])
-    pval.testBeqC <- as.vector(testval[(px + 1):(2 * px)])
-    obs.testBeq0 <- as.vector(testOBS[1:px])
-    obs.testBeqC <- as.vector(testOBS[(px + 1):(2 * px)])
-    sim.testBeq0 <- as.matrix(test[, 1:px])
-    sim.testBeqC <- as.matrix(test[, (px + 1):(2 * px)])
     sim.supUt <- as.matrix(simUt)
+
+    if (sim>=2) {
+	    test <- matrix(nparout[[29]], antsim, 2 * px)
+	    testOBS <- nparout[[30]]
+	    for (i in 1:(2 * px)) testval <- c(testval, pval(test[, i], testOBS[i]))
+	    for (i in 1:px) unifCI <- c(unifCI, percen(test[, i], 0.95))
+	    pval.testBeq0 <- as.vector(testval[1:px])
+	    pval.testBeqC <- as.vector(testval[(px + 1):(2 * px)])
+	    obs.testBeq0 <- as.vector(testOBS[1:px])
+	    obs.testBeqC <- as.vector(testOBS[(px + 1):(2 * px)])
+	    sim.testBeq0 <- as.matrix(test[, 1:px])
+	    sim.testBeqC <- as.matrix(test[, (px + 1):(2 * px)])
+    }
   }
+
   if (additive.resamp == 1) {
     baseproc <- matrix(nparout[[51]], mts, 50 * pg)
     additive.proc <- list()
@@ -140,10 +147,6 @@ cox.aalenBase<-function (times, fdata, designX, designG, status,
   }
   else additive.proc <- NULL
 
-
-  if (sim != 1) {
-    testUt <- test <- unifCI <- supUtOBS <- UIt <- testOBS <- testval <- pval.testBeq0 <- pval.testBeqC <- obs.testBeq0 <- obs.testBeqC <- sim.testBeq0 <- sim.testBeqC <- testUt <- sim.supUt <- NULL 
-  }
   if (robust==0 & beta.fixed==0) var.score<-NULL;
 
   ud <- list(cum = cumint, var.cum = vcum, robvar.cum = Rvcu, 

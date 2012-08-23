@@ -65,9 +65,11 @@ int*covariance,*nx,*px,*ng,*pg,*antpers,*Ntimes,*mw,*Nit,*detail,*mof,*sim,*ants
   for (j=0;j<*antclust;j++) malloc_vec(*pg,W2[j]);
   for (c=0;c<*nx;c++) cluster[id[c]]=clusters[c]; 
 
-  if (*sim==1) {
-    malloc_mat(*maxtimepoint,*px,Delta);  malloc_mat(*maxtimepoint,*px,tmpM1); 
+  if (*sim>=1) {
     malloc_mat(*maxtimepoint,*pg,Delta2); malloc_mat(*maxtimepoint,*pg,tmpM2);  
+  }
+  if (*sim>=2) {
+    malloc_mat(*maxtimepoint,*px,Delta);  malloc_mat(*maxtimepoint,*px,tmpM1); 
   }
 
   malloc_mat(*maxtimepoint,*pg,Utt); 
@@ -755,7 +757,7 @@ malloc_mat(*pg,(*px)*(*Ntimes),ZXAIn);
 
 //  for(j=0;j<*antclust;j++)  print_mat(Uti[j]); 
 
-  if (*sim==1) { // {{{ score process simulations
+  if (*sim>=1) { // {{{ score process simulations
     // Rprintf("Simulations start N= %ld \n",(long int) *antsim);
 
     tau=times[*Ntimes-1]-times[0];
@@ -764,6 +766,7 @@ malloc_mat(*pg,(*px)*(*Ntimes),ZXAIn);
     for (s=1;s<*maxtimepoint;s++) {  // {{{ /* Beregning af OBS teststørrelser */
       time=timesg[s]-times[0];  //  FIX 
 
+      if (*sim>=2) {
       for (i=1;i<=*px;i++) {
 	VE(xi,i-1)=fabs(cug[i*(*maxtimepoint)+s])/sqrt(Rvcu[i*(*maxtimepoint)+s]);
 	if (VE(xi,i-1)>testOBS[i-1]) testOBS[i-1]=VE(xi,i-1); 
@@ -775,6 +778,7 @@ malloc_mat(*pg,(*px)*(*Ntimes),ZXAIn);
       for (i=0;i<*px;i++) {
 	VE(difX,i)=fabs(VE(difX,i)); l=(*px+i);
 	if (VE(difX,i)>testOBS[l]) testOBS[l]=VE(difX,i);
+      }
       }
 
       if (*wscore>=1) {  /* sup beregnes i R */ 
@@ -789,16 +793,21 @@ malloc_mat(*pg,(*px)*(*Ntimes),ZXAIn);
 
     for (k=1;k<=*antsim;k++) {
     R_CheckUserInterrupt();
-      mat_zeros(Delta); mat_zeros(Delta2); vec_zeros(tmpv1);
+    if (*sim>=2) mat_zeros(Delta); 
+      mat_zeros(Delta2); vec_zeros(tmpv1);
       for (i=0;i<*antclust;i++) { /* random=gasdev(&idum); */ 
 	random=norm_rand();
+    if (*sim>=2) {
 	scl_mat_mult(random,W4t[i],tmpM1); mat_add(tmpM1,Delta,Delta);
+	}
 	scl_mat_mult(random,Uti[i],tmpM2); mat_add(tmpM2,Delta2,Delta2);
       }
 
-      extract_row(Delta,*maxtimepoint-1,tmpv1); 
+    if (*sim>=2) 
+	    extract_row(Delta,*maxtimepoint-1,tmpv1); 
 
       for (s=1;s<*maxtimepoint;s++) { time=timesg[s]-times[0];
+    if (*sim>=2)  {
 	scl_vec_mult(time/tau,tmpv1,xi); extract_row(Delta,s,rowX);
 	vec_subtr(rowX,xi,difX);
 
@@ -815,6 +824,7 @@ malloc_mat(*pg,(*px)*(*Ntimes),ZXAIn);
 	  VE(xi,i)=fabs(ME(Delta,s,i))/sqrt(Rvcu[(i+1)*(*maxtimepoint)+s]);
 	  if (VE(xi,i)>test[i*((*antsim))+k-1]) test[i*((*antsim))+k-1]=VE(xi,i); 
 	}
+    }
 
 	if (*wscore>=1) {
 	  extract_row(Delta2,s,zi); 
@@ -852,7 +862,8 @@ malloc_mat(*pg,(*px)*(*Ntimes),ZXAIn);
   PutRNGstate();  /* to use R random normals */
 
   // {{{ freeing 
-  if (*sim==1) free_mats(&Delta,&Delta2,&tmpM2,&tmpM1,NULL); 
+  if (*sim>=1) free_mats(&Delta2,&tmpM2,NULL); 
+  if (*sim>=2) free_mats(&Delta,&tmpM1,NULL); 
 
   free_mats(&Cn,&M1M2n,&ZXAIn,&AIn,NULL); 
   free_mats(&dAt,&Utt,&WX,&X,&cdesX,&cdesX2,&cdesX3, &WZ,&ZP,&Z,

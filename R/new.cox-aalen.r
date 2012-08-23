@@ -4,8 +4,8 @@ cox.aalen<-function(formula=formula(data),data=sys.parent(),
 beta=NULL,Nit=10,detail=0,start.time=0,max.time=NULL, id=NULL, 
 clusters=NULL, n.sim=500, residuals=0,robust=1,
 weighted.test=0,covariance=0,resample.iid=1,weights=NULL,
-rate.sim=0,beta.fixed=0,max.clust=1000,exact.deriv=1,silent=1,
-max.timepoint.sim=100)
+rate.sim=1,beta.fixed=0,max.clust=1000,exact.deriv=1,silent=1,
+max.timepoint.sim=100,basesim=0)
 { ## {{{
 offsets=0; 
 ## {{{ set up variables 
@@ -20,6 +20,7 @@ offsets=0;
   m$robust<-m$start.time<- m$scaleLWY<-m$weighted.test<-m$beta<-m$Nit<-m$detail<-m$max.time<-m$residuals<-m$n.sim<-m$id<-
 	                   m$covariance<-m$resample.iid<-m$clusters<-m$rate.sim<-m$beta.fixed<-
                            m$max.clust <- m$exact.deriv <- m$silent <- m$max.timepoint.sim <- m$silent <- NULL
+			   m$basesim <- NULL
   special <- c("prop","cluster")
   Terms <- if(missing(data)) terms(formula, special)
   else          terms(formula, special, data=data)
@@ -116,7 +117,7 @@ ldata<-list(start=start,stop=stop, antpers=survs$antpers,antclust=survs$antclust
             sim=sim,antsim=n.sim,residuals=residuals,robust=robust,
             weighted.test=weighted.test,ratesim=rate.sim,
             covariance=covariance,resample.iid=resample.iid,namesX=covnamesX,
-	    namesZ=covnamesZ,beta.fixed=beta.fixed,entry=entry,
+	    namesZ=covnamesZ,beta.fixed=beta.fixed,entry=entry,basesim=basesim,
 	    offsets=0,exactderiv=exact.deriv,max.timepoint.sim=max.timepoint.sim,silent=silent)
 
   ## {{{ output handling
@@ -129,11 +130,13 @@ ldata<-list(start=start,stop=stop, antpers=survs$antpers,antclust=survs$antclust
     if (robust==1) colnames(ud$robvar.cum)<- c("time",covnamesX)
     if (sim==1) {
       names(ud$pval.Prop)<- covnamesZ
-      names(ud$conf.band)<- names(ud$pval.testBeq0)<-
-        names(ud$pval.testBeqC)<-
-          names(ud$obs.testBeq0)<- names(ud$obs.testBeqC)<-
-            colnames(ud$sim.testBeq0)<- covnamesX; 
-    } }
+    if (basesim==1) {
+      names(ud$conf.band)<- names(ud$pval.testBeq0)<- names(ud$pval.testBeqC)<-
+      names(ud$obs.testBeq0)<- names(ud$obs.testBeqC)<- 
+      colnames(ud$sim.testBeq0)<- covnamesX; 
+    }
+    } 
+  }
   covariance<-ud$covariance
 
   rownames(ud$gamma)<-c(covnamesZ); colnames(ud$gamma)<-"estimate"; 
