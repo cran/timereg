@@ -1,4 +1,4 @@
-3937ba8aa20ba70d75361756ee6285fa *DESCRIPTION
+2a36f52a049eaeb4c54ef37ad8e1139c *DESCRIPTION
 29c0731ecd6f1aa2832bfa940e8c62ed *NAMESPACE
 662d742ccaac237516adb55cc7f0d81b *R/Cpred.r
 099387f56334cc736e8cb231fb9c45a9 *R/Csmooth.r
@@ -17,7 +17,7 @@ ca97fbcd8b1d135b7451270804c7cf71 *R/faster.reshape.r
 8c7472ffaff32d2f645adb1fa020bf2d *R/krylow.pls.r
 7e23c068ad0501bf7db10868ca32de14 *R/mgresid.r
 f0b8f570fd6fd2a6d25d3e7145243b19 *R/new.aalen.r
-440b7decd3a19005516b7393bf831ed6 *R/new.cox-aalen.r
+2629490e1d9fd74bf2428127c3453f2b *R/new.cox-aalen.r
 2fb90f0bc23d7123d795a0bc48c54503 *R/new.dynreg.r
 2f9cb1421849986b2b1a3b0a9dbcc67a *R/new.pe-sasieni.r
 0688a3b064e57e720c932cdc69e2b34c *R/new.prop-excess.r
@@ -29,7 +29,7 @@ f5388f16cc32d2b76d479a212af9144d *R/predict-timereg.r
 ea67ca7f0d4d1e6609a23bf88d1c572e *R/prop-odds.r
 0f24d37c1e93840eff5eaafefd0de226 *R/read-design.r
 0866d946b993e8abeb9956c059e10493 *R/timecox.r
-2b9010c7367e9c8ca8eb3d53a5f062f7 *R/two-stage-reg.r
+d030158551fcaaeeeb848280cbcf726f *R/two-stage-reg.r
 f9cf9dc925b0eb4532905279dcd07a3f *data/TRACE.txt.gz
 4287db3533e463a0c4899b7faad8962b *data/bmt.txt.gz
 82f961ec5ff8c270f587e6b37fa0dc36 *data/cd4.txt.gz
@@ -72,7 +72,7 @@ abb721f97ef8a8d92df131deaa0935b5 *man/prop.odds.Rd
 37e4e9d3b59fa4c1d54a09f537b307dc *man/summary.aalen.Rd
 ed0ccc5c46625f9a9cd3550639ecd476 *man/summary.cum.residuals.Rd
 6418128c9e8374473550568eea6c82a6 *man/timecox.Rd
-fd155e1735c35c9b82832b3886feae67 *man/two.stage.reg.Rd
+a6c1fef0c0b63eb0fa42e6f284678660 *man/two.stage.reg.Rd
 0f78c593c283b75546fd3aa6b26f23b0 *src/Gprop-odds-subdist.c
 d50881ace9146d86b5f4850260d93fcb *src/Gprop-odds.c
 0535599c937e420572b3266c1fb5f2c3 *src/Makevars
@@ -98,5 +98,5 @@ fa61430cf606919ec3f70df418eb60fb *src/prop-odds-subdist2.c
 f873fb25d2538bc56f4813b7d028790f *src/prop-odds.c
 8290d2df2558319dc1a15da71108fa53 *src/smooth.c
 32efbb4239c8e57fd02c4061a2158110 *src/smooth2.c
-7dbb48460d0fa8e731d78d74ffd08ccb *src/two-stage-reg.c
+108dab2d46c42d96ed68fc1e9fb71fc6 *src/two-stage-reg.c
 2c9c6cdb651a96cf6aa10733e9b55a84 *src/unifConfBandResampling.c
