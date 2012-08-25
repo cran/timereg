@@ -1,14 +1,13 @@
 prop<-function(x) x
 
 cox.aalen<-function(formula=formula(data),data=sys.parent(),
-beta=NULL,Nit=10,detail=0,start.time=0,max.time=NULL, id=NULL, 
+beta=NULL,Nit=20,detail=0,start.time=0,max.time=NULL, id=NULL, 
 clusters=NULL, n.sim=500, residuals=0,robust=1,
 weighted.test=0,covariance=0,resample.iid=1,weights=NULL,
 rate.sim=1,beta.fixed=0,max.clust=1000,exact.deriv=1,silent=1,
-max.timepoint.sim=100,basesim=0)
+max.timepoint.sim=100,basesim=0,offsets=NULL,strata=NULL)
 { ## {{{
-offsets=0; 
-## {{{ set up variables 
+# {{{ set up variables 
   if (n.sim == 0) sim <- 0 else sim <- 1
   if (resample.iid==1 & robust==0) {robust <- 1;}
   if (covariance==1 & robust==0) {covariance<-0;cat("Covariance of baseline only for robust=1\n"); }
@@ -17,10 +16,12 @@ offsets=0;
   if (beta.fixed==1) Nit<-1; 
   call <- match.call()
   m <- match.call(expand.dots=FALSE)
-  m$robust<-m$start.time<- m$scaleLWY<-m$weighted.test<-m$beta<-m$Nit<-m$detail<-m$max.time<-m$residuals<-m$n.sim<-m$id<-
-	                   m$covariance<-m$resample.iid<-m$clusters<-m$rate.sim<-m$beta.fixed<-
-                           m$max.clust <- m$exact.deriv <- m$silent <- m$max.timepoint.sim <- m$silent <- NULL
-			   m$basesim <- NULL
+  m$robust<-m$start.time<- m$scaleLWY<-m$weighted.test<-m$beta<-m$Nit<-m$detail<-
+	  m$max.time<-m$residuals<-m$n.sim<-m$id<-m$covariance<-m$resample.iid<-
+	  m$clusters<-m$rate.sim<-m$beta.fixed<- m$max.clust <- m$exact.deriv <- 
+	  m$silent <- m$max.timepoint.sim <- m$silent <- m$basesim  <- 
+	  m$offsets <- m$strata <- NULL
+
   special <- c("prop","cluster")
   Terms <- if(missing(data)) terms(formula, special)
   else          terms(formula, special, data=data)
@@ -35,24 +36,49 @@ offsets=0;
   des<-read.design(m,Terms,model="cox.aalen")
   X<-des$X; Z<-des$Z; npar<-des$npar; px<-des$px; pz<-des$pz;
   covnamesX<-des$covnamesX; covnamesZ<-des$covnamesZ
-  if(is.null(clusters)) clusters <- des$clusters  
-  cluster.call<-clusters; 
   pxz <- px + pz;
 
   if ( (nrow(Z)!=nrow(data)) && (!is.null(id))) stop("Missing values in design matrix not allowed with id\n"); 
 ###  if (nrow(Z)!=nrow(data)) stop("Missing values in design matrix not allowed\n"); 
 
+  ### if clusters=null perhaps given through cluster() special 
+  if (is.null(clusters)) clusters <- des$clusters  
+  cluster.call<-clusters; 
+
   survs<-read.surv(m,id,npar,clusters,start.time,max.time,model="cox.aalen",silent=silent)
-  times<-survs$times;id<-id.call<-survs$id.cal;
+  times<-survs$times;
+  id<-id.call<-survs$id.cal;
   clusters<-gclusters <- survs$clusters; 
+  if (is.null(clusters)) clusters <- des$clusters  
   start.call <- start <-  survs$start; 
   stop.call <- time2 <- survs$stop; 
   status<-survs$status;
+  status.call <- status
   orig.max.clust <- survs$antclust
   nobs <- nrow(X); 
   if (is.null(weights)) weights <- rep(1,nrow(X));  
-  weights <- rep(1,nrow(X)); 
-  if (sum(abs(offsets))!=0) stop("no offsets in this version \n"); 
+###  weights <- rep(1,nrow(X)); 
+  if (length(weights)!=nrow(X)) stop("Lengths of weights and data do not match\n"); 
+  if (is.null(offsets)) offsets <- rep(0,nrow(X));  
+  offsets.call <- offsets; 
+  weights.call <- weights; 
+  if (length(offsets)!=nrow(X)) stop("Lengths of offsets and data do not match\n"); 
+  if (!is.null(strata))  {
+  if (length(strata)!=nrow(X)) stop("Lengths of strata and data do not match\n"); 
+    iids <- unique(strata)
+    antiid <- length(iids)
+    if (is.numeric(strata)) strata <-  sindex.prodlim(iids,strata)-1
+    else strata<- as.integer(factor(strata, labels = seq(antiid)))-1
+  } 
+
+###  if ((!is.null(cluster.call)) || (!is.null(gclusters))) max.clust <- NULL
+
+###  if (rate.sim==0 && is.null(max.clust)) {
+###	  gclusters <-rep(nobs,nobs)
+###	  gclusters[status==1] <- (1:nobs)[status==1]
+###	  max.clust <- sum(status)+1
+###  }
+###  print(max.clust)
 
   if ((!is.null(max.clust))) if (max.clust<survs$antclust) {
 	qq <- unique(quantile(clusters, probs = seq(0, 1, by = 1/max.clust)))
@@ -75,20 +101,27 @@ offsets=0;
   }
 
 if ( (attr(m[, 1], "type") == "right" ) ) {  ## {{{
-   ot<-order(-time2,status==1); # order in time, status=0 first for ties
-   time2<-time2[ot]; status<-status[ot]; 
+   # order in time, status=0 first for ties
+   # strata først order in time, status=0 first for ties
+### if (!is.null(strata)) ot<-order(strata,-time2,status==1) else 
+   ot<-order(-time2,status==1); 
+   time2<-time2[ot]; 
+   status<-status[ot]; 
    X<-as.matrix(X[ot,])
    if (npar==FALSE) Z<-as.matrix(Z[ot,])
    stop<-time2;
    clusters<-clusters[ot]
    id<-id[ot];
    weights <- weights[ot]
-   if (sum(abs(offsets))!=0) offsets <- offsets[ot]
+   offsets <- offsets[ot]
    entry=rep(-1,nobs); 
+  if (!is.null(strata)) strata <- strata[ot]
   } else {
         eventtms <- c(survs$start,time2)
         status <- c(rep(0, nobs), status)
-        ix <- order(-eventtms,status==1)
+	### strata først order in time, status=0 first for ties
+###        if (!is.null(strata)) ix<-order(strata,-eventtms,status==1) else 
+	ix <- order(-eventtms,status==1)
         etimes    <- eventtms[ix]  # Entry/exit times
 	status <- status[ix]
         stop  <- etimes; 
@@ -100,8 +133,9 @@ if ( (attr(m[, 1], "type") == "right" ) ) {  ## {{{
 	if (npar==FALSE) Z <- Z[rep(1:nobs,2)[ix],]
 	id <- rep(id,2)[ix]
 	clusters <- rep(clusters,2)[ix]
-	if (sum(abs(offsets))!=0) offsets <- rep(offsets,2)[ix]
-    } ## }}}
+        offsets <- rep(offsets,2)[ix]
+        if (!is.null(strata)) strata <- rep(strata,2)[ix] 
+} ## }}}
 ###  print(cbind(Z,start,stop,etimes,id,entry))
 
 ldata<-list(start=start,stop=stop, antpers=survs$antpers,antclust=survs$antclust);
@@ -118,7 +152,8 @@ ldata<-list(start=start,stop=stop, antpers=survs$antpers,antclust=survs$antclust
             weighted.test=weighted.test,ratesim=rate.sim,
             covariance=covariance,resample.iid=resample.iid,namesX=covnamesX,
 	    namesZ=covnamesZ,beta.fixed=beta.fixed,entry=entry,basesim=basesim,
-	    offsets=0,exactderiv=exact.deriv,max.timepoint.sim=max.timepoint.sim,silent=silent)
+	    offsets=offsets,exactderiv=exact.deriv,max.timepoint.sim=max.timepoint.sim,silent=silent,
+	    strata=strata)
 
   ## {{{ output handling
   colnames(ud$test.procProp)<-c("time",covnamesZ)
@@ -161,8 +196,10 @@ ldata<-list(start=start,stop=stop, antpers=survs$antpers,antclust=survs$antclust
   attr(ud,"start.time")<-start.time; 
   attr(ud,"start")<-start.call; 
   attr(ud,"stop")<-stop.call; 
+  attr(ud,"weights")<-weights.call; 
+  attr(ud,"offsets")<-offsets.call; 
   attr(ud,"beta.fixed")<-beta.fixed
-  attr(ud,"status")<-survs$status; 
+  attr(ud,"status")<-status.call; 
   attr(ud,"residuals")<-residuals; 
   attr(ud,"max.clust")<-max.clust; 
   attr(ud,"max.time")<-max.time; 
@@ -176,44 +213,43 @@ ldata<-list(start=start,stop=stop, antpers=survs$antpers,antclust=survs$antclust
 
 "plot.cox.aalen" <-  function (x,pointwise.ci=1, hw.ci=0,
 sim.ci=0, robust=0, specific.comps=FALSE,level=0.05, start.time = 0,
-stop.time = 0, add.to.plot=FALSE, mains=TRUE, xlab="Time",
-ylab ="Cumulative coefficients",score=FALSE,...)
+stop.time = 0, add.to.plot=FALSE,main=NULL,mains=TRUE,xlab="Time",score=FALSE,
+ylab="Cumulative coefficients",...)
 { ## {{{
   object <- x; rm(x);  
   if (!inherits(object,'cox.aalen') ) stop ("Must be output from Cox-Aalen function")
+  if (ylab=="Cumulative coefficients" && (1*score)>=1) ylab <- "Cumulative MG-residuals"
 
   if (score==FALSE) plot.cums(object, pointwise.ci=pointwise.ci,
-        hw.ci=hw.ci,
-        sim.ci=sim.ci, robust=robust, specific.comps=specific.comps,level=level,
+        hw.ci=hw.ci, sim.ci=sim.ci, robust=robust, specific.comps=specific.comps,level=level,
         start.time = start.time, stop.time = stop.time, add.to.plot=add.to.plot,
-        mains=mains, xlab=xlab, ylab =ylab)
+	main=main, mains=mains, xlab=xlab,ylab=ylab,...)
   else plotScore(object, specific.comps=specific.comps, mains=mains,
-                  xlab=xlab,ylab =ylab);
+		 main=main,xlab=xlab,ylab=ylab,...);
 } ## }}}
 
 "print.cox.aalen" <- function (x,...) 
 { ## {{{
-  cox.aalen.object <- x; rm(x);
-  if (!inherits(cox.aalen.object, 'cox.aalen')) 
-    stop ("Must be an aalen object")
-
-if (is.null(cox.aalen.object$prop.odds)==TRUE) p.o<-FALSE else p.o<-TRUE
-
-if (is.null(cox.aalen.object$gamma)==TRUE) prop<-FALSE else prop<-TRUE
-    
-  # We print information about object:  
-  cat("Cox-Aalen Model \n\n")
-  cat("Additive Aalen terms : "); 
-  cat(colnames(cox.aalen.object$cum)[-1]); cat("   \n");  
-  if (prop) {
-  cat("Proportional Cox terms :  "); 
-  cat(rownames(cox.aalen.object$gamma)); 
-  cat("   \n");  }
-  cat("   \n");  
-
-  cat("  Call: \n")
-  dput(attr(cox.aalen.object,"Call"))
-  cat("\n")
+summary.cox.aalen(x,...) 
+###  cox.aalen.object <- x; rm(x);
+###  if (!inherits(cox.aalen.object, 'cox.aalen')) 
+###    stop ("Must be an aalen object")
+###if (is.null(cox.aalen.object$prop.odds)==TRUE) p.o<-FALSE else p.o<-TRUE
+###if (is.null(cox.aalen.object$gamma)==TRUE) prop<-FALSE else prop<-TRUE
+###    
+###  # We print information about object:  
+###  cat("Cox-Aalen Model \n\n")
+###  cat("Additive Aalen terms : "); 
+###  cat(colnames(cox.aalen.object$cum)[-1]); cat("   \n");  
+###  if (prop) {
+###  cat("Proportional Cox terms :  "); 
+###  cat(rownames(cox.aalen.object$gamma)); 
+###  cat("   \n");  }
+###  cat("   \n");  
+###
+###  cat("  Call: \n")
+###  dput(attr(cox.aalen.object,"Call"))
+###  cat("\n")
 } ## }}}
 
 "summary.cox.aalen" <- function (object,digits = 3,...) 
