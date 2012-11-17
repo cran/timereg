@@ -1,4 +1,4 @@
-0378f26cf3c6ca58c76e53ae2277b076 *DESCRIPTION
+d43ab0b8d1b3f784761831533118f53e *DESCRIPTION
 a4a37d93869b75e9f1107f6be7d41d3c *NAMESPACE
 662d742ccaac237516adb55cc7f0d81b *R/Cpred.r
 099387f56334cc736e8cb231fb9c45a9 *R/Csmooth.r
@@ -11,7 +11,7 @@ e4a6a575bb17a14a2f3ad39c67151cda *R/additive-compSs.r
 b89505e86396bacac2ddd37330f24452 *R/base.r
 86882af79c7bd8b1ff7f11caf1e52dc7 *R/clusterindex-reshape.r
 72047e5c705f1656118933b95982252e *R/comprisk.r
-9e068f4bc47a7fca6b9503dd85eeb2f4 *R/cox-aalen.r
+dcbfe868ccb6b024cc9d6db7e2318cda *R/cox-aalen.r
 af2c288707ae8a74eac2105f5c72354d *R/dynadd.r
 ca97fbcd8b1d135b7451270804c7cf71 *R/faster.reshape.r
 8c7472ffaff32d2f645adb1fa020bf2d *R/krylow.pls.r
@@ -85,7 +85,7 @@ d17d07200a41e92f18f235a1c310777d *src/breslow.c
 0be1145e118d61549b3d5ab820300c5b *src/comprisk.c
 d08f12f2415fe3b166f139e6a62fac19 *src/comptest-cmprsk.c
 52d62edf54d5d36bd0f290de5fb93cbd *src/comptest.c
-d7f5eeca3439ff7f017b1191263663e4 *src/cox-aalen.c
+c15ea95ac8db412b69cd7f586618b9a8 *src/cox-aalen.c
 404d988896fe5ad38ada48b97bcd9b73 *src/kim-kim.c
 5ec0345eb85a46c719b9681546d5f639 *src/matrix.c
 e4d9ac6bbc1f5d61683ffec03f261b37 *src/matrix.h
@@ -98,5 +98,6 @@ fa61430cf606919ec3f70df418eb60fb *src/prop-odds-subdist2.c
 f873fb25d2538bc56f4813b7d028790f *src/prop-odds.c
 8290d2df2558319dc1a15da71108fa53 *src/smooth.c
 32efbb4239c8e57fd02c4061a2158110 *src/smooth2.c
+4931740f86e47615d9280556d582a067 *src/timecox.c
 108dab2d46c42d96ed68fc1e9fb71fc6 *src/two-stage-reg.c
 2c9c6cdb651a96cf6aa10733e9b55a84 *src/unifConfBandResampling.c

@@ -1,7 +1,7 @@
 Package: timereg
 Title: Flexible regression models for survival data.
-Version: 1.8.1
-Date: 2012-08-25
+Version: 1.8.2
+Date: 2012-11-17
 Author: Thomas Scheike with contributions from Torben Martinussen and Jeremy
     Silver
 Maintainer: Thomas Scheike <ts@biostat.ku.dk>
@@ -23,7 +23,7 @@ Collate: 'aalenC.r' 'aalen-des.r' 'aalen.r' 'additive-compSs.r'
         'plots.r' 'predict-timereg.r' 'prop-excess.r' 'prop-odds.r'
         'prop-odds-subdist.r' 'read-design.r' 'two-stage-reg.r'
         'timecox.r'
-Packaged: 2013-10-28 11:57:49 UTC; bhd252
+Packaged: 2013-11-21 16:14:04 UTC; bhd252
 NeedsCompilation: yes
 Repository: CRAN
-Date/Publication: 2013-10-28 15:01:01
+Date/Publication: 2013-11-21 18:15:17
