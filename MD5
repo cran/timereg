@@ -1,4 +1,4 @@
-d43ab0b8d1b3f784761831533118f53e *DESCRIPTION
+0a3cbfe4ce8cc7440f20fe73dd2d2464 *DESCRIPTION
 a4a37d93869b75e9f1107f6be7d41d3c *NAMESPACE
 662d742ccaac237516adb55cc7f0d81b *R/Cpred.r
 099387f56334cc736e8cb231fb9c45a9 *R/Csmooth.r
@@ -10,14 +10,14 @@ f9d73c0fc23d3efdb52378f349d50187 *R/Gprop-odds.r
 e4a6a575bb17a14a2f3ad39c67151cda *R/additive-compSs.r
 b89505e86396bacac2ddd37330f24452 *R/base.r
 86882af79c7bd8b1ff7f11caf1e52dc7 *R/clusterindex-reshape.r
-72047e5c705f1656118933b95982252e *R/comprisk.r
+96c54c9fb1218923e367fb26681fc81d *R/comprisk.r
 dcbfe868ccb6b024cc9d6db7e2318cda *R/cox-aalen.r
 af2c288707ae8a74eac2105f5c72354d *R/dynadd.r
 ca97fbcd8b1d135b7451270804c7cf71 *R/faster.reshape.r
-8c7472ffaff32d2f645adb1fa020bf2d *R/krylow.pls.r
+f9c8053ea20d42ee10ac2b972c3ecd85 *R/krylow.pls.r
 bf64bed39238aba8b84c82499a888351 *R/mgresid.r
-cfd8c49a134ea978b35e5787557fef9f *R/new.aalen.r
-417d48a1674ddd0714eeecb6fb50031e *R/new.cox-aalen.r
+f8bca2b2280a2169221e159c805c56ab *R/new.aalen.r
+524cf0e3f013a214b5bd12d7fe6432c9 *R/new.cox-aalen.r
 2fb90f0bc23d7123d795a0bc48c54503 *R/new.dynreg.r
 2f9cb1421849986b2b1a3b0a9dbcc67a *R/new.pe-sasieni.r
 0688a3b064e57e720c932cdc69e2b34c *R/new.prop-excess.r
@@ -29,7 +29,7 @@ f5388f16cc32d2b76d479a212af9144d *R/predict-timereg.r
 ea67ca7f0d4d1e6609a23bf88d1c572e *R/prop-odds.r
 0f24d37c1e93840eff5eaafefd0de226 *R/read-design.r
 0866d946b993e8abeb9956c059e10493 *R/timecox.r
-b4ee67cb701a15a3a31d19747869a650 *R/two-stage-reg.r
+ec5e9f82edceed0d974ea60aee99c38b *R/two-stage-reg.r
 f9cf9dc925b0eb4532905279dcd07a3f *data/TRACE.txt.gz
 4287db3533e463a0c4899b7faad8962b *data/bmt.txt.gz
 82f961ec5ff8c270f587e6b37fa0dc36 *data/cd4.txt.gz
@@ -47,7 +47,7 @@ d108fe8aa8e72f626ae94585b477523e *man/TRACE.Rd
 7722b8cf85fa4c585a6d54a124623fd6 *man/aalen.Rd
 7fbc7eae8f3bfea691b749c4b527e3ea *man/bmt.Rd
 6d2ea3277d577d050fab1524b69b7b2c *man/cd4.Rd
-6c9718ed9c72a2f6af244d907158b488 *man/comp.risk.Rd
+1e90457a72d7282f58475e1dbff5da23 *man/comp.risk.Rd
 ecce209a875da3896c5060db43e9b039 *man/const.Rd
 815f74eb689d99d1698c526a202319f5 *man/cox.Rd
 cf386a32e022b54ef51c503e3f97ca51 *man/cox.aalen.Rd
@@ -77,7 +77,7 @@ a6c1fef0c0b63eb0fa42e6f284678660 *man/two.stage.reg.Rd
 d50881ace9146d86b5f4850260d93fcb *src/Gprop-odds.c
 0535599c937e420572b3266c1fb5f2c3 *src/Makevars
 51b5faa1e9abb86cf25443475cd50fd3 *src/aalen-test.c
-a6cc681b8fdfccf2099a8b53601bfd69 *src/aalen.c
+ddada23239764931a208f5170a74773b *src/aalen.c
 3d702dccfe32e1675da44542b0c431d3 *src/aalenC.c
 37c8d7f302b0075f8746e09a1c10d6ec *src/additive-compSs.c
 17c9e87f22f9ae95a56aa71607ce9655 *src/additive-pls-new.c
