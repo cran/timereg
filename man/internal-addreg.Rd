@@ -10,9 +10,10 @@
 \alias{localTimeReg}
 \alias{nameestimate}
 \alias{namematrix}
-\alias{aalen.des}
 \alias{aalenBase}
 \alias{aalenBaseC}
+\alias{aalen.des}
+\alias{aalen.des2}
 \alias{cox.aalenBase}
 \alias{read-design}
 \alias{is.diag}
@@ -55,7 +56,6 @@
 \alias{residualsTimereg}
 \alias{summary.pe.sasieni}
 \alias{summary.predict.timereg}
-\alias{sindex.prodlim}
 \alias{coef.dynreg}
 \alias{coef.timecox}
 \alias{dynregBase}

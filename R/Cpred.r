@@ -12,6 +12,7 @@ pred<-rep(0,nval);
 ###as.double(xval),as.integer(nval),as.integer(pred),
 ###as.integer(Tminus),PACKAGE="timereg")
 
+### sindex from prodlim
 xval.order <- sindex.prodlim(cumtimes,xval, comp=comp,strict=strict)
 pred.begin <-  xval.order
 pred.begin[xval.order==0] <- 1
@@ -37,7 +38,7 @@ sindex.prodlim <- function (jump.times, eval.times, comp = "smaller", strict = F
            new.order <- order(eval.times)
            ind <- .C("sindex", index = integer(neval), as.double(sort(jump.times)),
                   as.double(eval.times[new.order]), as.integer(N),
-                  as.integer(neval), as.integer(strict), DUP = FALSE, PACKAGE = "timereg")$index
+                  as.integer(neval), as.integer(strict), PACKAGE = "timereg")$index
 		   ind[order(new.order)]
     }
 }

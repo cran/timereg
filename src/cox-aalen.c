@@ -179,6 +179,8 @@ if (*ratesim==0 && mjump==1) {
      for (s=1;s<*Ntimes;s++)  // {{{ going through time
      {
          time=times[s]; //  vec_zeros(lamt);
+         if (it==(*Nit-1)) { time=times[s]; cu[s]=times[s]; vcu[s]=times[s]; 
+                             Rvcu[timegroup[s]]=times[s]; cug[timegroup[s]]=times[s]; }
     
 //   if (*detail==1) Rprintf("Starting Data reading, time %d \n",s); 
     // {{{ reading design and computing matrix products
@@ -270,6 +272,7 @@ if (*ratesim==0 && mjump==1) {
     // }}}
    ipers[s]=pers;
 
+//   if (s<3) { head_matrix(X); head_matrix(WX); head_matrix(Z); head_matrix(WZ); }
 //   if (*detail==1) Rprintf(" Data read, time %d \n",s); 
 
    if (*detail==2) {
@@ -469,6 +472,8 @@ if (*betafixed==0)  {
   mat_zeros(X); mat_zeros(Z); mat_zeros(WX); mat_zeros(WZ); 
   vec_zeros(zav); 
 
+  if (*detail==1) Rprintf("robust==%d \n",*robust); 
+
   if (*robust==1) 
   {
   for (s=1;s<*Ntimes;s++) // {{{ terms for robust variances 
@@ -544,7 +549,7 @@ if (*betafixed==0)  {
 		    if (*mof==1) VE(offset,id[ci])=0;  
 	    }
 	    S0+=entry[ci]*RR*weights[ci]; 
-	    S0strata[stratum[ci+2]]+=entry[ci]*RR*weights[c]; 
+	    S0strata[stratum[ci+2]]+=entry[ci]*RR*weights[ci]; 
 	  ci=ci-1; 
 	  pers=id[ci]; 
 	  stratpers=stratum[ci+2]; 
@@ -553,6 +558,7 @@ if (*betafixed==0)  {
    ipers[s]=pers;
     // }}} 
     
+//   if (s<3) { head_matrix(X); head_matrix(WX); head_matrix(Z); head_matrix(WZ); }
 //    extract_row(WX,pers,xi); 
      extract_row(dAt,s,dA); 
 //    hati=vec_prod(xi,dA);    lle=lle+log(hati);
@@ -561,6 +567,7 @@ if (*betafixed==0)  {
     if (basesim>=0) {
         for (j=0;j<*px;j++) for (i=0;i<*px;i++)  ME(AI,j,i)=ME(AIn,(s-1)*(*px)+j,i);
     }
+//    print_mat(ZXAI); print_vec(dA); 
 
     if (*ratesim==1 || *retur>=1)
     for (i=0;i<*antpers;i++)   // {{{
@@ -666,8 +673,6 @@ if (*betafixed==0)  {
     for (k=1;k<=*pg;k++) Ut[k*(*maxtimepoint)+timegroup[s]]=ME(Utt,timegroup[s],k-1);
   }   // }}}
   }  
-
-
 
   if (timing==2) { // {{{
   c1=clock();
@@ -878,7 +883,7 @@ if (*betafixed==0)  {
 
 
 //  for(j=0;j<*antclust;j++)  print_mat(Uti[j]); 
-  if (*detail==1)  Rprintf("Ready for simulations \n");
+  if (*detail==1)  Rprintf("Ready for simulations sim=%d\n",sim[0]);
 
   if (sim[0]>=1) // {{{ score process simulations
   {

@@ -64,10 +64,10 @@ models for survival data, Springer.
 }
 \author{Thomas Scheike, Jeremy Silver}
 \examples{
+library(timereg)
 data(bmt); 
 
-add<-comp.risk(Surv(time,cause>0)~platelet+age+tcell,data=bmt,
-bmt$cause,causeS=1,resample.iid=1)
+add<-comp.risk(Hist(time,cause)~platelet+age+tcell,data=bmt)
 
 ndata<-data.frame(platelet=c(1,0,0),age=c(0,1,0),tcell=c(0,0,1))
 out<-predict(add,newdata=ndata,uniform=1,n.sim=1000)
@@ -75,8 +75,7 @@ par(mfrow=c(2,2))
 plot(out,multiple=0,uniform=1,col=1:3,lty=1,se=1)
 # see comp.risk for further examples. 
 
-add<-comp.risk(Surv(time,cause>0)~factor(tcell),data=bmt,
-bmt$cause,causeS=1,resample.iid=1)
+add<-comp.risk(Hist(time,cause)~factor(tcell),data=bmt)
 summary(add)
 out<-predict(add,newdata=ndata,uniform=1,n.sim=1000)
 plot(out,multiple=1,uniform=1,col=1:3,lty=1,se=1)
