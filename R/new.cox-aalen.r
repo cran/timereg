@@ -24,10 +24,11 @@ max.timepoint.sim=100,basesim=0,offsets=NULL,strata=NULL)
 
   special <- c("prop","cluster")
   Terms <- if(missing(data)) terms(formula, special)
-  else          terms(formula, special, data=data)
+  else  terms(formula, special, data=data)
   m$formula <- Terms
   m[[1]] <- as.name("model.frame")
   m <- eval(m, sys.parent())
+  m <- na.omit(m)
   mt <- attr(m, "terms")
   intercept<-attr(mt, "intercept")
   Y <- model.extract(m, "response")
@@ -39,7 +40,7 @@ max.timepoint.sim=100,basesim=0,offsets=NULL,strata=NULL)
   pxz <- px + pz;
 
 ###  if ( (nrow(Z)!=nrow(data)) && (!is.null(id))) stop("Missing values in design matrix not allowed with id\n"); 
-  if (nrow(Z)!=nrow(data)) stop("Missing values in design matrix not allowed\n"); 
+###  if (nrow(Z)!=nrow(data)) stop("Missing values in design matrix not allowed\n"); 
   if (!is.null(id)) {
 	  if (length(id)!=nrow(Z)) stop("id length and data not the same\n"); 
   }
@@ -75,7 +76,7 @@ max.timepoint.sim=100,basesim=0,offsets=NULL,strata=NULL)
     else strata<- as.integer(factor(strata, labels = seq(antiid)))-1
   } 
 
-  if (rate.sim==1) 
+  if (rate.sim==1 && robust==1) 
   if ((!is.null(max.clust))) if (max.clust<survs$antclust) {
 	qq <- unique(quantile(clusters, probs = seq(0, 1, by = 1/max.clust)))
 	qqc <- cut(clusters, breaks = qq, include.lowest = TRUE)    
@@ -87,7 +88,7 @@ max.timepoint.sim=100,basesim=0,offsets=NULL,strata=NULL)
 
 ### if rate.sim==0 and no clusters then it suffices with jump processes and the rest is 0
   Ntimes <- sum(status)
-  if (rate.sim==0 && is.null(cluster.call)) {
+  if (rate.sim==0 && is.null(cluster.call) && (robust==1)) {
      clusters <-rep(nobs+1,nobs)
      clusters[status==1] <- (1:nobs)[status==1]
      max.clust <- Ntimes+1
@@ -143,16 +144,16 @@ if ( (attr(m[, 1], "type") == "right" ) ) {  ## {{{
         offsets <- rep(offsets,2)[ix]
         if (!is.null(strata)) strata <- rep(strata,2)[ix] 
 } ## }}}
-###  print(cbind(Z,start,stop,etimes,id,entry))
 
 ldata<-list(start=start,stop=stop,antpers=survs$antpers,antclust=survs$antclust);
 ## }}}
 
-  if (npar==FALSE) covar<-data.matrix(cbind(X,Z)) else 
-  stop("Both multiplicative and additive model needed");
+###  if (npar==FALSE) covar<-data.matrix(cbind(X,Z)) else 
+  if (npar==TRUE) stop("Both multiplicative and additive model needed");
   Ntimes <- sum(status); 
 
   if (px==0) stop("No nonparametric terms (needs one!)");
+
   ud<-cox.aalenBase(times,ldata,X,Z,
             status,id,clusters,Nit=Nit,detail=detail,beta=beta,weights=weights,
             sim=sim,antsim=n.sim,residuals=residuals,robust=robust,
@@ -190,8 +191,8 @@ ldata<-list(start=start,stop=stop,antpers=survs$antpers,antclust=survs$antclust)
   }
   namematrix(ud$D2linv,covnamesZ); 
 
-  attr(ud,"Call")<-sys.call(); 
   class(ud)<-"cox.aalen"
+  attr(ud,"Call")<-sys.call(); 
   attr(ud,"stratum")<-ud$stratum; 
   attr(ud,"Formula")<-formula;
   attr(ud,"rate.sim")<-rate.sim;

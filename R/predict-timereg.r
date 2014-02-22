@@ -62,12 +62,12 @@ predict.cox.aalen <- function(object,...) predict.timereg(object,...)
 predict.aalen <- function(object,...) predict.timereg(object,...)
 predict.comprisk <- function(object,...) predict.timereg(object,...)
 
-predict.timereg <-function(object,newdata=NULL,X=NULL,
+predict.timereg <-function(object,newdata=NULL,X=NULL,times=NULL,
                            Z=NULL,n.sim=500, uniform=TRUE,
                            se=TRUE,alpha=0.05,resample.iid=0,...)
 {
     ## {{{
-    if (object$conv$convd>=1) stop("Model did not converge.")
+###    if (object$conv$convd>=1) stop("Model did not converge.")
     if (!(inherits(object,'comprisk') || inherits(object,'aalen')
           || inherits(object,'cox.aalen')))
         stop ("Must be output from comp.risk function")
@@ -78,11 +78,11 @@ predict.timereg <-function(object,newdata=NULL,X=NULL,
   n <- length(object$B.iid) ## Number of clusters (or number of individuals
                             ## if no cluster structure is specified)
 
+  if (se==FALSE) uniform <- FALSE
   if (is.null(object$B.iid)==TRUE & (se==TRUE | uniform==TRUE)) {
     stop("resample processes necessary for these computations, set resample.iid=1");
   }
   if (is.null(object$gamma)==TRUE) { semi<-FALSE } else { semi<-TRUE }
-  if (se==FALSE) uniform <- FALSE
 
   ## {{{ extracts design based on the different specifications
   ## cox.aalen uses prop(...), while aalen and comp.risk use const(...)
@@ -103,7 +103,9 @@ predict.timereg <-function(object,newdata=NULL,X=NULL,
     ## Then extract the time-varying effects
     ###    time.coef <- data.frame(object$cum)
     time.coef <- as.matrix(object$cum)
-    if (modelType=="cox.aalen" && (!is.null(object$time.sim.resolution))) time.coef <- Cpred(object$cum,object$time.sim.resolution)
+    if (!is.null(times)) time.coef <- Cpred(time.coef,times)
+    ### SE based on iid decomposition so uses time-resolution for cox.aalen model 
+    if (modelType=="cox.aalen" && (!is.null(object$time.sim.resolution)) && (se==TRUE)) time.coef <- Cpred(object$cum,object$time.sim.resolution)
     ntime <- nrow(time.coef)
     fittime <- time.coef[,1,drop=TRUE]
     ntimevars <- ncol(time.coef)-2

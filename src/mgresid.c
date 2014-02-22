@@ -30,13 +30,13 @@ int *pg,*coxaalen,*nx,*px,*antpers,*nmgt,*sim,*ant,
   matrix *A,*AI,*cumX,*cumXAI,*cumZP,*XPZ,*tmp2,*dS,*S,*St[*nmgt]; 
   matrix *Z,*dS1,*S1,*cumX1,*cumXAI1,*cumZP1,*tmp21,*cummat1;
   vector *Deltazsd,*Deltaz,*tmpM1z,*vtmp2,*vtmp1,*cumdB1,*VdB1,*respm1;
-  vector *dNt[*nmgt],*dMGt[*nmgt],*cumdB,*dB,*VdB,*xi,*rowX,*rowcum,*difX,*vtmp,*respm,*gamma;
+  vector *dMGt[*nmgt],*cumdB,*dB,*VdB,*xi,*rowX,*rowcum,*difX,*vtmp,*respm,*gamma;
   vector *risk,*cumA[*antclust],*cum,*vecX;
   vector *Gbeta,*dA,*xtilde,*zi,*gammaiid[*antclust];
   vector *tmpv1,*rowZ,*rvec,*dB1[*antclust];
   vector *dBgam[*antclust];
   vector *weightmg,*weight,*offset; 
-  int ci=0,pmax,m,i,j,k,l,s,c=0,s1=0,count,pers;
+  int ci=0,pmax,m,i,j,k,l,s,c=0,s1=0,count,pers=0;
   int ptot,weighted,*cluster=calloc(*antpers,sizeof(int));
   double lamti=1,time,RR=1,vardiv;
   double random,fabs(),sqrt(),xij,dtime,norm_rand();
@@ -349,8 +349,10 @@ int *pg,*coxaalen,*nx,*px,*antpers,*nmgt,*sim,*ant,
       } // }}}
 
   } //  modelmatrix loop }}}
-
-    mat_zeros(X); mat_zeros(cummat); vec_zeros(risk);mat_zeros(Z);
+  // }}}
+  
+    mat_zeros(X); mat_zeros(cummat); vec_zeros(risk);
+    mat_zeros(Z);
     mat_zeros(XPZ); 
 
     R_CheckUserInterrupt();
@@ -514,6 +516,13 @@ int *pg,*coxaalen,*nx,*px,*antpers,*nmgt,*sim,*ant,
      }
 
     MxA(cumX1,AI,cumXAI1);
+    if (s < 0) {
+    printf(" %d \n",s); 
+    head_matrix(A); 
+    head_matrix(AI); 
+    head_matrix(cumX1); 
+    head_matrix(cummat1); 
+    }
 
     /* observed increment */ 
     vM(cummat1,dMGt[s],respm1); 
@@ -571,6 +580,17 @@ int *pg,*coxaalen,*nx,*px,*antpers,*nmgt,*sim,*ant,
                                   VE(VdB1,j)+=pow(ME(modMGz,m,j),2);
 	}
     }
+
+//    for (m=0;m<1;m++) {
+//            Rprintf("%d %d \n",m,*antclust); 
+//	    print_vec(dB1[m]); 
+//    }
+//
+//    for (s=0;s<2;s++) {
+//            Rprintf("%d %d \n",s,s); 
+//	    print_vec(dMGt[s]); 
+//    }
+
 
 //for (j=0;j<ant[l];j++)  Rprintf("%d %lf  \n",l,univarproc[(*maxval)*l+j]);
 
