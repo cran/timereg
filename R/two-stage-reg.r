@@ -30,21 +30,12 @@ if (class(margsurv)!="coxph") {
  if (is.null(se.clusters)) secluster <- mclusters;
  antsecluster <- length(unique(secluster))
  if (is.numeric(secluster)) secluster <-  sindex.prodlim(unique(secluster),secluster)-1 else  {
-      clusters <- as.integer(factor(clusters, labels = 1:antsecluster))-1
+      seclusters <- as.integer(factor(clusters, labels = 1:antsecluster))-1
  }
 
- if ( (sum(abs(clusters-mclusters))>0)  || (is.null(mclusters)))
- {
-    cat("Warning: Clusters for marginal model different than those specified for two.stage\n"); 
-    cat(" runs without variation from cox.aalen model, sets: notaylor=1\n"); 
-    notaylor <- 1
- }
-### else if (sum(abs(clusters-mclusters))>0) 
-###      cat("Warning: Clusters for marginal model different than those specified for two.stage\n"); 
-###  if (!is.null(attr(margsurv,"max.clust")))
-###  if ((attr(margsurv,"max.clust")< attr(margsurv,"orig.max.clust"))  && (!is.null(mclusters)) )
-###	  cat("Warning: Probably want to estimate marginal model with max.clust=NULL\n"); 
-### if (nrow(X)!=length(clusters)) stop("Length of Marginal survival data not consistent with cluster length\n"); 
+### print("two-stage"); print(head(cluster.call))
+ if (is.null(cluster.call)) notaylor <- 1
+ if (is.null(margsurv$gamma.iid)) notaylor <- 1
 
 } else { ## coxph ## {{{ 
   notaylor <- 1
@@ -60,7 +51,6 @@ if (class(margsurv)!="coxph") {
 	} else {
 	 start <- Y[, 1]; time2 <- Y[, 2];status <- Y[, 3];
         }
-###   Z <- na.omit(model.matrix(margsurv)[,-1]) ## Discard intercept
    Z <- matrix(1,antpers,length(coef(margsurv)));
 
    if (is.null(clusters)) stop("must give clusters for coxph\n");
@@ -124,7 +114,7 @@ if (class(margsurv)!="coxph") {
        residuals <- residuals(margsurv)
        cumhaz <- status-residuals
        cumhazleft <- rep(0,antpers)
-       RR<- exp(margsurv$linear.predictors-margsurv$means*coef(margsurv))
+       RR<- exp(margsurv$linear.predictors-sum(margsurv$means*coef(margsurv)))
         if ((lefttrunk==1)) { 
            baseout <- basehaz(margsurv,centered=FALSE); 
            cum <- cbind(baseout$time,baseout$hazard)
@@ -230,7 +220,7 @@ if (class(margsurv)!="coxph") {
 		names(ud$theta.score)<- rownames(ud$theta)<-"intercept" } 
 
 
-  attr(ud,"Call")<-sys.call(); 
+  attr(ud,"Call")<-call; 
   class(ud)<-"two.stage"
   attr(ud,"Formula")<-formula;
   attr(ud,"id")<-id;
@@ -285,21 +275,22 @@ if (class(margsurv)!="coxph") {
   prmatrix(resdep); cat("   \n");  
 
   if (attr(object,"marg.model")!="coxph")
-  if (attr(object,"beta.fixed")==0) {
-  cat("Marginal Cox-Aalen model fit\n\n"); 
+  if (attr(object,"beta.fixed")==0) { ## {{{ 
+###  cat("Marginal Cox-Aalen model fit\n\n"); 
   if (sum(abs(object$score)>0.000001) && sum(object$gamma)!=0) 
     cat("Marginal model did not converge, allow more iterations\n\n"); 
+###  if (prop) {
+###    if (p.o==FALSE) cat("Proportional Cox terms :  \n") else  cat("Covariate effects \n")
+###
+###    out=coef.two.stage(object,digits=digits);
+###    out=signif(out,digits=digits)
+###    print(out)
+###
+###  }
 
-  if (prop) {
-    if (p.o==FALSE) cat("Proportional Cox terms :  \n") else  cat("Covariate effects \n")
-
-    out=coef.two.stage(object,digits=digits);
-    out=signif(out,digits=digits)
-    print(out)
-
-  }
-  }
-   cat("   \n");  cat("  Call: \n"); dput(attr(object, "Call")); cat("\n");
+  } ## }}} 
+###   cat("   \n");  cat("  Call: \n"); dput(attr(object, "Call")); 
+  cat("\n");
 } ## }}}
 
 print.two.stage <- function (x,digits = 3,...) { ## {{{
@@ -391,42 +382,55 @@ plot.two.stage<-function(x,pointwise.ci=1,robust=0,specific.comps=FALSE,
   }
 }  ## }}}
 
-predict.two.stage <- function(object,X=NULL,Z=NULL,times=NULL,times2=NULL,theta.des=NULL,diag=TRUE,...)
+predict.two.stage <- function(object,X=NULL,Z=NULL,times=NULL,times2=NULL,X2=NULL,Z2=NULL,
+			      theta=NULL,theta.des=NULL,diag=TRUE,...)
 { ## {{{
 time.coef <- data.frame(object$cum)
-if (!is.null(times)) {
-cum <- Cpred(object$cum,times);
-cum2 <- Cpred(object$cum,times);
-} else { cum <- object$cum; cum2 <- object$cum }
-if (!is.null(times2)) cum2 <- Cpred(object$cum,times2);
+if (!is.null(times))   cum <- Cpred(object$cum,times)  else cum <- object$cum; 
+if (!is.null(times2)) cum2 <- Cpred(object$cum,times2) else cum2 <- object$cum;
 
-if (is.null(X)) X <- 1;
-if (is.null(Z) && (!is.null(object$gamma))) Z <- matrix(0,1,nrow(object$gamma));
+if (is.null(Z) & (!is.null(object$gamma))) Z <- matrix(0,1,nrow(object$gamma));
 if (is.null(X) & (!is.null(Z))) { Z <- as.matrix(Z);  X <- matrix(1,nrow(Z),1)}
 if (is.null(Z) & (!is.null(X)))  {X <- as.matrix(X);  Z <- matrix(0,nrow(X),1); gamma <- 0}
+if (is.null(X)) X <- 1;
+
+if (is.null(X2)) X2 <- X;
+if (is.null(Z2)) Z2 <- Z2;
+if (is.null(Z2) & (!is.null(object$gamma))) Z2 <- Z
+if (is.null(X2) & (!is.null(Z2)))  {Z2 <- as.matrix(Z2);  X2 <- matrix(1,nrow(Z2),1)}
+if (is.null(Z2) & (!is.null(X2)))  {X2 <- as.matrix(X2);  Z2 <- matrix(0,nrow(X2),1); gamma <- 0}
 
 if (diag==FALSE) {
    time.part <-  X %*% t(cum[,-1]) 
-   time.part2 <-  X %*% t(cum2[,-1]) 
-   if (!is.null(object$gamma)) { RR <- exp( Z %*% gamma ); 
-       cumhaz <- t( t(time.part) * RR ); cumhaz2 <- t( t(time.part2) * RR )}
+   time.part2 <-  X2 %*% t(cum2[,-1]) 
+   if (!is.null(object$gamma)) { 
+	   gamma <- object$gamma
+	   RR <- exp( Z %*% gamma ); 
+	   RR2 <- exp( Z2 %*% gamma ); 
+       cumhaz <- t( t(time.part) * RR ); cumhaz2 <- t( t(time.part2) * RR2 )}
 	    else { cumhaz <- time.part;  cumhaz2 <- time.part2;   }
 } else { 
 	time.part <-  apply(as.matrix(X*cum[,-1]),1,sum) 
-	time.part2 <-  apply(as.matrix(X*cum2[,-1]),1,sum) 
+	time.part2 <-  apply(as.matrix(X2*cum2[,-1]),1,sum) 
 }
 
 if (!is.null(object$gamma)) {
 	RR<- exp(Z%*%object$gamma); 
-	cumhaz <- (time.part) * RR ;  
-	cumhaz2 <- (time.part2) * RR; 
+	RR2 <- exp(Z2 %*%object$gamma); 
+	cumhaz <- c((time.part) * RR) ;  
+	cumhaz2 <- c((time.part2) * RR2); 
 } else {
-	cumhaz <- time.part;  cumhaz2 <- time.part2; 
+	cumhaz <- c(time.part);  cumhaz2 <- c(time.part2); 
 } 
+###print(time.part)
+###print(time.part2)
+###print(cumhaz)
+###print(cumhaz2)
 S1 <- exp(-cumhaz); S2 <- exp(-cumhaz2)
 
-if (attr(object,"var.link")==1) theta  <- exp(object$theta) else theta <- object$theta
-if (!is.null(theta.des)) theta <- c(theta.des %*% object$theta)
+if (is.null(theta))  theta <- object$theta
+if (!is.null(theta.des)) theta <- c(theta.des %*% theta)
+if (attr(object,"var.link")==1) theta  <- exp(theta) 
 
 if (diag==FALSE) St1t2<- (outer(c(S1)^{-(theta)},c(S2)^{-(theta)},FUN="+") - 1)^(-(1/theta)) else 
 St1t2<- ((S1^{-(theta)}+S2^{-(theta)})-1)^(-(1/theta))

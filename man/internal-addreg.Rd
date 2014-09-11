@@ -1,10 +1,19 @@
 \name{pval}
+\alias{kmplot}
 \alias{pval}
 \alias{additive.compSs}
 \alias{CsmoothB}
 \alias{mypbc}
 \alias{Csmooth2B}
 \alias{pval}
+\alias{Event}
+\alias{as.character.Event}
+\alias{as.matrix.Event} 
+\alias{[.Event} 
+\alias{format.Event}
+\alias{print.Event} 
+\alias{rbind.Event} 
+\alias{summary.Event}
 \alias{kernel}
 \alias{percen}
 \alias{localTimeReg}
@@ -20,6 +29,7 @@
 \alias{semiaalen}
 \alias{semiregBase}
 \alias{check.missing} 
+\alias{sindex.prodlim} 
 \alias{read.design}
 \alias{read.surv}
 \alias{risk.index}
@@ -43,6 +53,7 @@
 \alias{plot.cox.aalen2}
 \alias{plot.predict}
 \alias{coef.aalen}
+\alias{cox.ipw}
 \alias{coef.cox.aalen}
 \alias{coef.comprisk}
 \alias{coef.two.stage}
@@ -60,8 +71,10 @@
 \alias{coef.timecox}
 \alias{dynregBase}
 \alias{prop.excessBase}
+\alias{prop.odds.gam}
 \alias{semicox}
 \alias{timecoxBase}
+\alias{twin.clustertrunc}
 \alias{wald.test}
 \title{For internal use}
 \description{for internal use}

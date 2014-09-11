@@ -6,10 +6,9 @@
                  
 void transsurv(times,Ntimes,designX,nx,px,antpers,start,stop,betaS,Nit,cu,vcu,Iinv,
 Vbeta,detail,sim,antsim,rani,Rvcu,RVbeta,test,testOBS,Ut,simUt,Uit,id,status,
-weighted,ratesim,score,dhatMit,dhatMitiid,retur,loglike,profile,sym,baselinevar,clusters,antclust)
-double *designX,*times,*betaS,*start,*stop,*cu,*Vbeta,*RVbeta,*vcu,*Rvcu,*Iinv,*test,*testOBS,*Ut,*simUt,*Uit,*score,*dhatMit,*dhatMitiid,*loglike;
-int *nx,*px,*antpers,*Ntimes,*Nit,*detail,*sim,*antsim,*rani,*id,*status,*weighted,*ratesim,*retur,*profile,*sym,
-    *baselinevar,*clusters,*antclust;
+weighted,ratesim,score,dhatMit,dhatMitiid,retur,loglike,profile,sym,baselinevar,clusters,antclust,biid,gamiid)
+double *designX,*times,*betaS,*start,*stop,*cu,*Vbeta,*RVbeta,*vcu,*Rvcu,*Iinv,*test,*testOBS,*Ut,*simUt,*Uit,*score,*dhatMit,*dhatMitiid,*loglike,*biid,*gamiid;
+int *nx,*px,*antpers,*Ntimes,*Nit,*detail,*sim,*antsim,*rani,*id,*status,*weighted,*ratesim,*retur,*profile,*sym,*baselinevar,*clusters,*antclust;
 {
 // {{{  setting up
   matrix *ldesignX,*WX,*ldesignG,*CtVUCt,*A,*AI;
@@ -95,6 +94,8 @@ int *nx,*px,*antpers,*Ntimes,*Nit,*detail,*sim,*antsim,*rani,*id,*status,*weight
       vec_zeros(U); vec_zeros(Upl); mat_zeros(S2pl); mat_zeros(S2); ll=0; sumscore=0; 
       mat_zeros(COV); 
 
+   R_CheckUserInterrupt();
+
    if (timing==1) { // {{{ 
 	  c1=clock();
 	  Rprintf ("\telapsed CPU time:        %f\n", (float) (c1 - c0)/CLOCKS_PER_SEC);
@@ -107,24 +108,17 @@ int *nx,*px,*antpers,*Ntimes,*Nit,*detail,*sim,*antsim,*rani,*id,*status,*weight
       for (s=1;s<*Ntimes;s++)
       {// {{{  
 	  time=times[s];  
-//	  vec_zeros(risk); 
 	  vec_zeros(dS0);  mat_zeros(d2S0);  mat_zeros(dS1);  vec_zeros(S1star);
 	  S0star=0; S0=0; 
-//	  S0p=0; S0cox=0; 
-//	  vec_zeros(Gbeta); vec_zeros(plamt); vec_zeros(dlamt); 
 	  vec_zeros(S1); 
 
 	  for (c=0,count=0;((c<*nx) && (count!=*antpers));c++) { // {{{ reading data and computing things 
 	    if ((start[c]<time) && (stop[c]>=time))  {
-//	      VE(risk,id[c])=1; 
-//	      if (it==((*Nit)-1)) for(j=0;j<*px;j++)  ME(ldesignX,id[c],j)=designX[j*(*nx)+c];  
 	      for(j=0;j<*px;j++) VE(xi,j)=designX[j*(*nx)+c];  
 	      j=id[c];
-//	      extract_row(ldesignX,j,xi); 
 	      if (time==stop[c] && status[c]==1) {pers=id[c]; scl_vec_mult(1,xi,xipers);} 
 	      count=count+1; 
-///          VE(Gbeta,j)=vec_prod(xi,beta); 
-	    RR=exp(-VE(Gbeta,j));
+	      RR=exp(-VE(Gbeta,j));
 
 	    scale=(RR+cu[1*(*Ntimes)+s-1]); 
 	    dummy=1/scale; 
@@ -148,14 +142,9 @@ int *nx,*px,*antpers,*Ntimes,*Nit,*detail,*sim,*antsim,*rani,*id,*status,*weight
 	    vec_add(tmpv1,dS0,dS0); 
 	    if (s<0 && j<5 ) {Rprintf(" %d %d \n",s,j); print_vec(tmpv1); }
 
-	    if (*profile==0) scl_vec_mult(-dlamtj,xi,dA); else scl_vec_mult(-dlamtj,dA,dA); 
+	    // 16-10-2014                                                   -dlamtj
+	    if (*profile==0) scl_vec_mult(-dlamtj,xi,dA); else scl_vec_mult(-plamtj,dA,dA); 
 	    vec_add(dA,S1star,S1star); 
-
-//            for (i=0;i<*px;i++) for (k=0;k<*px;k++) { 
-//	       ME(dS1,i,k)=ME(dS1,i,k)+VE(xi,i)*VE(tmpv1,k); 
-//	       ME(tmp1,i,k)=-VE(plamt,j)*(ME(d2G[s-1],i,k)+(VE(xi,i)*VE(xi,k))*exp(-VE(Gbeta,j)));
-//               ME(d2S0,i,k)+=ME(tmp1,i,k)+2*scale*(VE(tmpv1,i)*VE(tmpv1,k)); 
-//            }
 
 	    for (i=0;i<*px;i++) for (k=0;k<*px;k++) { 
 		    ME(dS1,i,k)=ME(dS1,i,k)+VE(xi,i)*VE(tmpv1,k); 
@@ -431,6 +420,7 @@ int *nx,*px,*antpers,*Ntimes,*Nit,*detail,*sim,*antsim,*rani,*id,*status,*weight
 	vec_add(rowZ,zi,zi); 
 	if (i==-5) print_vec(zi); 
 	replace_row(W4t[i],s,zi);
+	biid[i*(*Ntimes)+s]=VE(zi,0);
 	vec_star(zi,zi,rowZ); vec_add(rowZ,VdB,VdB);
 
 	extract_row(W2t[i],s,xi); Mv(St[s],tmpv1,rowX); 
@@ -439,8 +429,13 @@ int *nx,*px,*antpers,*Ntimes,*Nit,*detail,*sim,*antsim,*rani,*id,*status,*weight
 	vec_star(tmpv1,tmpv1,xi); vec_add(xi,varUthat[s],varUthat[s]);
 
 	if (s==1) { 
-	  for (j=0;j<*px;j++) for (k=0;k<*px;k++)
-	    ME(RobVbeta,j,k)=ME(RobVbeta,j,k)+VE(W2[i],j)*VE(W2[i],k); }
+	  for (j=0;j<*px;j++) 
+	  {
+	  gamiid[j*(*antclust)+i]=VE(W2[i],j); 
+	  for (k=0;k<*px;k++)
+	  ME(RobVbeta,j,k)=ME(RobVbeta,j,k)+VE(W2[i],j)*VE(W2[i],k); 
+	  }
+	}
 
 	if (*retur==1 && j==0) { // {{{ 
 

@@ -192,7 +192,7 @@ ldata<-list(start=start,stop=stop,antpers=survs$antpers,antclust=survs$antclust)
   namematrix(ud$D2linv,covnamesZ); 
 
   class(ud)<-"cox.aalen"
-  attr(ud,"Call")<-sys.call(); 
+  attr(ud,"Call")<-call; 
   attr(ud,"stratum")<-ud$stratum; 
   attr(ud,"Formula")<-formula;
   attr(ud,"rate.sim")<-rate.sim;
@@ -211,6 +211,7 @@ ldata<-list(start=start,stop=stop,antpers=survs$antpers,antclust=survs$antclust)
   attr(ud,"residuals")<-residuals; 
   attr(ud,"max.clust")<-max.clust; 
   attr(ud,"max.time")<-max.time; 
+  attr(ud,"n")<-ldata$antpers; 
   attr(ud,"orig.max.clust")<- orig.max.clust 
   attr(ud,"max.timepoint.sim")<-max.timepoint.sim; 
   ud$call<-call
@@ -304,10 +305,10 @@ summary.cox.aalen(x,...)
       colnames(testP) <- c("sup|  hat U(t) |","p-value H_0 ")
       prmatrix(signif(testP,digits)); cat("\n"); }  }
 
-  cat("   \n");  
-  cat("  Call: \n")
-  dput(attr(obj, "Call"))
-  cat("\n")
+###  cat("   \n");  
+###  cat("  Call: \n")
+###  dput(attr(obj, "Call"))
+###  cat("\n")
 } ## }}}
 
 coef.cox.aalen<-function(object,digits=3,d2logl=1,...) {

@@ -22,7 +22,15 @@ the proportional setting that includes the Fine & Gray (FG) "prop" model and
 some extensions where 
 \eqn{h(x)=1-\exp(-\exp(x))} and 
 \deqn{
-g(t,x,z) = \exp(x^T A(t) + (diag(t^p) z)^T \beta)
+g(t,x,z) = (x^T A(t) + (diag(t^p) z)^T \beta)
+}
+The FG model is obtained when \eqn{x=1},  but the baseline is 
+parametrized as \eqn{\exp(A(t))}.
+
+The "fg" model is a different parametrization that contains the FG model,
+where \eqn{h(x)=1-\exp(-x)} and 
+\deqn{
+g(t,x,z) = (x^T A(t)) \exp((diag(t^p) z)^T \beta)
 }
 The FG model is obtained when \eqn{x=1}. 
 
@@ -32,13 +40,24 @@ The FG model is obtained when \eqn{x=1}.
 g(t,x,z) = x^T A(t) + (diag(t^p) z)^T \beta
 }
 
+The "logistic2" is 
+\deqn{
+P_1(t,x,z) = x^T A(t) exp((diag(t^p) z)^T \beta)/ (1+ x^T A(t) exp((diag(t^p) z)^T \beta))
+}
+
+
 4) the relative cumulative incidence function "rcif" model where
 \eqn{h(x)=\exp(x)} and 
 \deqn{
 g(t,x,z) = x^T A(t) + (diag(t^p) z)^T \beta
-}) 
-Where p by default is 1 for the additive model and 0 for 
-the other models.
+} 
+
+The "rcif2" 
+\deqn{
+P_1(t,x,z) = (x^T A(t)) \exp((diag(t^p) z)^T \beta)
+}
+
+Where p by default is 1 for the additive model and 0 for the other models.
 In general p may be powers of the same length as z. 
 }
 \usage{
@@ -53,7 +72,7 @@ estimator=1,trunc.p=NULL,cens.weight=NULL,admin.cens=NULL,conservative=1)
 \arguments{
 \item{formula}{a formula object, with the response on the left of a '~'
   operator, and the terms on the right. The response must be a survival
-  object as returned by the `Surv' function. The status indicator is not
+  object as returned by the `Event' function. The status indicator is not
   important here. Time-invariant regressors are specified by the wrapper
   const(), and cluster variables (for computing robust variances) by the
   wrapper cluster().
@@ -102,17 +121,17 @@ Default is 1000 to save memory and time. }
 }
 \details{
 Since timereg version 1.8.4. the response must be specified with the
-\code{\link{Hist}} function instead of the \code{\link{Surv}}
+\code{\link{Event}} function instead of the \code{\link{Surv}}
 function and the arguments. For example, if the old code was
 
 comp.risk(Surv(time,cause>0)~x1+x2,data=mydata,cause=mydata$cause,causeS=1)
 
 the new code is 
 
-comp.risk(Hist(time,cause)~x1+x2,data=mydata,cause=1)
+comp.risk(Event(time,cause)~x1+x2,data=mydata,cause=1)
 
 Also the argument cens.code is now obsolete since cens.code is an
-argument of \code{\link{Hist}}.
+argument of \code{\link{Event}}.
 
 }
 \value{returns an object of type 'comprisk'. With the following arguments:
@@ -151,16 +170,16 @@ Martinussen and Scheike (2006), Dynamic regression models for survival data, Spr
 data(bmt); 
 
 clust <- rep(1:204,each=2)
-addclust<-comp.risk(Hist(time,cause)~platelet+age+tcell+cluster(clust),data=bmt,
+addclust<-comp.risk(Event(time,cause)~platelet+age+tcell+cluster(clust),data=bmt,
 cause=1,resample.iid=1,n.sim=100,model="additive")
 ###
 
-addclust<-comp.risk(Hist(time,cause)~+1+cluster(clust),data=bmt,cause=1,
+addclust<-comp.risk(Event(time,cause)~+1+cluster(clust),data=bmt,cause=1,
 		    resample.iid=1,n.sim=100,model="additive")
 pad <- predict(addclust,X=1)
 plot(pad)
 
-add<-comp.risk(Hist(time,cause)~platelet+age+tcell,data=bmt,
+add<-comp.risk(Event(time,cause)~platelet+age+tcell,data=bmt,
 cause=1,resample.iid=1,n.sim=100,model="additive")
 summary(add)
 
@@ -174,7 +193,7 @@ out<-predict(add,ndata,uniform=1,n.sim=100)
 par(mfrow=c(2,2))
 plot(out,multiple=0,uniform=1,col=1:3,lty=1,se=1)
 
-add<-comp.risk(Hist(time,cause)~platelet+age+tcell,data=bmt,
+add<-comp.risk(Event(time,cause)~platelet+age+tcell,data=bmt,
 	       cause=1,resample.iid=0,n.sim=0,cens.model="cox",
 	       cens.formula=~factor(platelet),model="additive")
 
@@ -183,7 +202,7 @@ par(mfrow=c(2,2))
 plot(out,multiple=0,se=0,uniform=0,col=1:3,lty=1)
 
 ## fits additive model with some constant effects 
-add.sem<-comp.risk(Hist(time,cause)~
+add.sem<-comp.risk(Event(time,cause)~
 const(platelet)+const(age)+const(tcell),data=bmt,
 cause=1,resample.iid=1,n.sim=100,model="additive")
 summary(add.sem)
@@ -193,7 +212,7 @@ par(mfrow=c(2,2))
 plot(out,multiple=0,uniform=1,col=1:3,lty=1,se=0)
 
 ## Fine & Gray model 
-fg<-comp.risk(Hist(time,cause)~
+fg<-comp.risk(Event(time,cause)~
 const(platelet)+const(age)+const(tcell),data=bmt,
 cause=1,resample.iid=1,model="fg",n.sim=100)
 summary(fg)
@@ -204,7 +223,7 @@ par(mfrow=c(2,2))
 plot(out,multiple=1,uniform=0,col=1:3,lty=1,se=0)
 
 ## extended model with time-varying effects
-fg.npar<-comp.risk(Hist(time,cause)~platelet+age+const(tcell),
+fg.npar<-comp.risk(Event(time,cause)~platelet+age+const(tcell),
 data=bmt,cause=1,resample.iid=1,model="prop",n.sim=100)
 summary(fg.npar); 
 
@@ -215,7 +234,7 @@ par(mfrow=c(2,2))
 plot(out,multiple=1,uniform=0,col=1:3,lty=1,se=0)
 
 ## Fine & Gray model with alternative parametrization for baseline
-fg2<-comp.risk(Hist(time,cause)~const(platelet)+const(age)+const(tcell),data=bmt,
+fg2<-comp.risk(Event(time,cause)~const(platelet)+const(age)+const(tcell),data=bmt,
 cause=1,resample.iid=1,model="prop",n.sim=100)
 summary(fg2)
 }

@@ -1,7 +1,6 @@
 useDynLib(timereg) 
 
 import(survival)
-import(prodlim)
 
 export("aalen",
        "aalen.des",
@@ -14,6 +13,7 @@ export("aalen",
        "check.missing",
        "rm.missing",
        "coefBase",
+       "cox.ipw",
        "comp.risk",
        "const",       
        "cox",
@@ -27,10 +27,19 @@ export("aalen",
 ###    "cv.folds",
        "dynreg",   	
        "dynregBase",	
+       "Event",	
+       "as.matrix.Event",	
+       "as.character.Event",	
+       "format.Event",	
+       "print.Event",	
+       "summary.Event",	
+       "rbind.Event",	
+       "[.Event",	
        "Gprop.odds",
        "Gprop.odds.subdist",
        "is.diag",
        "krylow.pls",
+       "kmplot",
        "localTimeReg",
        "nameestimate",	
        "namematrix",
@@ -44,6 +53,7 @@ export("aalen",
        "prop.excess",	
        "prop.excessBase",
        "prop.odds",
+###       "prop.odds.gam",
        "prop.odds.subdist",
        "pval",
        "pava",
@@ -54,6 +64,7 @@ export("aalen",
        "semiaalen",	
        "semicox",	
        "semiregBase",
+       "sindex.prodlim",
 ###    "pls.surv.cv",
        "timecox",
        "timecoxBase",
@@ -108,6 +119,8 @@ S3method(coef,cox.aalen)
 S3method(coef,dynreg)
 S3method(coef,timecox)
 S3method(coef,two.stage)
+
+importFrom(lava,iid)
 
 export("plot.aalen",
        "plot.comprisk",
