@@ -54,6 +54,7 @@
 \alias{plot.predict}
 \alias{coef.aalen}
 \alias{cox.ipw}
+\alias{comprisk.ipw}
 \alias{coef.cox.aalen}
 \alias{coef.comprisk}
 \alias{coef.two.stage}
@@ -74,8 +75,9 @@
 \alias{prop.odds.gam}
 \alias{semicox}
 \alias{timecoxBase}
+\alias{timereg.formula}
+\alias{names2formula}
 \alias{twin.clustertrunc}
-\alias{wald.test}
 \title{For internal use}
 \description{for internal use}
 \author{Thomas Scheike}
