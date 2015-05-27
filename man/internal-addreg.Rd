@@ -1,4 +1,10 @@
 \name{pval}
+\alias{summary.restricted.residual.mean}
+\alias{plot.restricted.residual.mean}
+\alias{summary.resmean}
+\alias{plot.resmean}
+\alias{print.resmean}
+\alias{coef.resmean}
 \alias{kmplot}
 \alias{pval}
 \alias{additive.compSs}
@@ -54,7 +60,14 @@
 \alias{plot.predict}
 \alias{coef.aalen}
 \alias{cox.ipw}
+\alias{summary.cox.ipw}
+\alias{coef.cox.ipw}
+\alias{print.cox.ipw}
 \alias{comprisk.ipw}
+\alias{coef.comprisk.ipw}
+\alias{print.comprisk.ipw}
+\alias{prop.odds.subdist.ipw}
+\alias{summary.comprisk.ipw}
 \alias{coef.cox.aalen}
 \alias{coef.comprisk}
 \alias{coef.two.stage}
@@ -63,6 +76,8 @@
 \alias{des.aalen}
 \alias{timetest}
 \alias{print.pe.sasieni} 
+\alias{pred.stratKM} 
+\alias{prep.glm.comprisk} 
 \alias{print.predict.timereg}
 \alias{print.two.stage}
 \alias{residualsTimereg}

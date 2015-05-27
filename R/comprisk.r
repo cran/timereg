@@ -1,15 +1,13 @@
-comp.risk<-function(formula,data=sys.parent(),cause,times=NULL,Nit=50,
-                    clusters=NULL,est=NULL,fix.gamma=0,gamma=0,n.sim=500,weighted=0,model="fg",
-                    detail=0,interval=0.01,resample.iid=1,
+comp.risk<-function(formula,data=sys.parent(),cause,times=NULL,Nit=50,clusters=NULL,est=NULL,
+		    fix.gamma=0,gamma=0,n.sim=0,weighted=0,model="fg",detail=0,interval=0.01,resample.iid=1,
                     cens.model="KM",cens.formula=NULL,time.pow=NULL,time.pow.test=NULL,silent=1,conv=1e-6,
                     weights=NULL,max.clust=1000,n.times=50,first.time.p=0.05,estimator=1,
-                    trunc.p=NULL,cens.weight=NULL,admin.cens=NULL,conservative=1) 
+		    trunc.p=NULL,cens.weights=NULL,admin.cens=NULL,conservative=1,monotone=0,step=NULL) 
     # {{{
 {
     if (!missing(cause)){
        if (length(cause)!=1) stop("Argument cause has new meaning since 
-   timereg version 1.8.4., it now specifies the cause of interest, 
-   see help(comp.risk) for details.")
+   timereg version 1.8.4., it now specifies the cause of interest, see help(comp.risk) for details.")
    } 
 
     ## {{{
@@ -28,11 +26,14 @@ comp.risk<-function(formula,data=sys.parent(),cause,times=NULL,Nit=50,
     cause.call <- causeS <- cause
     m<-match.call(expand.dots=FALSE);
     m$gamma<-m$times<-m$n.times<-m$cause<-m$Nit<-m$weighted<-m$n.sim<-
-        m$model<-m$detail<- m$cens.model<-m$time.pow<-m$silent<- 
-            m$cens.formula <- m$interval<- m$clusters<-m$resample.iid<-
-                m$time.pow.test<-m$conv<- m$weights  <- m$max.clust <- m$first.time.p<- m$trunc.p <- 
-                    m$cens.weight <- m$admin.cens <- m$fix.gamma <- m$est  <- m$conservative <- m$estimator <- NULL
+             m$model<-m$detail<- m$cens.model<-m$time.pow<-m$silent<- m$step <- 
+             m$cens.formula <- m$interval<- m$clusters<-m$resample.iid<- m$monotone <- 
+             m$time.pow.test<-m$conv<- m$weights  <- m$max.clust <- m$first.time.p<- m$trunc.p <- 
+             m$cens.weights <- m$admin.cens <- m$fix.gamma <- m$est  <- m$conservative <- m$estimator <- NULL
   
+    if ((trans==2 || trans==3 || trans==7) && is.null(step)) step <- 0.5
+    if (is.null(step)) step <- 1
+
     special <- c("const","cluster")
     if (missing(data)) {
         Terms <- terms(formula, special)
@@ -58,15 +59,23 @@ comp.risk<-function(formula,data=sys.parent(),cause,times=NULL,Nit=50,
        Event(time, event) or with non default censoring codes Event(time, event, cens.code=0).")
   }
 
-
-  model.type <- "competing.risks"
+   model.type <- "competing.risks"
 
    ## {{{ Event stuff
     cens.code <- attr(event.history,"cens.code")
-    time2 <- eventtime <- event.history[,1]
-    status <- delta  <- event.history[,2]
+    if (ncol(event.history)==2) {
+	time2 <- eventtime <- event.history[,1]
+	status <- delta  <- event.history[,2]
+	entrytime <- rep(0,length(time2))
+	left <- 0
+    } else {
+	time2 <- eventtime <- event.history[,2]
+	status <- delta  <- event.history[,3]
+	entrytime <- event.history[,1]
+	left <- 1
+	if (max(entrytime)==0) left <- 0
+    }
     event <- (status==cause)
-    entrytime <- rep(0,length(time2))
     if (sum(event)==0) stop("No events of interest in data\n"); 
 
     ## }}} 
@@ -120,70 +129,84 @@ comp.risk<-function(formula,data=sys.parent(),cause,times=NULL,Nit=50,
 
   ## {{{ censoring and estimator 
   if (!is.null(admin.cens)) estimator  <- 3;
-  Gcxe <- 1;  ordertime <- order(eventtime); 
+  Gcxe <- 1;  
+  ordertime <- order(eventtime); 
   ###dcumhazcens <- rep(0,n); 
 
-    if (estimator==1 || estimator==4) {
-        if (is.null(cens.weight)) { ## {{{ censoring model stuff with possible truncation
+    if (estimator==1 || estimator==2) {
+        if (is.null(cens.weights)) { ## {{{ censoring model stuff with possible truncation
             if (cens.model=="KM") { ## {{{
-                ud.cens<-survfit(Surv(eventtime,delta==cens.code)~+1)
+	        if (left==1) ud.cens<-survfit(Surv(entrytime,eventtime,delta==cens.code)~+1) else 
+		ud.cens<-survfit(Surv(eventtime,delta==cens.code)~+1)
                 Gfit<-cbind(ud.cens$time,ud.cens$surv)
                 Gfit<-rbind(c(0,1),Gfit); 
                 Gcx<-Cpred(Gfit,eventtime,strict=TRUE)[,2];
-                ###    cumhazcens<-Cpred(ud.censcum$cum,eventtime[ordertime])[,3];
-                ###    dcumhazcens <- diff(c(0,cumhazcens));
-                Gcx <- Gcx/Gcxe; 
+                Gcxe<-Cpred(Gfit,entrytime,strict=TRUE)[,2];
+		### strictly before, but starts in 1. 
+		Gcxe[Gcxe==0] <- 1
+		### only conditional on L if trunc given 
+		if (!is.null(trunc.p)) Gcx <- Gcx/Gcxe; 
                 Gctimes<-Cpred(Gfit,times,strict=TRUE)[,2]; ## }}}
-            } else if (cens.model=="strat-KM") { ## {{{
+            } else if (cens.model=="stratKM") { ## {{{
 	        XZ <- model.matrix(cens.formula,data=data); 
-                stop("survfit based predictions strat-KM, under construction\n");
-                ud.cens<-survfit(Surv(eventtime,delta==cens.code)~XZ) 
-	        print(head(XZ))
-                Gfit<-cbind(ud.cens$time,ud.cens$surv)
-                Gfit<-rbind(c(0,1),Gfit); 
-                Gcx<-Cpred(Gfit,eventtime,strict=TRUE)[,2];
-                Gcx <- Gcx/Gcxe; 
+	        strata <- as.factor(XZ)
+		Gcx <- pred.stratKM(data,time=eventtime,cause=delta,strata=strata)
+		### only conditional on L if trunc given 
+		if (!is.null(trunc.p)) Gcx <- Gcx/Gcxe; 
                 Gctimes<-Cpred(Gfit,times)[,2]; ## }}}
             } else if (cens.model=="cox") { ## {{{
                 if (!is.null(cens.formula)) { 
 		      XZ <- model.matrix(cens.formula,data=data); 
                       if (sum(XZ[,1])==nrow(XZ)) XZ <- as.matrix(XZ[,-1])
-                                          } else {
+                } else {
                        if (npar==TRUE) XZ<-X[,-1] else XZ <-cbind(X,Z)[,-1];
-                     }
-			ud.cens<-coxph(Surv(eventtime,delta==cens.code)~XZ)                
-			baseout <- basehaz(ud.cens,centered=FALSE); 
-			baseout <- cbind(baseout$time,baseout$hazard)
-			Gcx<-Cpred(baseout,eventtime,strict=TRUE)[,2];
-			RR<-exp(as.matrix(XZ) %*% coef(ud.cens))
-			Gcx<-exp(-Gcx*RR)
-			Gfit<-rbind(c(0,1),cbind(eventtime,Gcx)); 
-			Gcx <- Gcx/Gcxe; 
-			Gctimes<-Cpred(Gfit,times,strict=TRUE)[,2]; 
+                }
+		if (left==1) ud.cens<-coxph(Surv(entrytime,eventtime,delta==cens.code)~XZ)                
+		else ud.cens<-coxph(Surv(eventtime,delta==cens.code)~XZ)                
+		baseout <- basehaz(ud.cens,centered=FALSE); 
+		baseout <- cbind(baseout$time,baseout$hazard)
+		Gcx<-Cpred(baseout,eventtime,strict=TRUE)[,2];
+		Gcxe<-Cpred(baseout,entrytime,strict=TRUE)[,2];
+		Gcxe[Gcxe==0] <- 1
+		RR<-exp(as.matrix(XZ) %*% coef(ud.cens))
+		Gcx<-exp(-Gcx*RR)
+		Gcxe<-exp(-Gcxe*RR)
+		Gfit<-rbind(c(0,1),cbind(eventtime,Gcx)); 
+		### only conditional on L if trunc given 
+		if (!is.null(trunc.p)) Gcx <- Gcx/Gcxe; 
+		Gctimes<-Cpred(Gfit,times,strict=TRUE)[,2]; 
                 ## }}}
             } else if (cens.model=="aalen") {  ## {{{
-                if (!is.null(cens.formula)) { XZ <- model.matrix(cens.formula,data=data); 
-                                          } else {
-                                              if (npar==TRUE) XZ <-X else XZ <-cbind(X,Z);
-                                          }
-                ud.cens<-aalen(Surv(eventtime,delta==cens.code)~-1+XZ+cluster(clusters), n.sim=0,residuals=0,robust=0,silent=1)
+                if (!is.null(cens.formula)) { 
+			XZ <- model.matrix(cens.formula,data=data); 
+                 } else {
+                      if (npar==TRUE) XZ <-X else XZ <-cbind(X,Z);
+                }
+	        if (left==1) ud.cens<-aalen(Surv(entrytime,eventtime,delta==cens.code)~-1+XZ+cluster(clusters),
+			       n.sim=0,residuals=0,robust=0,silent=1)
+	        else ud.cens<-aalen(Surv(eventtime,delta==cens.code)~-1+XZ+cluster(clusters),
+			       n.sim=0,residuals=0,robust=0,silent=1); 
                 Gcx <- Cpred(ud.cens$cum,eventtime,strict=TRUE)[,-1];
                 Gcx<-exp(-apply(Gcx*XZ,1,sum))
-                Gcx[Gcx>1]<-1; Gcx[Gcx<0]<-0
+                Gcx[Gcx>1]<-1; Gcx[Gcx<0]<-1
+                Gcxe <- Cpred(ud.cens$cum,entrytime,strict=TRUE)[,2];
+		Gcxe[Gcxe==0] <- 1
+		if (!is.null(trunc.p)) Gcx <- Gcx/Gcxe; 
                 Gfit<-rbind(c(0,1),cbind(eventtime,Gcx)); 
-                Gcx <- Gcx/Gcxe; 
                 Gctimes<-Cpred(Gfit,times,strict=TRUE)[,2]; ## }}}
             } else  stop('Unknown censoring model') 
-            cens.weight <- Gcx
+            cens.weights <- Gcx
             if ((min(Gcx[event==1])< 0.00001) && (silent==0)) { 
                 cat("Censoring dist. approx zero for some points, summary cens:\n");
                 print(summary(Gcx)) 
             }
             ## }}}
         } else { 
-            if (length(cens.weight)!=n) stop("censoring weights must have length equal to nrow in data\n");  
-            Gcx <- cens.weight
-            Gctimes <- rep(1,length(times)); 
+            if (length(cens.weights)!=n) stop("censoring weights must have length equal to nrow in data\n");  
+            Gcx <- cens.weights
+	    ### for left truncation specification
+            ord2 <- order(time2)
+            Gctimes <- Cpred(cbind(time2[ord2],weights[ord2]),times)
         }
     } else { ## estimator==3 admin.cens 
         if (length(admin.cens)!=n) stop("censoring weights must have length equal to nrow in data\n");  
@@ -191,9 +214,27 @@ comp.risk<-function(formula,data=sys.parent(),cause,times=NULL,Nit=50,
         Gctimes <- rep(1,length(times)); 
     }
 
+   if (left==1 & is.null(trunc.p) & is.null(cens.weights))  {  ## {{{ 
+	 ### geskus weights: from mstate crprep 
+	 stop("For left-truncated data call prep.comp.risk\n call with weights and cens.weights\n"); 
+         n=length(time2)
+         prec.factor <- 100
+         prec <- .Machine$double.eps * prec.factor
+         surv.trunc <- survfit(Surv(-time2,-entrytime+prec,rep(1,n)) ~ 1)
+         trunc.dist <- summary(surv.trunc)
+         trunc.dist$time <- rev(-trunc.dist$time)
+         trunc.dist$surv <- c(rev(trunc.dist$surv)[-1], 1)
+         Lfit <-Cpred(cbind(trunc.dist$time,trunc.dist$surv),time2)
+         Lw <- Lfit[,2]
+###	 weights <- 1/Lw
+	 weights <- 1/((Lw)*Gcx); 
+	 weights[delta==cens.code] <- 0
+	 Gcx <- rep(1,n)
+   } ## }}} 
    if (is.null(trunc.p)) trunc.p <- rep(1,n);  
    if (length(trunc.p)!=n) stop("truncation weights must have same length as data\n"); 
 ## }}}
+
 
 ## {{{ setting up more variables
 
@@ -208,7 +249,12 @@ comp.risk<-function(formula,data=sys.parent(),cause,times=NULL,Nit=50,
   betaS<-rep(0,ps); 
 
   ## possible starting value for nonparametric components
-  if (is.null(est)) { est<-matrix(0,ntimes,px+1); est[,1] <- times; }  
+  if (is.null(est)) { 
+	  est<-matrix(0.0+0.1,ntimes,px+1); 
+          est[,1] <- times; 
+  }  else {
+      est <- as.matrix(est); 
+  }
   if (nrow(est)!=length(times)) est <- Cpred(est,times); 
 
   hess<-matrix(0,ps,ps); var<-score<-matrix(0,ntimes,ps+1); 
@@ -220,12 +266,12 @@ comp.risk<-function(formula,data=sys.parent(),cause,times=NULL,Nit=50,
   pred.covs.sem<-0
 
   if (is.null(time.pow)==TRUE & model=="prop" )     time.pow<-rep(0,pg); 
-  if (is.null(time.pow)==TRUE & model=="fg" )     time.pow<-rep(0,pg); 
+  if (is.null(time.pow)==TRUE & model=="fg" )       time.pow<-rep(0,pg); 
   if (is.null(time.pow)==TRUE & model=="additive")  time.pow<-rep(1,pg); 
   if (is.null(time.pow)==TRUE & model=="rcif" )     time.pow<-rep(0,pg); 
-  if (is.null(time.pow)==TRUE & model=="rcif2" )     time.pow<-rep(0,pg); 
+  if (is.null(time.pow)==TRUE & model=="rcif2" )    time.pow<-rep(0,pg); 
   if (is.null(time.pow)==TRUE & model=="logistic" ) time.pow<-rep(0,pg); 
-  if (is.null(time.pow)==TRUE & model=="logistic2" ) time.pow<-rep(0,pg); 
+  if (is.null(time.pow)==TRUE & model=="logistic2" )time.pow<-rep(0,pg); 
   if (length(time.pow)!=pg) time.pow <- rep(time.pow[1],pg); 
 
   if (is.null(time.pow.test)==TRUE & model=="prop" )     time.pow.test<-rep(0,px); 
@@ -240,12 +286,13 @@ comp.risk<-function(formula,data=sys.parent(),cause,times=NULL,Nit=50,
   if (ntimes>1) silent <- c(silent,rep(0,ntimes-1))
   ## }}}
 
+###    print(Gctimes); 
 
-  ###  dyn.load("comprisk.so")
-  ssf <- 0; 
+  ###  dyn.load("comprisk.so"0
+  ssf <- step;  ## takes step size over 
   out<-.C("itfit", ## {{{
           as.double(times),as.integer(ntimes),as.double(eventtime),
-          as.integer(cens.code), as.integer(event),as.double(Gcx),
+          as.integer(cens.code), as.integer(status),as.double(Gcx),
           as.double(X),as.integer(n),as.integer(px),
           as.integer(Nit), as.double(betaS), as.double(score),
           as.double(hess), as.double(est), as.double(var),
@@ -254,15 +301,16 @@ comp.risk<-function(formula,data=sys.parent(),cause,times=NULL,Nit=50,
           as.double(simUt),as.integer(weighted),as.double(gamma),
           as.double(var.gamma),as.integer(fixed),as.double(Z),
           as.integer(pg),as.integer(trans),as.double(gamma2),
-          as.integer(1),as.integer(line),as.integer(detail),
+          as.integer(cause),as.integer(line),as.integer(detail),
           as.double(biid),as.double(gamiid),as.integer(resample.iid),
           as.double(time.pow),as.integer(clusters),as.integer(antclust),
           as.double(time.pow.test),as.integer(silent), as.double(conv),
 	  as.double(weights),as.double(entrytime),as.double(trunc.p),
 	  as.integer(estimator),as.integer(fix.gamma), as.integer(stratum),
 	  as.integer(ordertime-1),as.integer(conservative), as.double(ssf), 
-	  as.double(Gctimes),as.double(rep(0,pg)),as.double(matrix(0,pg,pg)),PACKAGE="timereg") ## }}}
-
+	  as.double(Gctimes),as.double(rep(0,pg)),as.double(matrix(0,pg,pg)),
+	  as.integer(monotone),PACKAGE="timereg") ## }}}
+ 
  ## {{{ handling output
   ssf <- out[[51]]; 
   gamma<-matrix(out[[24]],pg,1); 
@@ -342,7 +390,7 @@ comp.risk<-function(formula,data=sys.parent(),cause,times=NULL,Nit=50,
            obs.testBeqC=obs.testBeqC,pval.testBeqC.is=pval.testBeqC.is,
            conf.band=unifCI,B.iid=B.iid,gamma.iid=gamiid,ss=ssf,
            test.procBeqC=Ut,sim.test.procBeqC=UIt,conv=conv,
-	   cens.weight=cens.weight,scores=scores,Dscore.gamma=Dscore.gamma)
+	   weights=weights,cens.weights=cens.weights,scores=scores,Dscore.gamma=Dscore.gamma,step=step)
 
     ud$call<-call; 
     ud$model<-model; 
@@ -423,7 +471,8 @@ summary.comprisk <- function (object,digits = 3,...) {  ## {{{
          cat("Did not converge, allow more iterations\n\n"); 
 
 	 cat("Parametric terms : \n"); 
-         out=coef(object); print(signif(out,digits=digits)); cat("   \n"); 
+	 prmatrix(coef(object,digits=digits))
+	 cat("   \n"); 
   }
 
   if (object$conv$convd>=1) {
@@ -431,9 +480,6 @@ summary.comprisk <- function (object,digits = 3,...) {  ## {{{
        cat(object$cum[object$conv$convp>0,1])
        cat("\nReadjust analyses by removing points\n\n") }
 
-###  cat("  Call: \n")
-###  dput(attr(object, "Call"))
-###  cat("\n")
 } ## }}}
 
 plot.comprisk <-  function (x, pointwise.ci=1, hw.ci=0,
@@ -545,3 +591,155 @@ plot.comprisk <-  function (x, pointwise.ci=1, hw.ci=0,
     }
   }
 } ## }}}
+
+prep.comp.risk <- function(data,times=NULL,entrytime=NULL,
+			   time="time",cause="cause",cname="cweight",tname="tweight",
+			   strata=NULL,nocens.out=TRUE,cens.formula=NULL,cens.code=0,
+			   prec.factor=100)
+{ ## {{{ 
+## {{{  geskus weights, up to min(T_i,max(times))
+   if (is.null(times)) times <- max(data[,time])
+   if (is.null(entrytime)) entrytime <- rep(0,nrow(data)) else entrytime <- data[,entrytime]
+   mtt <- max(times)
+   prec.factor <- 100
+   prec <- .Machine$double.eps * prec.factor
+   trunc.model <- cens.model <- NULL ## output of Cox models for entry cens
+
+   if (is.null(cens.formula)) { 
+   if (is.null(strata)) { ## {{{ 
+	   if (!is.null(entrytime)) {
+	   surv.trunc <- 
+	   survfit(Surv(-data[,time],-entrytime+prec,rep(1,nrow(data))) ~ 1) 
+	   trunc.dist <- summary(surv.trunc)
+	   trunc.dist$time <- rev(-trunc.dist$time)
+	   trunc.dist$surv <- c(rev(trunc.dist$surv)[-1], 1)
+	   Lfit <-Cpred(cbind(trunc.dist$time,trunc.dist$surv),data[,time])
+	   Lw <- Lfit[,2]
+	   } else Lw <- 1
+	   ud.cens<- survfit(Surv(entrytime,data[,time],data[,cause]==0)~+1) 
+	   Gfit<-cbind(ud.cens$time,ud.cens$surv)
+	   Gfit<-rbind(c(0,1),Gfit); 
+	   Gcx<-Cpred(Gfit,pmin(mtt,data[,time]),strict=TRUE)[,2];
+           weights <- 1/(Lw*Gcx); 
+	   cweights <-  Lw; 
+	   tweights <-  Gcx; 
+   ### ## }}} 
+   } else { ## {{{ 
+	   ### compute for each strata and combine 
+	  vstrata <- as.numeric(data[,strata])
+          weights <- rep(1,nrow(data))
+          cweights <- rep(1,nrow(data))
+          tweights <- rep(1,nrow(data))
+	  for (i in unique(vstrata)) { ## {{{ for each strata
+	       who <- (vstrata == i)
+	       if (sum(who) <= 1) stop(paste("strata",i,"less than 1 observation\n")); 
+	   datas <- subset(data,who)
+	   if (!is.null(entrytime)) {
+		   entrytimes <- entrytime[who]
+		   surv.trunc <- 
+		   survfit(Surv(-datas[,time],-entrytimes+prec,rep(1,nrow(datas))) ~ +1) 
+		   trunc.dist <- summary(surv.trunc)
+		   trunc.dist$time <- rev(-trunc.dist$time)
+		   trunc.dist$surv <- c(rev(trunc.dist$surv)[-1], 1)
+		   Lfit <-Cpred(cbind(trunc.dist$time,trunc.dist$surv),datas[,time])
+		   Lw <- Lfit[,2]
+	   } else Lw <- 1
+	   ud.cens<- survfit(Surv(entrytimes,datas[,time],datas[,cause]==0)~+1) 
+	   Gfit<-cbind(ud.cens$time,ud.cens$surv)
+	   Gfit<-rbind(c(0,1),Gfit); 
+	   Gcx<-Cpred(Gfit,pmin(mtt,datas[,time]),strict=TRUE)[,2];
+	   weights[who]<-  1/(Lw*Gcx); 
+	   cweights[who]<-  Lw; 
+	   tweights[who]<-  Gcx; 
+          } ## }}} 
+   } ## }}} 
+   } else { ### cens.formula Cox models  ## {{{
+        X <- model.matrix(cens.formula,data=data)[,-1,drop=FALSE]; 
+
+	if (!is.null(entrytime)) {
+		trunc.model <- coxph(Surv(-data[,time],-entrytime+prec,rep(1,nrow(data))) ~ X) 
+		baseout <- basehaz(trunc.model,centered=FALSE); 
+		baseout <- cbind(rev(-baseout$time),rev(baseout$hazard))
+	###
+		Lfit <-Cpred(baseout,data[,time])[,-1]
+		RR<-exp(as.matrix(X) %*% coef(trunc.model))
+		Lfit<-exp(-Lfit*RR)
+		Lw <- Lfit
+	   } else Lw <- 1
+###
+	cens.model <- coxph(Surv(entrytime,data[,time],data[,cause]==0)~+X) 
+        baseout <- basehaz(cens.model,centered=FALSE); 
+	baseout <- cbind(baseout$time,baseout$hazard)
+	Gfit<-Cpred(baseout,pmin(mtt,data[,time]),strict=TRUE)[,2];
+	RR<-exp(as.matrix(X) %*% coef(cens.model))
+	Gfit<-exp(-Gfit*RR)
+        weights <- 1/(Lw*Gfit); 
+        cweights <- Gfit
+        tweights <- Lw
+   } ## }}} 
+   data[,cname] <- cweights
+   data[,tname] <- tweights
+
+   if (!is.null(entrytime)) {
+   mint <- min(tweights); maxt <- min(tweights) 
+   if (mint<0 | mint>1) warning("min(truncation weights) strange, maybe prec.factor should be different\n")
+   if (maxt<0 | maxt>1) warning("max(truncation weights) strange, maybe prec.factor should be different\n")
+   }
+
+   if ("weights" %in% names(data)) {
+       warning("Weights in variable 'weights_' \n")
+       wname<- "weights_"
+       data[,wname] <- weights
+   } else data[,"weights"] <- weights
+###
+   if ("cw" %in% names(data)) {
+     warning("cw weights in variable 'cw_' \n")
+     cwname<- "cw_"
+     data[,cwname] <- 1
+   } else data[,"cw"] <- 1
+###
+   if (nocens.out) {
+     med <- ((data[,time]>mtt & data[,cause]==cens.code)) | (data[,cause]!=cens.code)
+     data <- data[med,]
+   } 
+
+   attr(data,"trunc.model") <- trunc.model
+   attr(data,"cens.model") <- cens.model 
+## }}} 
+   return(data)
+} ## }}} 
+
+pred.stratKM <- function(data,entrytime=NULL,time="time",cause="cause",strata="strata",event.code=0)
+{ ## {{{ 
+
+     if (is.numeric(time)) time <- time else {
+	     if (!is.null(data)) time <- data[,time] else stop("time not given\n"); 
+     }
+     if (is.numeric(cause)) cause <- cause else {
+	     if (!is.null(data)) cause <- data[,cause] else stop("cause not given\n"); 
+     }
+     if (is.numeric(strata)) strata <- strata else {
+	     if (!is.null(data)) strata <- data[,strata] else stop("strata not given\n"); 
+     }
+  if (is.null(entrytime)) entrytime <- rep(0,nrow(data)) else {
+     if (is.numeric(entrytime)) entrytime <- entrytime else {
+	     if (!is.null(data)) entrytime <- data[,entrytime] else stop("entrytime not given\n"); 
+     }
+  }
+  vstrata <- as.numeric(strata)
+  weights <- rep(1,length((data)))
+  for (i in unique(vstrata)) { ## {{{ for each strata
+	   who <- (vstrata == i)
+	   if (sum(who) <= 1) stop(paste("strata",i,"less than 1 observation\n")); 
+	   times <- time[who]
+	   causes <- cause[who]
+	   entrytimes <- entrytime[who]
+	   ud.cens<- survfit(Surv(entrytimes,times,causes==event.code)~+1) 
+	   Gfit<-cbind(ud.cens$time,ud.cens$surv)
+	   Gfit<-rbind(c(0,1),Gfit); 
+	   Gcx<-Cpred(Gfit,times,strict=TRUE)[,2];
+	   weights[who]<-  Gcx; 
+   } ## }}} 
+   return(weights); 
+} ## }}} 
+

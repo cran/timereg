@@ -44,7 +44,9 @@ The "logistic2" is
 \deqn{
 P_1(t,x,z) = x^T A(t) exp((diag(t^p) z)^T \beta)/ (1+ x^T A(t) exp((diag(t^p) z)^T \beta))
 }
-
+The simple logistic model with just a baseline can also be fitted by
+an alternative procedure that has better small sample properties
+see prop.odds.subist().
 
 4) the relative cumulative incidence function "rcif" model where
 \eqn{h(x)=\exp(x)} and 
@@ -62,12 +64,13 @@ In general p may be powers of the same length as z.
 }
 \usage{
 comp.risk(formula,data=sys.parent(),cause,times=NULL,Nit=50,
-clusters=NULL,est=NULL,fix.gamma=0,gamma=0,n.sim=500,weighted=0,model="fg",
+clusters=NULL,est=NULL,fix.gamma=0,gamma=0,n.sim=0,weighted=0,model="fg",
 detail=0,interval=0.01,resample.iid=1,
 cens.model="KM",cens.formula=NULL,
 time.pow=NULL,time.pow.test=NULL,silent=1,conv=1e-6,
 weights=NULL,max.clust=1000,n.times=50,first.time.p=0.05,
-estimator=1,trunc.p=NULL,cens.weight=NULL,admin.cens=NULL,conservative=1)
+estimator=1,trunc.p=NULL,cens.weights=NULL,admin.cens=NULL,
+conservative=1,monotone=0,step=NULL)
 }
 \arguments{
 \item{formula}{a formula object, with the response on the left of a '~'
@@ -114,10 +117,20 @@ Default is 1000 to save memory and time. }
 \item{n.times}{only uses 50 points for estimation, if NULL then uses all points, subject to p.start condition.}
 \item{estimator}{default estimator is 1.}
 \item{trunc.p}{truncation weight for delayed entry, P(T > entry.time | Z_i), typically Cox model.}
-\item{cens.weight}{censoring weights can be given here rather than calculated using the KM, cox or aalen models.}
+\item{cens.weights}{censoring weights can be given here rather than calculated using the KM, cox or aalen models.}
 \item{admin.cens}{censoring times for the administrative censoring}
 \item{conservative}{set to 0 to compute correct variances based on censoring weights, default is conservative
   estimates that are much quicker.}
+\item{monotone}{ monotone=0, uses estimating equations 
+\deqn{
+(D_beta P_1) w(t) ( Y(t)/G_c(t) - P_1(t,X)) and 
+}
+montone 1 uses 
+\deqn{
+w(t) ( Y(t)/G_c(t) - P_1(t,X)) and 
+}
+}
+\item{step}{step size for Fisher-Scoring algorithm.}
 }
 \details{
 Since timereg version 1.8.4. the response must be specified with the
@@ -237,5 +250,35 @@ plot(out,multiple=1,uniform=0,col=1:3,lty=1,se=0)
 fg2<-comp.risk(Event(time,cause)~const(platelet)+const(age)+const(tcell),data=bmt,
 cause=1,resample.iid=1,model="prop",n.sim=100)
 summary(fg2)
+
+#################################################################
+## Delayed entry models, must use semi-parametric model call 
+#################################################################
+nn <- nrow(bmt)
+entrytime <- rbinom(nn,1,0.5)*(bmt$time*runif(nn))
+bmt$entrytime <- entrytime
+times <- seq(5,70,by=1)
+
+bmtw <- prep.comp.risk(bmt,times=times,time="time",entrytime="entrytime",cause="cause")
+
+## non-parametric model 
+outnp <- comp.risk(Event(time,cause)~tcell+platelet+const(age),
+		   data=bmtw,cause=1,fix.gamma=1,gamma=0,
+ cens.weights=bmtw$cw,weights=bmtw$weights,times=times,n.sim=0)
+par(mfrow=c(2,2))
+plot(outnp)
+
+outnp <- comp.risk(Event(time,cause)~tcell+platelet,
+		   data=bmtw,cause=1,
+ cens.weights=bmtw$cw,weights=bmtw$weights,times=times,n.sim=0)
+par(mfrow=c(2,2))
+plot(outnp)
+
+
+## semiparametric model 
+out <- comp.risk(Event(time,cause)~const(tcell)+const(platelet),data=bmtw,cause=1,
+ cens.weights=bmtw$cw,weights=bmtw$weights,times=times,n.sim=0)
+summary(out)
+
 }
 \keyword{survival}

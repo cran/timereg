@@ -1,4 +1,4 @@
-coefBase<- function(object, digits=3, d2logl=0) { ## {{{
+coefBase<- function(object, digits=3, d2logl=0,ci=0,alpha=0.05) { ## {{{
   res <- cbind(object$gamma,
                diag(object$var.gamma)^0.5,
                diag(object$robvar.gamma)^0.5)
@@ -7,13 +7,14 @@ coefBase<- function(object, digits=3, d2logl=0) { ## {{{
   waldp <- (1 - pnorm(abs(wald))) * 2
   res <- round(as.matrix(cbind(res, wald, waldp)),digits=digits)
   if (d2logl==1) colnames(res) <- c("Coef.", "SE", "Robust SE","D2log(L)^-1","z","P-val") else colnames(res) <- c("Coef.", "SE", "Robust SE", "z", "P-val")
+  if (ci==1) {res <- round(cbind(res,res[,1]+qnorm(alpha/2)*res[,2],res[,1]+qnorm(1-alpha/2)*res[,2]),digits=digits); 
+               nn <- ncol(res); colnames(res)[(nn-1):nn] <- c("lower","upper")
+  }
 ###  prmatrix(signif(res, digits))
-###  cat("\n")
-  
   return(res)
 } ## }}}
 
-wald.test <- function(object=NULL,coef=NULL,Sigma=NULL,contrast,coef.null=NULL,null=NULL)
+wald.test <- function(object=NULL,coef=NULL,Sigma=NULL,contrast,coef.null=NULL,null=NULL,print.coef=TRUE,alpha=0.05)
 { ## {{{
   if (is.null(Sigma)) {
      if (class(object)=="cor" || class(object)=="twostage") Sigma <- object$var.theta else Sigma <- object$var.gamma;
@@ -38,14 +39,21 @@ wald.test <- function(object=NULL,coef=NULL,Sigma=NULL,contrast,coef.null=NULL,n
   p <- coefs
   if (is.vector(B)) { B <- rbind(B); colnames(B) <- names(contrast) }
 
- Q <- t(B%*%p-null)%*%solve(B%*%Sigma%*%t(B))%*%(B%*%p-null)
+ varBp <- B%*%Sigma%*%t(B)
+ seBp <- diag(varBp)^.5
+ lin.comb <- B %*% p
+ Q <- t(B%*%p-null)%*%solve(varBp)%*%(B%*%p-null)
+ coef.out <- cbind(lin.comb,seBp,lin.comb+seBp*qnorm(alpha/2),lin.comb+seBp*qnorm(1-alpha/2))
+ colnames(coef.out) <- c("lin.comb","se","lower","upper")
+ if (print.coef) prmatrix(coef.out)
+
  df <- qr(B)$rank; names(df) <- "df"
  attributes(Q) <- NULL; names(Q) <- "chisq";
  pQ <- ifelse(df==0,NA,1-pchisq(Q,df))
  method = "Wald test";
  ##    hypothesis <-
  res <- list(##data.name=hypothesis,
-  statistic = Q, parameter = df, p.value=pQ, method = method)
+  statistic = Q, parameter = df, p.value=pQ, method = method,coef.out=coef.out,varBp=varBp,lin.comb=lin.comb)
   class(res) <- "htest"
   attributes(res)$B <- B
 return(res)

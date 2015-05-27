@@ -1,7 +1,20 @@
+
 restricted.residual.mean <- function(out,x=0,tau=10,iid=0)
 { ## {{{ 
-  if ((class(out)!='cox.aalen') & (class(out)!='aalen'))
+  if ((class(out)!='cox.aalen') 
+      & (class(out)!='aalen')
+      & (class(out)!='survfit')  )
       stop ("Must be output from cox.aalen or aalen function\n") 
+
+if (class(out)=="survfit") { ## {{{ 
+   fit.table  <-  as.matrix(summary(out, rmean=tau)$table)
+if (ncol(fit.table)==1) fit.table <- t(fit.table)
+   ee  <-  fit.table[,"*rmean"]                     
+   se  <- fit.table[,"*se(rmean)"]        
+   variid <- diag(se^2)
+   S0t <- NULL
+   timetau <- NULL
+} ## }}}
 
 if (class(out)=="cox.aalen") { ## {{{ 
 time <- out$cum[,1]
@@ -68,7 +81,30 @@ if (iid==1) {
 } ## }}}
 
 out <- list(mean=ee,var.mean=variid,se=se,S0tau=S0t,timetau=timetau)
+class(out) <- "restricted.residual.mean"
 return(out)
 } ## }}} 
 
+plot.restricted.residual.mean <- function(x,...)
+{ ## {{{ 
+matplot(x$timetau,x$S0tau,type="s")
+} ## }}} 
+
+###print.restricted.residual.mean <- function(object,digits=3)
+###{ ## {{{ 
+###out <- cbind(object$mean,object$se)
+###colnames(out) <- c("mean","se")
+###
+###prmatrix(signif(out,digits))
+###cat("\n"); 
+###} ## }}} 
+
+summary.restricted.residual.mean <- function(object, digits=3,...)
+{ ## {{{ 
+out <- cbind(object$mean,object$se)
+colnames(out) <- c("mean","se")
+
+prmatrix(signif(out,digits))
+cat("\n"); 
+} ## }}} 
 
