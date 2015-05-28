@@ -1,4 +1,4 @@
-1ff4edb697c7ea0f59ccfb7f6f15050e *DESCRIPTION
+52d82bd6b3988bf70bd5e22eba845ab6 *DESCRIPTION
 426d4e3730f66cf4b1343c9ba3a2760c *NAMESPACE
 5626b58ac5b3148673c12e7917b6be8a *R/Cpred.r
 099387f56334cc736e8cb231fb9c45a9 *R/Csmooth.r
@@ -79,7 +79,7 @@ b5fde4428cb20171362d8a7a115762e0 *man/prop.odds.subdist.Rd
 37e4e9d3b59fa4c1d54a09f537b307dc *man/summary.aalen.Rd
 ed0ccc5c46625f9a9cd3550639ecd476 *man/summary.cum.residuals.Rd
 a25004f8b9b4718afe3e03b6ec75f170 *man/timecox.Rd
-932d43b05625941356e2616b7b17b0ea *man/two.stage.reg.Rd
+0eca6c517e78e63d4eece74c311f1ecd *man/two.stage.reg.Rd
 35fbad264eae687c08b074ce2e21989b *man/wald.test.Rd
 f3cda6fd03c8ce405c9a2f102107d737 *src/Gprop-odds-subdist.c
 d50881ace9146d86b5f4850260d93fcb *src/Gprop-odds.c
@@ -97,7 +97,7 @@ f54bc122a9a3dd69a621d2f50684c206 *src/cox-aalen-lwy-resamp.c
 ce4698135c08b2a08eefa2ae2d280411 *src/cox-aalen-stratum.c
 b742075277b9abed88a6b1cb6b3329e0 *src/cox-aalen.c
 97b6ef92a808f650e80c22765d0c2316 *src/dynadd.c
-d30ad642d3506a9c494c516f5ee582ad *src/ipcw-residualmean.c
+ca29fa4b05738dd326779eabf52c4e3f *src/ipcw-residualmean.c
 404d988896fe5ad38ada48b97bcd9b73 *src/kim-kim.c
 2e95739991fe261d1985c6f5b87b21ea *src/matrix.c
 b64eb3799599472641047bd4c4b605af *src/matrix.h
@@ -111,5 +111,5 @@ e48f531f59fb1b2cc299f01fe0fd100f *src/prop-odds.c
 e7c409384f665cf2947b6b2bfe4df73f *src/smooth.c
 32efbb4239c8e57fd02c4061a2158110 *src/smooth2.c
 afa0afbcae2f59d9b1b54622759c3ed5 *src/timecox.c
-19c0bb3c2e600ec619491fd373e2139e *src/two-stage-reg.c
+335f6297109ec82aebd1a2f7b908fbad *src/two-stage-reg.c
 2c9c6cdb651a96cf6aa10733e9b55a84 *src/unifConfBandResampling.c
