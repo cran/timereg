@@ -59,10 +59,10 @@
 \alias{plot.cox.aalen2}
 \alias{plot.predict}
 \alias{coef.aalen}
-\alias{cox.ipw}
-\alias{summary.cox.ipw}
-\alias{coef.cox.ipw}
-\alias{print.cox.ipw}
+\alias{cox.marg}
+\alias{summary.cox.marg}
+\alias{coef.cox.marg}
+\alias{print.cox.marg}
 \alias{comprisk.ipw}
 \alias{coef.comprisk.ipw}
 \alias{print.comprisk.ipw}
@@ -71,7 +71,7 @@
 \alias{coef.cox.aalen}
 \alias{coef.comprisk}
 \alias{coef.two.stage}
-\alias{cluster.index}
+\alias{cluster.index.timereg}
 \alias{coefBase}
 \alias{des.aalen}
 \alias{timetest}
@@ -93,6 +93,11 @@
 \alias{timereg.formula}
 \alias{names2formula}
 \alias{twin.clustertrunc}
+\alias{vcov.aalen}
+\alias{vcov.cox.aalen}
+\alias{vcov.two.stage}
+\alias{vcov.comp.risk}
+\alias{qcut}
 \title{For internal use}
 \description{for internal use}
 \author{Thomas Scheike}

@@ -1,11 +1,12 @@
-cox.ipw <- function(survformula,glmformula,d=sys.parent(),max.clust=NULL,ipw.se=FALSE,tie.seed=100)
+cox.marg <- function(survformula,glmformula,d=sys.parent(),max.clust=NULL,ipw.se=FALSE,tie.seed=100)
 { ## {{{ 
   ggl <- glm(glmformula,family='binomial',data=d)
   mat <-  model.matrix(glmformula,data=d);
   glmcovs <- attr(ggl$terms,"term.labels")
-  d$ppp <- predict(ggl,type='response')
+  ppp <-predict(ggl,type="response")
+  ppp[ggl$y==0] <- 1- ppp[ggl$y==0]
+  d$ppp <- ppp
 
-###  d1 <- d[,survcovs]
 ###  dcc <- na.omit(d)
   ## {{{ checking and breaking ties
   ties <- FALSE
@@ -23,10 +24,15 @@ cox.ipw <- function(survformula,glmformula,d=sys.parent(),max.clust=NULL,ipw.se=
   }
   ## }}}
 
-  dcc <- d[ggl$y==1,]
+###  dcc <- d[ggl$y==1,]
+  dcc <- d
   ppp <- dcc$ppp
-  timeregsurvformula <- timereg.formula(survformula)
-  udca <- cox.aalen(timeregsurvformula,data=dcc,weights=1/ppp,n.sim=0,max.clust=max.clust)  
+###  print(head(1/ppp))
+
+  timeregformula <- timereg.formula(survformula)
+  udcox <- coxph(survformula,data=dcc,weights=1/ppp)  
+  udca <- cox.aalen(timeregformula,data=dcc,weights=1/ppp,n.sim=0,max.clust=max.clust)  
+###  print(summary(udca))
 
   ### iid of beta for Cox model 
   coxiid <- udca$gamma.iid
@@ -34,16 +40,17 @@ cox.ipw <- function(survformula,glmformula,d=sys.parent(),max.clust=NULL,ipw.se=
 if (ipw.se==TRUE)  { ## {{{ 
 ###requireNamespace("lava"); requireNamespace("NumDeriv"); 
 glmiid <-   lava::iid(ggl)
-mat <- mat[ggl$y==1,]
+###mat <- mat
 par <- coef(ggl)
 
 coxalpha <- function(par)
 { ## {{{ 
   rr <- mat %*% par
   pw <- c(exp(rr)/(1+exp(rr)))
+  pw[ggl$y==0] <- 1 - pw[ggl$y==0]
   assign("pw",pw,envir=environment(survformula))
 ###  if (coxph==FALSE) 
-  ud <- cox.aalen(timeregsurvformula,data=dcc,weights=1/pw,beta=udca$gamma,Nit=1,n.sim=0,robust=0)  
+  ud <- cox.aalen(timeregformula,data=dcc,weights=1/pw,beta=udca$gamma,Nit=1,n.sim=0,robust=0)  
 ###  else { ud <- coxph(survformula,data=dcc,weights=1/pw,iter.max=1,init=udca$gamma)  
 ###	 ud <- coxph.detail(ud,data=dcc)
 ###  }
@@ -56,7 +63,7 @@ alphaiid <-t( IDU %*% t(glmiid))
 ###
 iidfull <- alphaiid
 ###
-iidfull[ggl$y==1,] <- coxiid + alphaiid[ggl$y==1,]
+iidfull <- coxiid + alphaiid
 ###
 var2 <- t(iidfull) %*% iidfull
 se <- cbind(diag(var2)^.5); colnames(se) <- "se"
@@ -65,11 +72,11 @@ se <- cbind(diag(var2)^.5); colnames(se) <- "se"
 se.naive=coef(udca)[,3,drop=FALSE]; colnames(se.naive) <- "se.naive"
 
 res <- list(iid=iidfull,coef=udca$gamma,var=var2,se=se,se.naive=se.naive,ties=list(ties=ties,time2=time2,cox=udca))
-class(res) <- "cox.ipw"
+class(res) <- "cox.marg"
 return(res)
 } ## }}} 
 
-summary.cox.ipw <- function(object,digits=3,...)
+summary.cox.marg <- function(object,digits=3,...)
 {
 	tval <- object$coef/object$se
 	pval <- 2*(1-pnorm(abs(tval)))
@@ -79,13 +86,13 @@ summary.cox.ipw <- function(object,digits=3,...)
 return(res)
 }
 
-coef.cox.ipw<- function(object,digits=3,...)
+coef.cox.marg<- function(object,digits=3,...)
 {
-summary.cox.ipw(object)
+summary.cox.marg(object)
 }
 
-print.cox.ipw  <-  function(x,...)
+print.cox.marg  <-  function(x,...)
 { 
-summary.cox.ipw(x)
+summary.cox.marg(x)
 }
 

@@ -24,7 +24,7 @@ comp.risk<-function(formula,data=sys.parent(),cause,times=NULL,Nit=50,clusters=N
     ###  if (model=="logistic2") trans<-7; 
     line <- 0
     cause.call <- causeS <- cause
-    m<-match.call(expand.dots=FALSE);
+    m <- match.call(expand.dots=FALSE);
     m$gamma<-m$times<-m$n.times<-m$cause<-m$Nit<-m$weighted<-m$n.sim<-
              m$model<-m$detail<- m$cens.model<-m$time.pow<-m$silent<- m$step <- 
              m$cens.formula <- m$interval<- m$clusters<-m$resample.iid<- m$monotone <- 
@@ -392,7 +392,7 @@ comp.risk<-function(formula,data=sys.parent(),cause,times=NULL,Nit=50,clusters=N
            test.procBeqC=Ut,sim.test.procBeqC=UIt,conv=conv,
 	   weights=weights,cens.weights=cens.weights,scores=scores,Dscore.gamma=Dscore.gamma,step=step)
 
-    ud$call<-call; 
+    ud$call<- match.call()
     ud$model<-model; 
     ud$n<-n; 
     ud$clusters <- clusters
@@ -400,7 +400,7 @@ comp.risk<-function(formula,data=sys.parent(),cause,times=NULL,Nit=50,clusters=N
     ud$response <- event.history
     ud$cause <- status
     class(ud)<-"comprisk"; 
-    attr(ud, "Call") <- call
+    attr(ud, "Call") <- match.call()
     attr(ud, "Formula") <- formula
     attr(ud, "time.pow") <- time.pow
     attr(ud, "causeS") <- causeS
@@ -482,6 +482,11 @@ summary.comprisk <- function (object,digits = 3,...) {  ## {{{
 
 } ## }}}
 
+vcov.comp.risk <- function(object, ...) {
+  rv <- object$robvar.gamma
+  if (!identical(rv, matrix(0, nrow = 1L, ncol = 1L))) rv # else return NULL
+}
+
 plot.comprisk <-  function (x, pointwise.ci=1, hw.ci=0,
                             sim.ci=0, specific.comps=FALSE,level=0.05, start.time = 0,
                             stop.time = 0, add.to.plot=FALSE, mains=TRUE, xlab="Time",
@@ -532,8 +537,8 @@ plot.comprisk <-  function (x, pointwise.ci=1, hw.ci=0,
           cat("Hall-Wellner bands only 95 % \n");
         }
         tau<-length(B[,1])
-        nl<-B[,v]-1.13*V[tau,v]^.5*(1+V[,v]/V[tau,v])
-        ul<-B[,v]+1.13*V[tau,v]^.5*(1+V[,v]/V[tau,v])
+        nl<-B[,v]-1.27*V[tau,v]^.5*(1+V[,v]/V[tau,v])
+        ul<-B[,v]+1.27*V[tau,v]^.5*(1+V[,v]/V[tau,v])
         lines(B[,1],ul,lty=hw.ci,type="s"); 
         lines(B[,1],nl,lty=hw.ci,type="s");
       }
@@ -595,7 +600,7 @@ plot.comprisk <-  function (x, pointwise.ci=1, hw.ci=0,
 prep.comp.risk <- function(data,times=NULL,entrytime=NULL,
 			   time="time",cause="cause",cname="cweight",tname="tweight",
 			   strata=NULL,nocens.out=TRUE,cens.formula=NULL,cens.code=0,
-			   prec.factor=100)
+			   prec.factor=100,trunc.mintau=FALSE)
 { ## {{{ 
 ## {{{  geskus weights, up to min(T_i,max(times))
    if (is.null(times)) times <- max(data[,time])
@@ -613,6 +618,7 @@ prep.comp.risk <- function(data,times=NULL,entrytime=NULL,
 	   trunc.dist <- summary(surv.trunc)
 	   trunc.dist$time <- rev(-trunc.dist$time)
 	   trunc.dist$surv <- c(rev(trunc.dist$surv)[-1], 1)
+	   if (trunc.mintau==TRUE) Lfit <-Cpred(cbind(trunc.dist$time,trunc.dist$surv),pmin(mtt,data[,time])) else 
 	   Lfit <-Cpred(cbind(trunc.dist$time,trunc.dist$surv),data[,time])
 	   Lw <- Lfit[,2]
 	   } else Lw <- 1
@@ -621,8 +627,8 @@ prep.comp.risk <- function(data,times=NULL,entrytime=NULL,
 	   Gfit<-rbind(c(0,1),Gfit); 
 	   Gcx<-Cpred(Gfit,pmin(mtt,data[,time]),strict=TRUE)[,2];
            weights <- 1/(Lw*Gcx); 
-	   cweights <-  Lw; 
-	   tweights <-  Gcx; 
+	   cweights <-  Gcx; 
+	   tweights <-  Lw; 
    ### ## }}} 
    } else { ## {{{ 
 	   ### compute for each strata and combine 
@@ -641,7 +647,8 @@ prep.comp.risk <- function(data,times=NULL,entrytime=NULL,
 		   trunc.dist <- summary(surv.trunc)
 		   trunc.dist$time <- rev(-trunc.dist$time)
 		   trunc.dist$surv <- c(rev(trunc.dist$surv)[-1], 1)
-		   Lfit <-Cpred(cbind(trunc.dist$time,trunc.dist$surv),datas[,time])
+          	   if (trunc.mintau==TRUE) Lfit <-Cpred(cbind(trunc.dist$time,trunc.dist$surv),pmin(mtt,datas[,time])) else 
+	           Lfit <-Cpred(cbind(trunc.dist$time,trunc.dist$surv),datas[,time])
 		   Lw <- Lfit[,2]
 	   } else Lw <- 1
 	   ud.cens<- survfit(Surv(entrytimes,datas[,time],datas[,cause]==0)~+1) 
@@ -649,8 +656,8 @@ prep.comp.risk <- function(data,times=NULL,entrytime=NULL,
 	   Gfit<-rbind(c(0,1),Gfit); 
 	   Gcx<-Cpred(Gfit,pmin(mtt,datas[,time]),strict=TRUE)[,2];
 	   weights[who]<-  1/(Lw*Gcx); 
-	   cweights[who]<-  Lw; 
-	   tweights[who]<-  Gcx; 
+	   cweights[who]<-  Gcx; 
+	   tweights[who]<-  Lw; 
           } ## }}} 
    } ## }}} 
    } else { ### cens.formula Cox models  ## {{{
@@ -661,7 +668,9 @@ prep.comp.risk <- function(data,times=NULL,entrytime=NULL,
 		baseout <- basehaz(trunc.model,centered=FALSE); 
 		baseout <- cbind(rev(-baseout$time),rev(baseout$hazard))
 	###
-		Lfit <-Cpred(baseout,data[,time])[,-1]
+
+	   if (trunc.mintau==TRUE) Lfit <-Cpred(baseout,pmin(mtt,data[,time]))[,-1] else 
+		   Lfit <-Cpred(baseout,data[,time])[,-1]
 		RR<-exp(as.matrix(X) %*% coef(trunc.model))
 		Lfit<-exp(-Lfit*RR)
 		Lw <- Lfit
@@ -742,4 +751,5 @@ pred.stratKM <- function(data,entrytime=NULL,time="time",cause="cause",strata="s
    } ## }}} 
    return(weights); 
 } ## }}} 
+
 

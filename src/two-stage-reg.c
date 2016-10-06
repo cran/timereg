@@ -8,8 +8,8 @@ antpers,start,stop, Nit,
 detail, id,status, ratesim, robust, clusters,
 antclust,betafixed, theta, vartheta,thetascore, inverse,
 clustsize,desthetaI, ptheta,SthetaI,step,idiclust,notaylor,gamiid,biid,semi,cumhaz,
-cumhazleft,lefttrunk,rr,maxtimesim,timegroup,secluster,antsecluster,thetiid,timereso)
-double *designX,*designG,*times,*start,*stop,*theta,*vartheta,*thetascore,*desthetaI,*SthetaI,*step,*gamiid,*biid,*cumhaz,*cumhazleft,*rr,*thetiid,*timereso;
+cumhazleft,lefttrunk,rr,maxtimesim,timegroup,secluster,antsecluster,thetiid,timereso,DUbeta)
+double *designX,*designG,*times,*start,*stop,*theta,*vartheta,*thetascore,*desthetaI,*SthetaI,*step,*gamiid,*biid,*cumhaz,*cumhazleft,*rr,*thetiid,*timereso,*DUbeta;
 int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*id,*status,*ratesim,*robust,
 *clusters,*antclust,*betafixed,*inverse,*clustsize,*ptheta,*idiclust,*notaylor,*semi,*lefttrunk,*maxtimesim,*timegroup,*antsecluster,*secluster;
 {
@@ -202,6 +202,7 @@ for(j=0;j<pmax;j++) {
   if (isnan(thetaiidscale[j])) vec_zeros(vtheta3); 
 
   if (it==(*Nit-1)) { 
+//	  printf(" tror vi er her %d %d \n",i,secluster[i]); print_vec(vtheta3); print_vec(thetaiid[secluster[i]]); 
 	  vec_add(vtheta3,thetaiid[secluster[i]],thetaiid[secluster[i]]); 
   }
   vec_add(vthetascore,vtheta3,vthetascore); 
@@ -247,6 +248,8 @@ for(j=0;j<pmax;j++) {
   if (*detail==1) Rprintf("Newton-Raphson ok \n"); 
   for (i=0;i<*ptheta;i++) { theta[i]=VE(vtheta1,i); thetascore[i]=VE(vthetascore,i); }
 
+//  if (*detail==1) Rprintf("notaylor %d robust %d \n",*notaylor,*robust); 
+
    R_CheckUserInterrupt();
   /* terms for robust variances ============================ */
   if (*robust==1) { // {{{  
@@ -278,6 +281,10 @@ for(j=0;j<pmax;j++) {
 	}
 	}
       }
+      
+      for (c=0;c<*ptheta;c++) for (l=0;l<*pg;l++) DUbeta[c*(*pg)+l]=ME(Gtilde,c,l); 
+//      SthetaI[k*(*ptheta)+j]=ME(d2UItheta,j,k); 
+
       } // }}} 
 
     if (*notaylor==0) 
