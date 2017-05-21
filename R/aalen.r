@@ -28,8 +28,6 @@ if (sum(offsets)==0) mof <- 0 else mof <- 1;
   if (!is.null(caseweight)) {icase <- 1; }
 
 
-
-
 aalenout<- .C("robaalen", ## {{{
 as.double(times), as.integer(Ntimes),as.double(designX),
 as.integer(nx),as.integer(p),as.integer(fdata$antpers),
@@ -109,7 +107,18 @@ conf.band=unifCI,test.procBeqC=Ut,sim.test.procBeqC=UIt,
 covariance=cov.list,B.iid=B.iid,stratum=stratum)
 }
 
+
+
+#' Identifies parametric terms of model
+#' 
+#' Specifies which of the regressors that have constant effect.
+#' 
+#' @param x variable
+#' 
+#' @author Thomas Scheike
+#' @keywords survival
 const <- function(x) x 
+
 
 pval<-function(simt,Otest)
 {

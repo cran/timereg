@@ -5,21 +5,13 @@
 \alias{plot.resmean}
 \alias{print.resmean}
 \alias{coef.resmean}
+\alias{coefcox}
 \alias{kmplot}
 \alias{pval}
 \alias{additive.compSs}
 \alias{CsmoothB}
-\alias{mypbc}
 \alias{Csmooth2B}
 \alias{pval}
-\alias{Event}
-\alias{as.character.Event}
-\alias{as.matrix.Event} 
-\alias{[.Event} 
-\alias{format.Event}
-\alias{print.Event} 
-\alias{rbind.Event} 
-\alias{summary.Event}
 \alias{kernel}
 \alias{percen}
 \alias{localTimeReg}
@@ -97,7 +89,6 @@
 \alias{vcov.cox.aalen}
 \alias{vcov.two.stage}
 \alias{vcov.comp.risk}
-\alias{qcut}
 \title{For internal use}
 \description{for internal use}
 \author{Thomas Scheike}
