@@ -4,6 +4,8 @@ import(survival)
 import(numDeriv)
 import(lava)
 
+
+
 export("aalen", ## {{{ 
        "aalen.des",
        "aalen.des2",
@@ -45,6 +47,8 @@ export("aalen", ## {{{
        "Gprop.odds",
 ###    "Gprop.odds.subdist",
        "is.diag",
+       "invsubdist",
+       "subdist",
        "krylow.pls",
        "kmplot",
        "localTimeReg",
@@ -59,6 +63,7 @@ export("aalen", ## {{{
        "predictpropodds",
 ###    "summary.pls",
        "prep.comp.risk",	
+       "pre.cifs",	
        "prep.glm.comprisk",	
        "pred.stratKM",	
        "prop",	"prop.excess",	"prop.excessBase",
@@ -70,19 +75,26 @@ export("aalen", ## {{{
        "pava",
        "qcut",
        "res.mean",
+       "recurrent.marginal.mean",
+       "recurrent.marginal.coxmean",
        "read.design",
        "read.surv",
+       "read.fit",
        "residualsTimereg",
        "restricted.residual.mean",
        "semiaalen",	
        "semicox",	
        "semiregBase",
        "sindex.prodlim",
+       "simsubdist",
 ###    "pls.surv.cv",
        "pc.hazard",
        "pchazard.sim",
        "cause.pchazard.sim",
+       "sim.cif",
+       "sim.cifs",
        "sim.cox",
+       "sim.cause.cox",
        "timecox",
        "timecoxBase",
        "timetest",
@@ -173,6 +185,7 @@ S3method(rbind,Event)
 S3method(as.matrix,Event)
 S3method(as.character,Event)
 S3method(format,Event)
+S3method("[",Event)
 
 S3method(coef,comprisk)
 S3method(predict,timereg)
@@ -244,6 +257,7 @@ importFrom("stats", "approx", "as.formula", "coef", "delete.response", "formula"
    "model.matrix", "na.omit","pchisq", "pnorm", "predict", "qnorm", "quantile", "runif", "terms", "time", "update")
 importFrom("utils", "head","tail")
 importFrom("stats", "rexp")
+importFrom("stats", "rbinom")
 importFrom("stats", "get_all_vars")
 
 
