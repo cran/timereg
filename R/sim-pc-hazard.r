@@ -6,6 +6,7 @@
 #' @param cumhazard cumulative hazard, or piece-constant rates for periods
 #' defined by first column of input.
 #' @param rr number of simulations or vector of relative risk for simuations.
+#' @param n number of simulations given as "n" 
 #' @param entry delayed entry time for simuations.
 #' @param cum.hazard specifies wheter input is cumulative hazard or rates.
 #' @param cause name of cause 
@@ -23,7 +24,7 @@
 #' cumhaz <- cumsum(c(0,diff(breaks)*rates[-1]))
 #' cumhaz <- cbind(breaks,cumhaz)
 #' 
-#' pctime <- pc.hazard(haz,1000,cum.hazard=FALSE)
+#' pctime <- pc.hazard(haz,n=1000,cum.hazard=FALSE)
 #' 
 #' par(mfrow=c(1,2))
 #' ss <- aalen(Surv(time,status)~+1,data=pctime,robust=0)
@@ -58,12 +59,13 @@
 #' lines(sss$cum,col=3,lwd=3)
 #' 
 #' @export
-#' @aliases pchazard.sim 
-pc.hazard <- function(cumhazard,rr,entry=NULL,cum.hazard=TRUE,cause=1)
+#' @aliases pchazard.sim addCums
+pc.hazard <- function(cumhazard,rr,n=NULL,entry=NULL,cum.hazard=TRUE,cause=1)
 {# {{{
 ### cumh=cbind(breaks,rates), first rate is 0 if cumh=FALSE
 ### cumh=cbind(breaks,cumhazard) if cumh=TRUE
-  if (length(rr)==1 & is.integer(rr)) rr<-rep(1,rr)
+  if (!is.null(n)) rr <- rep(1,n)
+
   breaks <- cumhazard[,1]
   rates <- cumhazard[,2][-1]
   mm <- tail(breaks,1)
@@ -73,25 +75,19 @@ pc.hazard <- function(cumhazard,rr,entry=NULL,cum.hazard=TRUE,cause=1)
   } else cumh <- cumhazard[,2] 
    n <- length(rr)
    ttt <- rexp(n)/rr
-   if (cumh[1]>0)  {
+   if (cumhazard[1,2]>0)  {
 	   warning("Safest to start with cumulative hazard 0 to avoid problems\n"); 
-	   cumh <- rbind(c(0,0),cumh)
+	   cumhazard <- rbind(c(0,0),cumhazard)
+	   cumh <- c(0,cumh)
    }
    ###
    if (!is.null(entry)) {
 	   if (length(entry)==1) entry <- rep(entry,n) else entry <- entry
-	   ## cumhazard at entry 
-           ri <- sindex.prodlim(breaks,entry)
-           rrr <- (entry-breaks[ri])/(breaks[ri+1]-breaks[ri])
-           cumentry <- rrr*(cumh[ri+1]-cumh[ri])+cumh[ri]
-	   cumentry <- cumentry
+	   cumentry <- lin.approx(entry,cumhazard,x=1)
    } else { entry <- cumentry <- rep(0,n) }
    ###
    ttte <- ttt+cumentry
-   ri <- sindex.prodlim(cumh,ttte)
-   rrr <- (ttte-cumh[ri])/(cumh[ri+1]-cumh[ri])
-   rrx <- rrr*(breaks[ri+1]-breaks[ri])+breaks[ri]
-   rrx[is.na(rrx)] <- mm
+   rrx <- lin.approx(ttte,cumhazard,x=-1)
    rrx <- ifelse(rrx>mm,mm,rrx)
    status <- rep(0,n)
    status <- ifelse(rrx<mm,cause,status)
@@ -100,6 +96,83 @@ pc.hazard <- function(cumhazard,rr,entry=NULL,cum.hazard=TRUE,cause=1)
    attr(dt,"cumhaz") <- cumhazard
    return(dt)
 }# }}}
+
+###pc.hazard <- function(cumhazard,rr,entry=NULL,cum.hazard=TRUE,cause=1)
+###{# {{{
+###### cumh=cbind(breaks,rates), first rate is 0 if cumh=FALSE
+###### cumh=cbind(breaks,cumhazard) if cumh=TRUE
+###  if (length(rr)==1 & is.integer(rr)) rr<-rep(1,rr)
+###  breaks <- cumhazard[,1]
+###  rates <- cumhazard[,2][-1]
+###  mm <- tail(breaks,1)
+###  if (cum.hazard==FALSE) {
+###        cumh <- cumsum(c(0,diff(breaks)*rates))
+###        cumhazard <- cbind(breaks,cumh)
+###  } else cumh <- cumhazard[,2] 
+###   n <- length(rr)
+###   ttt <- rexp(n)/rr
+###   if (cumh[1]>0)  {
+###	   warning("Safest to start with cumulative hazard 0 to avoid problems\n"); 
+###	   cumh <- rbind(c(0,0),cumh)
+###   }
+###   ###
+###   if (!is.null(entry)) {
+###	   if (length(entry)==1) entry <- rep(entry,n) else entry <- entry
+###	   ## cumhazard at entry 
+###           ri <- sindex.prodlim(breaks,entry)
+###           rrr <- (entry-breaks[ri])/(breaks[ri+1]-breaks[ri])
+###           rrr[is.na(rrr)] <- 0
+###           cumentry <- rrr*(cumh[ri+1]-cumh[ri])+cumh[ri]
+###	   cumentry[is.na(cumentry)] <- tail(cumh,1)
+###   } else { entry <- cumentry <- rep(0,n) }
+###   ###
+###   ttte <- ttt+cumentry
+###   ri <- sindex.prodlim(cumh,ttte)
+###   rrr <- (ttte-cumh[ri])/(cumh[ri+1]-cumh[ri])
+###   rrr[is.na(rrr)] <- 0
+###   rrx <- rrr*(breaks[ri+1]-breaks[ri])+breaks[ri]
+###   rrx[is.na(rrx)] <- mm
+###   rrx <- ifelse(rrx>mm,mm,rrx)
+###   status <- rep(0,n)
+###   status <- ifelse(rrx<mm,cause,status)
+###   dt <- data.frame(entry=entry,time=rrx,status=status,rr=rr)
+###   colnames(dt) <- c("entry","time","status","rr"); 
+###   attr(dt,"cumhaz") <- cumhazard
+###   return(dt)
+###}# }}}
+
+#' @export
+lin.approx <- function(x2,xfx,x=1)
+{# {{{
+   ### x=1   gives  f(x2) 
+   ### x=-1  gives  f^-1(x2) 
+   breaks <- xfx[,x]
+   fx     <- xfx[,-x]
+   ri <- sindex.prodlim(breaks,x2)
+   maxindex <- which(ri==length(breaks))
+   rip1 <- ri+1
+   rip1[maxindex] <- length(breaks)
+   rrr <- (x2-breaks[ri])/(breaks[rip1]-breaks[ri])
+   rrr[maxindex] <- 0
+   res <- rrr*(fx[rip1]-fx[ri])+fx[ri]
+   res[is.na(res)] <- tail(fx,1)
+   return(res)
+}# }}}
+
+
+#' @export
+addCums <- function(cumB,cumA,max=NULL)
+{# {{{
+ ## take times
+ times <- sort(unique(c(cumB[,1],cumA[,1])))
+ if (!is.null(max)) times <- times[times<max]
+ cumBjx <- lin.approx(times,cumB,x=1)
+ cumAjx <- lin.approx(times,cumA,x=1)
+ cumBA <- cumBjx+cumAjx
+ return(cbind(times,cumBA))
+}# }}}
+
+
 
 #' @export
 pchazard.sim <- function(cumhazard,rr,cens=NULL,rrc=NULL,cens.cum.hazard=TRUE,...)
@@ -152,7 +225,7 @@ pchazard.sim <- function(cumhazard,rr,cens=NULL,rrc=NULL,cens.cum.hazard=TRUE,..
 #'             data=TRACE,robust=0)
 #'
 #' X1 <- TRACE[,c("vf","chf","wmi")]
-#' n <- 100000
+#' n <- 1000
 #' xid <- sample(1:nrow(X1),n,replace=TRUE)
 #' Z1 <- X1[xid,]
 #' Z2 <- X1[xid,]
@@ -173,6 +246,7 @@ pchazard.sim <- function(cumhazard,rr,cens=NULL,rrc=NULL,cens.cum.hazard=TRUE,..
 #' plot(cox1); lines(sc1$cum,col=2)
 #' plot(cox2$cum,type="l");
 #' lines(sc2$cum,col=2)
+#' 
 #' @export 
 cause.pchazard.sim<-function(cumhaz1,cumhaz2,rr1,rr2,cens=NULL,rrc=NULL,cens.cum.hazard=TRUE,...)
 {#'# {{{
@@ -257,6 +331,7 @@ cause.pchazard.sim<-function(cumhaz1,cumhaz2,rr1,rr2,cens=NULL,rrc=NULL,cens.cum
 #' basehazplot.phreg(cox)
 #' basehazplot.phreg(cc,add=TRUE)
 #' }
+#' 
 #' @export
 #' @aliases sim.cox read.fit 
 sim.cox <- function(cox,n,data=NULL,cens=NULL,rrc=NULL,entry=NULL,...)
@@ -267,6 +342,7 @@ des <- 	read.fit(cox,n,data=data,...)
 Z <- des$Z; cumhazard <- des$cum; rr <- des$rr; 
 
 if (class(cox)!="phreg") {
+        if (cumhazard[1,2]>0) cumhazard <- rbind(c(0,0),cumhazard)
 	ptt <- pc.hazard(cumhazard,rr,entry=entry) 
 	ptt <- cbind(ptt,Z)
 } else {
@@ -282,6 +358,7 @@ if (class(cox)!="phreg") {
 			ptt  <-  rbind(ptt,pttj)
 		}
 	} else {
+            if (cumhazard[1,2]>0) cumhazard <- rbind(c(0,0),cumhazard)
 		ptt <- pc.hazard(cumhazard,rr,entry=entry) 
 		ptt <- cbind(ptt,Z)
 	}
@@ -861,7 +938,7 @@ subdist <- function(F1,times)
 #' lines(cifs[[2]]$cum,col=2,lty=2)
 #'
 #' @export
-#' @aliases sim.cif sim.cifs subdist pre.cifs
+#' @aliases sim.cif sim.cifs subdist pre.cifs 
 sim.cif <- function(cif,n,data=NULL,Z=NULL,drawZ=TRUE,cens=NULL,rrc=NULL,
 		    cumstart=c(0,0),...)
 {# {{{
@@ -1147,4 +1224,5 @@ if (class(cox)=="phreg")
 return(out)
 
 }# }}}
+
 
