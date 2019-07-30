@@ -1,5 +1,5 @@
-b4c786405af32b362e654d67ffc50e3a *DESCRIPTION
-a966896add3a12ca982823e3d562c1c7 *NAMESPACE
+9c01de645f605bb733c148ae39aed096 *DESCRIPTION
+3a8f3458a8233d481c12071a36dad884 *NAMESPACE
 5626b58ac5b3148673c12e7917b6be8a *R/Cpred.r
 099387f56334cc736e8cb231fb9c45a9 *R/Csmooth.r
 abf4346cbe86fe80197650e72ffed898 *R/Gprop-odds.r
@@ -22,14 +22,14 @@ a79914271865dbf07cfe1dc01da9669a *R/ipcw-residualmean.r
 059050bba25ecb3573efe3bf39c17907 *R/kmplot.r
 8c13dd5267a40d23a05b3bf1727a4a36 *R/krylow.pls.r
 075943e46200e781e6cd36b06fe47c01 *R/mgresid.r
-add78fe692aab1b732d3b044be82ce5b *R/new.aalen.r
+491bbf858536ab0c58927e29e30ddaa4 *R/new.aalen.r
 6c2f4cccb04d30f6b957da52d8c24f46 *R/new.cox-aalen.r
 17a64a8de69dce3169e39231b3535725 *R/new.dynreg.r
 5307d93edfe46336f695624abccaaf70 *R/new.pe-sasieni.r
 f082b454b7342a030e9b381534e86580 *R/new.prop-excess.r
 c9c53ab19d4270fd6e05cf11d9d96f63 *R/new.timecox.r
 a8670d9185d078c4c51be46895ec6318 *R/plots.r
-f1478f65407f3290036de52adf106838 *R/predict-timereg.r
+facdc3173a4fc800f6931a22251adeb7 *R/predict-timereg.r
 e7135ed89e91b6ad4038bc36a98d896f *R/prop-excess.r
 72496ba2bfe97215f1842146cb075a81 *R/prop-odds-subdist.r
 0338465897656cb28c2f00c74e19546b *R/prop-odds.r
@@ -38,7 +38,7 @@ bd2377ebc32c75fc769ec33561f4ff18 *R/read-design.r
 e0936d5d002cc59dcaa718833195b771 *R/recurrent.r
 89576212056bc68752f9e1584f02a4a9 *R/residualsTimereg.r
 7458071becb0e7bba21d911611459fe5 *R/restricted.residual.mean.r
-ffa89eab369bacb2156c8822405227a8 *R/sim-pc-hazard.r
+5bcc420cfe9e89753e679d04071dc00a *R/sim-pc-hazard.r
 0c8bbe3f6e4a496e31b6f23f5c2dcf45 *R/timecox.r
 030832be7ab88a52ee030f17857486ef *R/timereg-copy-package.R
 4967a74ec2030c0af8e9ccbcd4663abc *R/two-stage-reg.r
@@ -58,7 +58,6 @@ b61d3b8771eadd513bb517dfa7487cbf *data/tTRACE.txt.gz
 d108fe8aa8e72f626ae94585b477523e *man/TRACE.Rd
 2e37d142e73fd66046e4f963a2c446f0 *man/aalen.Rd
 7fbc7eae8f3bfea691b749c4b527e3ea *man/bmt.Rd
-09a6e9c2debddad98e2cf699dd6ab518 *man/cause.pchazard.sim.Rd
 6d2ea3277d577d050fab1524b69b7b2c *man/cd4.Rd
 1438d01abf5b987a3d5bcb3c540d8418 *man/comp.risk.Rd
 350fec0cecc267ae95ea93919eed3f95 *man/const.Rd
@@ -77,7 +76,6 @@ d55feb16a4435a4361cef76a20836d94 *man/mela.pop.Rd
 e5beb43d6f21fb7d746998b3bc65b98e *man/melanoma.Rd
 05c259e250c27f3a8bd74c3238a65b75 *man/mypbc.Rd
 882abb59f0c2d83574602bc7eb999067 *man/pava.pred.Rd
-1d800252b4cc542759b71942adcf5a78 *man/pc.hazard.Rd
 b93db95340e46cd7dd6f7772a02263d5 *man/pe.sasieni.Rd
 bd5a440f1b6c52bccc43f6aec318cffc *man/plot.aalen.Rd
 cb38c8970b1346278288a98aec51ca2e *man/plot.cum.residuals.Rd
@@ -90,13 +88,15 @@ efd0866363e2ee1a0bc110efdf8e4bb8 *man/prop.excess.Rd
 5ce742b0960f1ba578d69c4589c2513d *man/prop.odds.Rd
 c0c3650c7414843891fc1f71ec3351c2 *man/prop.odds.subdist.Rd
 bd9941d527a00930f5ea4cd9eef2c179 *man/qcut.Rd
+72698300ebcf3ebebc8190554172af10 *man/rchaz.Rd
+81af7dc50e2145dda90342bf43d7b217 *man/rcrisk.Rd
 99acad7a9ac057108a2fa27b8b71c97b *man/recurrent.marginal.coxmean.Rd
 01ba024eba20af38bec808e74b530d0b *man/recurrent.marginal.mean.Rd
 e6a96f068be834335aa2f810bfa73964 *man/res.mean.Rd
 e585fbc99585cbef346682b9c2ed7f7d *man/restricted.residual.mean.Rd
-72b0588a608279f4b70162977e46561c *man/sim.cause.cox.Rd
+f5224cd62688a6bdbeffaffe3d9d25d1 *man/sim.cause.cox.Rd
 8d81a0fce70c9041ee7d32e6d5df83b1 *man/sim.cif.Rd
-4922a4fd002c0669c9e11deaae43cc53 *man/sim.cox.Rd
+aefadb917813ad246f1c014955e0e02f *man/sim.cox.Rd
 c34cae3a14e5e67f54a4af28ac20703f *man/simsubdist.Rd
 a28f24f21384abedf39e210325980a1e *man/summary.aalen.Rd
 f2866c71545517e06ace846609a3aba9 *man/summary.cum.residuals.Rd
