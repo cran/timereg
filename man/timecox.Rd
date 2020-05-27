@@ -4,10 +4,26 @@
 \alias{timecox}
 \title{Fit Cox model with partly timevarying effects.}
 \usage{
-timecox(formula = formula(data), data = sys.parent(), start.time = 0,
-  max.time = NULL, id = NULL, clusters = NULL, n.sim = 1000,
-  residuals = 0, robust = 1, Nit = 20, bandwidth = 0.5,
-  method = "basic", weighted.test = 0, degree = 1, covariance = 0)
+timecox(
+  formula = formula(data),
+  data,
+  weights,
+  subset,
+  na.action,
+  start.time = 0,
+  max.time = NULL,
+  id = NULL,
+  clusters = NULL,
+  n.sim = 1000,
+  residuals = 0,
+  robust = 1,
+  Nit = 20,
+  bandwidth = 0.5,
+  method = "basic",
+  weighted.test = 0,
+  degree = 1,
+  covariance = 0
+)
 }
 \arguments{
 \item{formula}{a formula object with the response on the left of a '~'
@@ -17,6 +33,12 @@ regressors are specified by the wrapper const(), and cluster variables (for
 computing robust variances) by the wrapper cluster().}
 
 \item{data}{a data.frame with the variables.}
+
+\item{weights}{to add weights}
+
+\item{subset}{to subset the data}
+
+\item{na.action}{to take care of na' s}
 
 \item{start.time}{start of observation period where estimates are computed.}
 

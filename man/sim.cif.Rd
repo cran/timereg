@@ -5,10 +5,21 @@
 \alias{sim.cifs}
 \alias{subdist}
 \alias{pre.cifs}
+\alias{sim.cifsRestrict}
+\alias{setup.cif}
 \title{Simulation of output from Cumulative incidence regression model}
 \usage{
-\method{sim}{cif}(cif, n, data = NULL, Z = NULL, drawZ = TRUE,
-  cens = NULL, rrc = NULL, cumstart = c(0, 0), ...)
+\method{sim}{cif}(
+  cif,
+  n,
+  data = NULL,
+  Z = NULL,
+  drawZ = TRUE,
+  cens = NULL,
+  rrc = NULL,
+  cumstart = c(0, 0),
+  ...
+)
 }
 \arguments{
 \item{cif}{output form prop.odds.subdist or ccr (cmprsk), can also call invsubdist with
@@ -65,15 +76,13 @@ cbind(cif$gamma,cc$gamma)
 plot(cif) 
 lines(cc$cum)
 
-# data(TRACE)
-#  mm <- model.matrix(~vf+chf+wmi,data=TRACE)[,-1]
-#  library(cmprsk)
-#  cif <-  crr(TRACE$time,TRACE$status,mm,failcode=9)
-#  sim1 <- sim.cif(cif,10000,data=TRACE,Z=mm)
-#  mms <- model.matrix(~vf+chf+wmi,data=sim1)[,-1]
-#  #' cc <-  prop.odds.subdist(Event(time,status)~vf+chf+wmi,data=sim1,cause=1)
-#  cif1 <-  crr(sim1$time,sim1$status,mms,failcode=1)
-#  cbind(cif$coef,cif1$coef)
+# faster/better with  mets package 
+# library(mets)
+# scif <-  cifreg(Event(time,status)~vf+chf+wmi,data=sim1,cause=1,prop=NULL)
+#   
+# plot(scif$cum,type="l")
+# lines(cif$cum,col=2)
+# cbind(cif$gamma,scif$coef)
 # 
 ################################################################
 #  simulating several causes with specific cumulatives 
@@ -114,7 +123,7 @@ legend("topleft",c("cause1","cause2"),lty=1,col=1:2)
  lines(cifs[[1]]$cum,col=2)
  lines(cifs[[2]]$cum,col=2,lty=2)
 
-#  Everyhing wraped in a call assuming covariates work in the same way for two models
+#  Everyhing wrapped in call assuming covariates work in the same way for two models
 dd <- sim.cifs(list(cif1,cif2),2000,data=bmt)
 scif1 <-  comp.risk(Event(time,cause)~const(tcell)+const(age),
                   data=dd,cause=1,model="logistic2")
@@ -127,6 +136,22 @@ legend("topleft",c("cause1","cause2"),lty=1:2,col=1:1)
 lines(cifs[[1]]$cum,col=2)
 lines(cifs[[2]]$cum,col=2,lty=2)
 
+# Everyhing wrapped in call assuming covariates work in the same way for two models
+# but now draws cif1 to be of correct model, but model 2 is adapted 
+#(if needed) to make constraints satisfied F1+F2 <=1
+# see doubleFG of mets package for paramtrization
+# and drawns as "if not cause1" then distribute according to cause 2
+# dd <- sim.cifsRestrict(list(cif1,cif2),2000,data=bmt)
+# faster with mets package 
+# dd <- sim.cifs(list(cif1,cif2),1000,data=bmt)
+# scif1 <-  cifreg(Event(time,cause)~tcell+age,data=dd,cause=1)
+# scif2 <-  cifreg(Event(time,cause)~tcell+age,data=dd,cause=2)
+#   
+# plot(scif1$cum,type="l")
+# legend("topleft",c("cause1","cause2"),lty=1:2,col=1:1)
+# lines(cifs[[1]]$cum,col=2)
+# lines(cifs[[2]]$cum,col=2,lty=2)
+# 
 }
 \author{
 Thomas Scheike

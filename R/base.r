@@ -46,6 +46,7 @@ coefcox <- function(object, digits=3, d2logl=0,ci=1,alpha=0.05) { ## {{{
 #' @param object timereg object
 #' @param coef estimates from some model
 #' @param Sigma variance of estimates
+#' @param vcov same as Sigma but more standard in other functions
 #' @param contrast contrast matrix for testing
 #' @param coef.null which indeces to test to 0
 #' @param null mean of null, 0 by default
@@ -73,20 +74,23 @@ coefcox <- function(object, digits=3, d2logl=0,ci=1,alpha=0.05) { ## {{{
 #' 	  contrast=rbind(c(1,-1,0,0,0),c(0,0,1,-1,0)))
 #' 
 #' @export
-wald.test <- function(object=NULL,coef=NULL,Sigma=NULL,contrast,coef.null=NULL,null=NULL,print.coef=TRUE,alpha=0.05)
+wald.test <- function(object=NULL,coef=NULL,Sigma=NULL,vcov=NULL,contrast,coef.null=NULL,null=NULL,print.coef=TRUE,alpha=0.05)
 { ## {{{
 
-  if (class(object)=="coxph")  {coef <-  matrix(coef(object),ncol=1); Sigma=object$var;}
-  if (class(object)=="phreg")  {coef <-  matrix(c(coef(object)),ncol=1); Sigma=vcov(object);}
-  if (class(object)=="cox.aalen")  {coef <- object$gamma; Sigma=object$var.gamma;}
+  coefs <- NULL
+  if (class(object)[1]=="coxph")  {coef <-  matrix(coef(object),ncol=1); Sigma=object$var;}
+  if (class(object)[1]=="phreg")  {coef <-  matrix(c(coef(object)),ncol=1); Sigma=vcov(object);}
+  if (class(object)[1]=="cox.aalen")  {coef <- object$gamma; Sigma=object$var.gamma;}
   if (is.null(Sigma)) {
-     if (class(object)=="cor" || class(object)=="twostage") Sigma <- object$var.theta else Sigma <- object$var.gamma;
+     if (class(object)[1]=="cor" || class(object)[1]=="twostage") Sigma <- object$var.theta else Sigma <- object$var.gamma;
   }
   if (!is.null(object)) {
-     if (class(object)=="cor" || class(object)=="twostage") coefs <- object$theta else coefs <- object$gamma;
+     if (class(object)[1]=="cor" || class(object)[1]=="twostage") coefs <- object$theta else coefs <- object$gamma;
   } 
+  if (is.null(coefs)) coefs <- coef(object)
   if (!is.null(coef)) coefs <- coef ## else stop("No estimates given \n"); 
   nl <- length(coefs)
+
   if (missing(contrast)) {
       contrast <- rep(1,length(coefs))
       contrast <- diag(1,nl);
@@ -99,10 +103,13 @@ wald.test <- function(object=NULL,coef=NULL,Sigma=NULL,contrast,coef.null=NULL,n
   }
   if (missing(null)) null <- 0
 
-  ### Wald test
-  B <- contrast
-  p <- coefs
-  if (is.vector(B)) { B <- rbind(B); colnames(B) <- names(contrast) }
+  if (is.null(Sigma)) Sigma <- vcov
+  if (is.null(Sigma)) Sigma <- vcov(object)
+
+ ### Wald test
+ B <- contrast
+ p <- coefs
+ if (is.vector(B)) { B <- rbind(B); colnames(B) <- names(contrast) }
 
  varBp <- B%*%Sigma%*%t(B)
  seBp <- diag(varBp)^.5
@@ -125,6 +132,7 @@ wald.test <- function(object=NULL,coef=NULL,Sigma=NULL,contrast,coef.null=NULL,n
   attributes(res)$B <- B
 return(res)
 } ## }}}
+
 
 timetest<-function(object,digits=3,hyp.label="p-value H_0:constant effect",out=0)
 {  ## {{{

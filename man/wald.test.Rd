@@ -4,8 +4,17 @@
 \alias{wald.test}
 \title{Makes wald test}
 \usage{
-wald.test(object = NULL, coef = NULL, Sigma = NULL, contrast,
-  coef.null = NULL, null = NULL, print.coef = TRUE, alpha = 0.05)
+wald.test(
+  object = NULL,
+  coef = NULL,
+  Sigma = NULL,
+  vcov = NULL,
+  contrast,
+  coef.null = NULL,
+  null = NULL,
+  print.coef = TRUE,
+  alpha = 0.05
+)
 }
 \arguments{
 \item{object}{timereg object}
@@ -13,6 +22,8 @@ wald.test(object = NULL, coef = NULL, Sigma = NULL, contrast,
 \item{coef}{estimates from some model}
 
 \item{Sigma}{variance of estimates}
+
+\item{vcov}{same as Sigma but more standard in other functions}
 
 \item{contrast}{contrast matrix for testing}
 

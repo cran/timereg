@@ -96,6 +96,7 @@ export("aalen", ## {{{
        "simrchaz",
        "sim.cif",
        "sim.cifs",
+       "sim.cifsRestrict",
        "sim.cox",
        "sim.cause.cox",
        "timecox",
@@ -265,5 +266,6 @@ importFrom("stats", "get_all_vars")
 importFrom("stats", "vcov")
 importFrom("methods", "hasArg")
 
+importFrom("stats", "model.response", "model.weights")
 
 
