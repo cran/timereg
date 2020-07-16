@@ -1,3 +1,5 @@
+
+
 #' Fit Cox model with partly timevarying effects.
 #' 
 #' Fits proportional hazards model with some effects time-varying and some
@@ -22,9 +24,9 @@
 #' regressors are specified by the wrapper const(), and cluster variables (for
 #' computing robust variances) by the wrapper cluster().
 #' @param data a data.frame with the variables.
-#' @param weights to add weights 
-#' @param subset to subset the data
-#' @param na.action to take care of na' s
+#' @param weights for analysis 
+#' @param subset to subset
+#' @param na.action to have na.action 
 #' @param start.time start of observation period where estimates are computed.
 #' @param max.time end of observation period where estimates are computed.
 #' Estimates thus computed from [start.time, max.time]. Default is max of data.

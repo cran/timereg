@@ -4,17 +4,9 @@
 \alias{event.split}
 \title{EventSplit (SurvSplit).}
 \usage{
-event.split(
-  data,
-  time = "time",
-  status = "status",
-  cuts = "cuts",
-  name.id = "id",
-  name.start = "start",
-  cens.code = 0,
-  order.id = TRUE,
-  time.group = TRUE
-)
+event.split(data, time = "time", status = "status", cuts = "cuts",
+  name.id = "id", name.start = "start", cens.code = 0,
+  order.id = TRUE, time.group = TRUE)
 }
 \arguments{
 \item{data}{data to be split}
@@ -49,7 +41,7 @@ d <- data.frame(event=round(5*runif(5),2),start=1:5,time=2*1:5,
 		status=rbinom(5,1,0.5),x=1:5)
 d
 
-d0 <- event.split(d,cuts="event")
+d0 <- event.split(d,cuts="event",name.start=0)
 d0
 
 dd <- event.split(d,cuts="event")

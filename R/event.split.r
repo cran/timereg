@@ -25,7 +25,7 @@
 #' 		status=rbinom(5,1,0.5),x=1:5)
 #' d
 #' 
-#' d0 <- event.split(d,cuts="event")
+#' d0 <- event.split(d,cuts="event",name.start=0)
 #' d0
 #' 
 #' dd <- event.split(d,cuts="event")
