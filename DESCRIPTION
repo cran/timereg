@@ -1,7 +1,7 @@
 Package: timereg
 Title: Flexible Regression Models for Survival Data
-Version: 1.9.7
-Date: 2020-08-21
+Version: 1.9.8
+Date: 2020-09-21
 Author: Thomas Scheike with contributions from Torben Martinussen, Jeremy
     Silver and Klaus Holst
 Maintainer: Thomas Scheike <ts@biostat.ku.dk>
@@ -20,6 +20,6 @@ License: GPL (>= 2)
 Encoding: UTF-8
 RoxygenNote: 7.1.0
 NeedsCompilation: yes
-Packaged: 2020-08-21 07:12:18 UTC; bhd252
+Packaged: 2020-09-21 06:40:29 UTC; bhd252
 Repository: CRAN
-Date/Publication: 2020-08-24 08:00:02 UTC
+Date/Publication: 2020-10-05 09:50:02 UTC
