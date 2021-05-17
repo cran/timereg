@@ -1,4 +1,4 @@
-4baf3159d714a11af9a575e0681c79be *DESCRIPTION
+2299e0f51b9bfbf1b44ae31e3cc1093b *DESCRIPTION
 77ef0d19b368f7a02cc491b5ba186ed4 *NAMESPACE
 5626b58ac5b3148673c12e7917b6be8a *R/Cpred.r
 099387f56334cc736e8cb231fb9c45a9 *R/Csmooth.r
@@ -18,7 +18,7 @@ b86e4223e01cc585c71738fe7831df91 *R/cox.marg.r
 0af33319ce62350579a2df77d6ff8b6f *R/event.r
 40045591daf690fedc6e2f3dca8b0356 *R/event.split.r
 e4ea65660c583fa2badf2c4ced5e0da5 *R/glm-comprisk.r
-17ab438c9d247f9c1fb3341fdb54a823 *R/ipcw-residualmean.r
+eb30fed1e570fea74a584f57d023b1f2 *R/ipcw-residualmean.r
 059050bba25ecb3573efe3bf39c17907 *R/kmplot.r
 8c13dd5267a40d23a05b3bf1727a4a36 *R/krylow.pls.r
 e1affa4ad22b508ffc9c283f184f298d *R/mgresid.r
@@ -34,14 +34,14 @@ e7135ed89e91b6ad4038bc36a98d896f *R/prop-excess.r
 b7245acfb12eaf2f0fc0b5f224a18eb3 *R/prop-odds-subdist.r
 37e3158e18d9c9381f6bae3e5a5f3c84 *R/prop-odds.r
 1919ca75894e6e4ba1bef85cf973b897 *R/qcut.r
-bd2377ebc32c75fc769ec33561f4ff18 *R/read-design.r
+1ada7ca3cc97eb1f61f86489747c520d *R/read-design.r
 e0936d5d002cc59dcaa718833195b771 *R/recurrent.r
 89576212056bc68752f9e1584f02a4a9 *R/residualsTimereg.r
 7458071becb0e7bba21d911611459fe5 *R/restricted.residual.mean.r
 fcd95e0f5483840042cef05f7b65f8e4 *R/sim-pc-hazard.r
 0c8bbe3f6e4a496e31b6f23f5c2dcf45 *R/timecox.r
 030832be7ab88a52ee030f17857486ef *R/timereg-copy-package.R
-0c80a37d6aa99e2838050f60fee3636c *R/two-stage-reg.r
+09db02d1ee89f461a34a07d0b33d8ce7 *R/two-stage-reg.r
 f9cf9dc925b0eb4532905279dcd07a3f *data/TRACE.txt.gz
 4287db3533e463a0c4899b7faad8962b *data/bmt.txt.gz
 82f961ec5ff8c270f587e6b37fa0dc36 *data/cd4.txt.gz
@@ -107,7 +107,7 @@ f3cda6fd03c8ce405c9a2f102107d737 *src/Gprop-odds-subdist.c
 d50881ace9146d86b5f4850260d93fcb *src/Gprop-odds.c
 86d6c8302231e97079879409bcbda0a9 *src/Makevars
 51b5faa1e9abb86cf25443475cd50fd3 *src/aalen-test.c
-45b7afbafc661869f353cbbd43b7861d *src/aalen.c
+97ad208c0cafb2aaefaa7bea1c9bdadf *src/aalen.c
 a8c0e78b6dc70c8875372fb70d844c4c *src/aalenC.c
 37c8d7f302b0075f8746e09a1c10d6ec *src/additive-compSs.c
 17c9e87f22f9ae95a56aa71607ce9655 *src/additive-pls-new.c
@@ -115,9 +115,9 @@ d17d07200a41e92f18f235a1c310777d *src/breslow.c
 bd2d38ffbad02032fddff08217bbf716 *src/comprisk.c
 d08f12f2415fe3b166f139e6a62fac19 *src/comptest-cmprsk.c
 52d62edf54d5d36bd0f290de5fb93cbd *src/comptest.c
-f54bc122a9a3dd69a621d2f50684c206 *src/cox-aalen-lwy-resamp.c
-ce4698135c08b2a08eefa2ae2d280411 *src/cox-aalen-stratum.c
-c14a75e5aa1f4fb63903e9dc43376a76 *src/cox-aalen.c
+bce6cdbdb066fb69fd5d96c7223ef5f3 *src/cox-aalen-lwy-resamp.c
+fbd20d29f0817171d9728c7ee17bbcb4 *src/cox-aalen-stratum.c
+1a29c165406f5b7b7a179b62de4f97c6 *src/cox-aalen.c
 97b6ef92a808f650e80c22765d0c2316 *src/dynadd.c
 ca29fa4b05738dd326779eabf52c4e3f *src/ipcw-residualmean.c
 404d988896fe5ad38ada48b97bcd9b73 *src/kim-kim.c
