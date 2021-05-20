@@ -1,4 +1,4 @@
-2299e0f51b9bfbf1b44ae31e3cc1093b *DESCRIPTION
+9756bf3affce355e8b47fc9dcb0c5d4f *DESCRIPTION
 77ef0d19b368f7a02cc491b5ba186ed4 *NAMESPACE
 5626b58ac5b3148673c12e7917b6be8a *R/Cpred.r
 099387f56334cc736e8cb231fb9c45a9 *R/Csmooth.r
@@ -125,7 +125,7 @@ ca29fa4b05738dd326779eabf52c4e3f *src/ipcw-residualmean.c
 b64eb3799599472641047bd4c4b605af *src/matrix.h
 0f5f7f48963cb993ac00376bee16345c *src/mgresid.c
 49bbf5d16d6ae2d81a62597862480bbd *src/pava.c
-5696d5bb8a063197c83d5c01eb0b8500 *src/pe-sasieni.c
+41510506bccf3684a5682a69b35c9315 *src/pe-sasieni.c
 e27326ea9526523bfae7218f471300c5 *src/pred.c
 33e63e34d273154c6a5fa21c1b8d616a *src/prop-excess.c
 746a44a951c61b50ddfd9602bb6ffc7d *src/prop-odds-subdist2.c
