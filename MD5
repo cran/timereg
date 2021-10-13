@@ -1,4 +1,4 @@
-9756bf3affce355e8b47fc9dcb0c5d4f *DESCRIPTION
+bbc094065ed70cbcc90863f7b681e196 *DESCRIPTION
 77ef0d19b368f7a02cc491b5ba186ed4 *NAMESPACE
 5626b58ac5b3148673c12e7917b6be8a *R/Cpred.r
 099387f56334cc736e8cb231fb9c45a9 *R/Csmooth.r
@@ -16,7 +16,7 @@ ac3e9cba85994ee64d58271355b19c66 *R/cox.ipw.r
 b86e4223e01cc585c71738fe7831df91 *R/cox.marg.r
 4d4e18867d345927fb741137a190d7a5 *R/dynadd.r
 0af33319ce62350579a2df77d6ff8b6f *R/event.r
-40045591daf690fedc6e2f3dca8b0356 *R/event.split.r
+25e8041d1a29c5987f2b4a88eca22c72 *R/event.split.r
 e4ea65660c583fa2badf2c4ced5e0da5 *R/glm-comprisk.r
 eb30fed1e570fea74a584f57d023b1f2 *R/ipcw-residualmean.r
 059050bba25ecb3573efe3bf39c17907 *R/kmplot.r
@@ -68,7 +68,7 @@ a492a8b2210cd1576538a38cb9044e15 *man/csl.Rd
 d36cf628de8ba43ac0e5df33ae653e02 *man/cum.residuals.Rd
 bdabc53ef7f9e7fc6252f34bfd78c0a8 *man/diabetes.Rd
 4594967bc41e0d1a8dde9f3a96a025af *man/dynreg.Rd
-2b2d3f6f220e5615be1398aa80ee5492 *man/event.split.Rd
+b149b29193aac922e51c2732716755b9 *man/event.split.Rd
 51b2684b3427df231d9675f2e08174b7 *man/internal-addreg.Rd
 434ed05637298fd441597e1deb9887d5 *man/invsubdist.Rd
 15639ce7d9851fdc71ee6960672bf2e5 *man/krylow.pls.Rd
@@ -92,7 +92,7 @@ bd9941d527a00930f5ea4cd9eef2c179 *man/qcut.Rd
 24808700ebf8eee3b7c67963c8040d1e *man/rcrisk.Rd
 99acad7a9ac057108a2fa27b8b71c97b *man/recurrent.marginal.coxmean.Rd
 01ba024eba20af38bec808e74b530d0b *man/recurrent.marginal.mean.Rd
-f067d5be0d0c15ef1c0b1ce419d46c3d *man/res.mean.Rd
+e9e6dac9a499f2354d58b940515a2bac *man/res.mean.Rd
 e585fbc99585cbef346682b9c2ed7f7d *man/restricted.residual.mean.Rd
 c88a610ddb2cefa17413e292a909aa1b *man/sim.cause.cox.Rd
 f375c0e3b4b6b51c653995eb99e51e6a *man/sim.cif.Rd
@@ -121,8 +121,8 @@ fbd20d29f0817171d9728c7ee17bbcb4 *src/cox-aalen-stratum.c
 97b6ef92a808f650e80c22765d0c2316 *src/dynadd.c
 ca29fa4b05738dd326779eabf52c4e3f *src/ipcw-residualmean.c
 404d988896fe5ad38ada48b97bcd9b73 *src/kim-kim.c
-2e95739991fe261d1985c6f5b87b21ea *src/matrix.c
-b64eb3799599472641047bd4c4b605af *src/matrix.h
+060b10e016c41a01cd34eb9e6b3a03d7 *src/matrix.c
+bdb934edfe1b5d23b0d5d5fbbef1219e *src/matrix.h
 0f5f7f48963cb993ac00376bee16345c *src/mgresid.c
 49bbf5d16d6ae2d81a62597862480bbd *src/pava.c
 41510506bccf3684a5682a69b35c9315 *src/pe-sasieni.c

@@ -9,13 +9,11 @@
 #' @param time time variable.
 #' @param status status variable.
 #' @param cuts cuts variable or numeric cut (only one value)
-#' @param name.start name of start variable in data, start can also be numeric
-#' "0"
 #' @param name.id name of id variable.
+#' @param name.start name of start variable in data, start can also be numeric "0"
 #' @param cens.code code for the censoring.
 #' @param order.id order data after id and start.
-#' @param time.group make variable "before"."cut" that keeps track of wether
-#' start,stop is before (1) or after cut (0).
+#' @param time.group make variable "before"."cut" that keeps track of wether start,stop is before (1) or after cut (0).
 #' @author Thomas Scheike
 #' @keywords survival
 #' @examples
@@ -42,12 +40,10 @@
 #' 
 #' @export
 event.split <- function(data,
-			time="time",status="status",cuts="cuts",
-			name.id="id",
-			name.start="start", 
-			cens.code=0, 
-			order.id=TRUE,time.group=TRUE
-			)
+		time="time",status="status",cuts="cuts",name.id="id",
+		name.start="start", 
+		cens.code=0,order.id=TRUE,
+		time.group=FALSE)
 {
 ## {{{ 
     n <- nrow(data)
@@ -66,7 +62,6 @@ event.split <- function(data,
             data[,name.start] <- start0
     }  
 
-  
 
     if ((name.start %in% names(data))) {
       new.start <- data[,name.start]
@@ -79,6 +74,8 @@ event.split <- function(data,
 	    data[,name.id] <- idl 
     }
 
+###    if (newrow)  new.row <- rep(0,nrow(data))
+
     splits <- which(new.cuts<new.time & new.start<new.cuts)
 
     if (length(splits)) {
@@ -87,6 +84,7 @@ event.split <- function(data,
 	    new.start <-  c(new.start,new.cuts[splits])
 	    new.status <- c(new.status,new.status[splits])
 	    new.ccc <-    c(new.cuts,new.cuts[splits])
+###	    new.row <- c(new.row,rep(1,length(splits)))
 	    idl <- c(idl,idl[splits])
 	    new.time[splits] <- new.cuts[splits]
 	    new.status[splits] <- cens.code
@@ -95,6 +93,7 @@ event.split <- function(data,
 	    data[,status] <- new.status
 	    data[,name.start] <- new.start
 	    data[,name.id] <- idl
+###	    if (newrow) data[,newrow.name]  <-  new.row 
 ###    if (num %in% names(data))
 ###        data[,num] <- data[,num] + new.num else data[,num] <- new.num
 
@@ -110,4 +109,5 @@ event.split <- function(data,
     return(data)
     ## }}} 
 } 
+
 
