@@ -2,25 +2,25 @@
 #include <math.h>
 #include "matrix.h"
 
-double tukey(x,b) double x,b;
+double tukey(double x,double b)
 {
   return((1/b)*((cos(3.141592 *(x/b))+ 1)/2) * (fabs(x/b) < 1)); 
 }
 
-double dtukey(x,b) double x,b;
+double dtukey(double x,double b)
 {
   return((-3.141592/b*b)*(sin(3.141592 *(x/b))/2)*(fabs(x/b) < 1));
 }
 
-void smoothB(designX,nx,p,bhat,nb,b,degree,coef)
-double *designX,*bhat,*b;
-int *coef,*nx,*p,*degree,*nb;
+void smoothB(double *designX,int *nx,int *p,double *bhat,int *nb,double *b,int *degree,int *coef)
+//double *designX,*bhat,*b;
+//int *coef,*nx,*p,*degree,*nb;
 { // {{{ 
   matrix *mat1,*mat2,*II,*I;
   vector *XWy,*Y,*RES,*sY;
   int count,j,k,s,d;
   int silent=1;
-  double tukey(),x,w,band;
+  double x,w,band;
   matrix *sm1,*sm2;
 
   malloc_mat(*nx,(*degree)+1,mat1);
@@ -81,14 +81,14 @@ int *coef,*nx,*p,*degree,*nb;
 } // }}}
 
 
-void localTimeReg(designX,nx,p,times,response,bhat,nb,b,lin,dens)
-double *designX,*bhat,*b,*times,*response,*dens;
-int *nx,*p,*nb,*lin;
+void localTimeReg(double *designX,int *nx,int *p,double *times,double *response,double *bhat,int *nb,double *b,int *lin,double *dens)
+//double *designX,*bhat,*b,*times,*response,*dens;
+//int *nx,*p,*nb,*lin;
 {
   matrix *X,*AI,*A;
   vector *res,*Y,*XY;
   int c,j,k,s,silent=1;
-  double band,tukey(),dtukey(),x,w,delta; 
+  double band,x,w,delta; 
   j=(*lin+1)*(*p);  
   malloc_mat(*nx,j,X);
   malloc_mat(j,j,A);

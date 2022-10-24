@@ -110,9 +110,7 @@ void bubble_sort(double *val,int *list,int n)
 }
 
 
-void Cpred(cum,nx,px,xval,nxval,pred,tminus)
-double *cum,*xval,*pred;
-int *nxval,*nx,*px,*tminus; 
+void Cpred(double *cum,int *nx,int *px,double *xval,int *nxval,double *pred,int *tminus)
 { // {{{
 int j,s,c;
 double timex,sc1,sc2,smax,smin; 
@@ -137,9 +135,7 @@ for (s=0;s<*nxval;s++)
    }
    else {
    while ((!((timex<sc2) && (timex>=sc1))) && (c>=0)) {
-   /* Rprintf(" %lf %lf %lf %ld \n",timex,sc2,sc1,c); */ 
    sc1=cum[c-1];sc2=cum[c];c=c-1; } 
-   /* Rprintf("før pred  %lf %lf %lf %ld \n",timex,sc2,sc1,c); */
    for(j=1;j<*px;j++) pred[j*(*nxval)+s]=cum[j*(*nx)+c]; 
 //   pred[s]=c+1; 
    } // }}} 
@@ -154,7 +150,6 @@ for (s=0;s<*nxval;s++)
    while ((!((timex<=sc2) && (timex>sc1))) && (c>=0)) {
    /* Rprintf(" %lf %lf %lf %ld \n",timex,sc2,sc1,c); */ 
    sc1=cum[c-1];sc2=cum[c];c=c-1; } 
-//  printf("før pred  %lf %lf %lf %ld \n",timex,sc2,sc1,c); 
    for(j=1;j<*px;j++) pred[j*(*nxval)+s]=cum[j*(*nx)+c]; 
    }
    }
