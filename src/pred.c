@@ -113,9 +113,8 @@ void bubble_sort(double *val,int *list,int n)
 void Cpred(double *cum,int *nx,int *px,double *xval,int *nxval,double *pred,int *tminus)
 { // {{{
 int j,s,c;
-double timex,sc1,sc2,smax,smin; 
+double timex,sc1,sc2,smax; 
 
-smin=cum[0]; 
 smax=cum[*nx-1]; 
 for (s=0;s<*nxval;s++)
 {
