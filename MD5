@@ -1,5 +1,5 @@
-22b494c40b51707300cf9419a7579f86 *DESCRIPTION
-64582f20a99b3a524ba2f3d5ffbd6690 *NAMESPACE
+eb5b17dc3396c121e53858bc0c3709e6 *DESCRIPTION
+8f047e7f91e9408620e8c986aa2cea7f *NAMESPACE
 5626b58ac5b3148673c12e7917b6be8a *R/Cpred.r
 099387f56334cc736e8cb231fb9c45a9 *R/Csmooth.r
 7288a70096d1613865a1f6e5146b6f23 *R/Gprop-odds.r
@@ -38,7 +38,6 @@ e7135ed89e91b6ad4038bc36a98d896f *R/prop-excess.r
 bdce9edba1ea9cad1ca4633b0a776eb1 *R/recurrent.r
 ec1d20dfef3c8c448dd24a35721d143b *R/residualsTimereg.r
 d9eda9827b80fec05cc3b15bcd999d0e *R/restricted.residual.mean.r
-5cf1f37e89059a373c553ccdd7d2a8c4 *R/sim-pc-hazard.r
 4f2caa2babeb0eaf9f8986a37343b717 *R/timecox.r
 82f4a3df0076148b80060681e144d69c *R/timereg-copy-package.R
 24ae9a1c4086cc23e46275bef5d36c8d *R/two-stage-reg.r
@@ -70,7 +69,6 @@ bdabc53ef7f9e7fc6252f34bfd78c0a8 *man/diabetes.Rd
 1742f364a6307469ac4a48eb2564ba54 *man/dynreg.Rd
 20384a51a8aa97a93ffd83ac8ca3e2b8 *man/event.split.Rd
 51b2684b3427df231d9675f2e08174b7 *man/internal-addreg.Rd
-434ed05637298fd441597e1deb9887d5 *man/invsubdist.Rd
 15639ce7d9851fdc71ee6960672bf2e5 *man/krylow.pls.Rd
 d55feb16a4435a4361cef76a20836d94 *man/mela.pop.Rd
 e5beb43d6f21fb7d746998b3bc65b98e *man/melanoma.Rd
@@ -88,16 +86,10 @@ e9d1aea47071d1a1be53adec1dcc0bab *man/print.aalen.Rd
 30fe9c58d319b5a17d43b3a2ec141e88 *man/prop.odds.Rd
 c614af392e58f15a26dc9ca98bdda34b *man/prop.odds.subdist.Rd
 bd9941d527a00930f5ea4cd9eef2c179 *man/qcut.Rd
-2570ce3d200f44f739640bc4b8e5fe5c *man/rchaz.Rd
-24808700ebf8eee3b7c67963c8040d1e *man/rcrisk.Rd
 dff199c02a90c08d5a213d3223dae790 *man/recurrent.marginal.coxmean.Rd
 01ba024eba20af38bec808e74b530d0b *man/recurrent.marginal.mean.Rd
 c9a5f9492d39e1e8b496170f51777352 *man/res.mean.Rd
 e585fbc99585cbef346682b9c2ed7f7d *man/restricted.residual.mean.Rd
-c88a610ddb2cefa17413e292a909aa1b *man/sim.cause.cox.Rd
-50ef2c7c6857fb78f73a7784b1d09bbe *man/sim.cif.Rd
-87f25ad944453e6c74e9f5aeb842ac61 *man/sim.cox.Rd
-9fe5ad398c7992c9f4bea735d15c5802 *man/simsubdist.Rd
 a28f24f21384abedf39e210325980a1e *man/summary.aalen.Rd
 f2866c71545517e06ace846609a3aba9 *man/summary.cum.residuals.Rd
 6ce722252b424227ca04ee81b2865703 *man/timecox.Rd
