@@ -1,4 +1,4 @@
-09cb762ba6a87d0bff6b316f1d678a20 *DESCRIPTION
+c2a1ab36678e851843d5680b14550f3a *DESCRIPTION
 8f047e7f91e9408620e8c986aa2cea7f *NAMESPACE
 5626b58ac5b3148673c12e7917b6be8a *R/Cpred.r
 099387f56334cc736e8cb231fb9c45a9 *R/Csmooth.r
@@ -21,7 +21,7 @@ e4ea65660c583fa2badf2c4ced5e0da5 *R/glm-comprisk.r
 c7c083d2ef54d38c42daa2e05c321898 *R/ipcw-residualmean.r
 059050bba25ecb3573efe3bf39c17907 *R/kmplot.r
 8c13dd5267a40d23a05b3bf1727a4a36 *R/krylow.pls.r
-875d0bcd6ab756f25829f93dcc4c5f21 *R/mgresid.r
+5ced24cc6b52cd8f62b5ae3864b8daa3 *R/mgresid.r
 7f4332ab4d956334e9045d494358ff6a *R/new.aalen.r
 e057c6252fe2053bb8d095eab5e88ec0 *R/new.cox-aalen.r
 e97aa0b0a0b7cb2e3976ca35886492ef *R/new.dynreg.r
@@ -35,7 +35,7 @@ e7135ed89e91b6ad4038bc36a98d896f *R/prop-excess.r
 21e9898b2d60394a477e2a27c852536f *R/prop-odds.r
 1919ca75894e6e4ba1bef85cf973b897 *R/qcut.r
 1ada7ca3cc97eb1f61f86489747c520d *R/read-design.r
-2aec6e39ea0a684c0f602518837f9a2a *R/recurrent.r
+749a9bb61c415e8ca3dd14a64fd474b8 *R/recurrent.r
 ec1d20dfef3c8c448dd24a35721d143b *R/residualsTimereg.r
 d9eda9827b80fec05cc3b15bcd999d0e *R/restricted.residual.mean.r
 54ee566ee5b1fa0665545bbd70fea20b *R/timecox.r
@@ -86,8 +86,8 @@ e9d1aea47071d1a1be53adec1dcc0bab *man/print.aalen.Rd
 30fe9c58d319b5a17d43b3a2ec141e88 *man/prop.odds.Rd
 c614af392e58f15a26dc9ca98bdda34b *man/prop.odds.subdist.Rd
 bd9941d527a00930f5ea4cd9eef2c179 *man/qcut.Rd
-dff199c02a90c08d5a213d3223dae790 *man/recurrent.marginal.coxmean.Rd
-561676b16959b2072d7902162744d90f *man/recurrent.marginal.mean.Rd
+fe1cfe74469237cfed19af6979ebf0f9 *man/recurrent.marginal.coxmean.Rd
+75985b5db3c4764f626d0f7a22f021ee *man/recurrent.marginal.mean.Rd
 e2069e66fefd8a0601ea008629bc6513 *man/res.mean.Rd
 e585fbc99585cbef346682b9c2ed7f7d *man/restricted.residual.mean.Rd
 a28f24f21384abedf39e210325980a1e *man/summary.aalen.Rd
@@ -105,7 +105,7 @@ b963f0b3911cc21da984f0fea67e0fb2 *src/aalen.c
 06d355d5db087581c5c79e0a44858b25 *src/comprisk.c
 4af2092d013aff6795231d8127fe3be5 *src/comptest-cmprsk.c
 e29122ed5b6d2f81bfe22ec77490623b *src/comptest.c
-ea3e5ea0f0b035c4b04e193b99214bb0 *src/cox-aalen.c
+0854ca700d4bb10011d2e23589dc98cf *src/cox-aalen.c
 428348f508251e6ce3f7f4081668c8c7 *src/dynadd.c
 e7d148e52968b5e6e4e8bbefef40bb09 *src/ipcw-residualmean.c
 20e22f72953d0ba8dadd8dd4a63f14e1 *src/matrix.c
